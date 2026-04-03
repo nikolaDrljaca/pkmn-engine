@@ -1,5 +1,6 @@
 package com.drbrosdev.battle.turn
 
+import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.abilities
 import com.drbrosdev.battle.move.Move
@@ -139,7 +140,7 @@ private val SpeedTieRule = TurnActionOrderRule { battle ->
     val (p1, a1) = selection1
     val (p2, a2) = selection2
     when {
-        Random.nextBoolean() -> OrderingResult.Resolved(
+        RandomGen.nextBoolean() -> OrderingResult.Resolved(
             first = ActionContext(p1, p2, a1),
             second = ActionContext(p2, p1, a2)
         )

@@ -1,5 +1,6 @@
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.Team
+import com.drbrosdev.battle.move.Flamethrower
 import com.drbrosdev.battle.move.Growl
 import com.drbrosdev.battle.move.Leer
 import com.drbrosdev.battle.move.Pursuit
@@ -13,7 +14,7 @@ import org.junit.jupiter.api.Test
 class BattleTest {
     val chimchar = buildPokemon {
         id = "chimchar-1"
-        elements(Element.FIRE)
+        elements(Element.WATER)
         name = "Chimchar"
         nature = Quirky
         ability = RunAway
@@ -38,7 +39,7 @@ class BattleTest {
         elements(Element.FIRE)
         name = "Charmander"
         nature = Quirky
-        ability = RunAway
+        ability = Pressure
         baseStats {
             baseHp = 11
             attack = 52
@@ -52,7 +53,7 @@ class BattleTest {
             maxHp()
             maxAttack()
         }
-        addMoves(Scratch, Growl)
+        addMoves(Scratch, Growl, Flamethrower)
     }
 
     val battle = Battle(
@@ -65,8 +66,8 @@ class BattleTest {
     @Test
     fun `first single turn test`() {
         val turn = Turn(
-            selection1 = chimchar to TurnAction.MoveSelected(Pursuit),
-            selection2 = charmander to TurnAction.MoveSelected(Growl)
+            selection1 = chimchar to TurnAction.MoveSelected(Scratch),
+            selection2 = charmander to TurnAction.MoveSelected(Flamethrower)
         )
         val updatedBattle = battle.resolveTurn(turn)
         val foo = updatedBattle.team1[chimchar.id].computeInBattleStats(updatedBattle)

@@ -2,6 +2,8 @@ package com.drbrosdev.battle.move
 
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.abilities
+import com.drbrosdev.battle.pokemon.MajorStatus
+import com.drbrosdev.battle.pokemon.hasAnyOf
 
 fun interface MovePrecondition {
     fun MoveContext.check(battle: Battle): Result
@@ -14,26 +16,31 @@ fun interface MovePrecondition {
 
 private val AccuracyPrecondition = MovePrecondition { battle ->
     // TODO
+    // For moves with MoveAccuracy.Percentage
     MovePrecondition.Result.PASS
 }
 
 private val StatusPrecondition = MovePrecondition { battle ->
     // TODO
+    // To check user pokemon status, like paralysis, freeze, confusion, sleep
     MovePrecondition.Result.PASS
 }
 
 private val ProtectionPrecondition = MovePrecondition { battle ->
     // TODO
+    // To check things like Protect/Detect/Wide Guard etc
     MovePrecondition.Result.PASS
 }
 
 private val ImmunityPrecondition = MovePrecondition { battle ->
     // TODO
+    // To check things like Typing Immunity (normal -> ghost)
     MovePrecondition.Result.PASS
 }
 
 private val TargetFaintedPrecondition = MovePrecondition { battle ->
     // TODO
+    // If the target is 0 HP already
     MovePrecondition.Result.PASS
 }
 /*

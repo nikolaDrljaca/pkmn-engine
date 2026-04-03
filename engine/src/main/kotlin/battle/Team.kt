@@ -21,6 +21,8 @@ data class Team(
 
 fun Team.hasMember(pokemon: Pokemon) = members.containsKey(pokemon.id)
 
+fun Team.hasMember(id: String) = members.containsKey(id)
+
 fun Team.updateMember(pokemon: Pokemon) = Team(members = members.toMutableMap() + (pokemon.id to pokemon))
 
 fun Team.allFainted() = members.values.all { it.hasFainted() }

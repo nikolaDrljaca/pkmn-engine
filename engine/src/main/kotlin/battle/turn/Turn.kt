@@ -25,9 +25,9 @@ data class ActionContext(
 
 fun ActionContext.toMoveContext(): MoveContext = when (action) {
     is TurnAction.MoveSelected -> MoveContext(
-        user = user,
-        target = target,
-        move = action.move
+        userId = user.id,
+        targetId = target.id,
+        moveId = action.move.id
     )
     else ->  error("Cannot create MoveContext when action is ${action.javaClass.simpleName}!")
 }

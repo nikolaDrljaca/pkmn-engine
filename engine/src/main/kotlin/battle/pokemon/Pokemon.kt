@@ -66,6 +66,10 @@ data class Pokemon(
         }
         addAll(statModifications)
     }
+
+    operator fun get(moveId: String): Move = requireNotNull(moves.find { it.id == moveId }) {
+        "Pokemon $id does not have $moveId assigned!"
+    }
 }
 
 fun Pokemon.hasFainted() = inBattleHp.value == 0

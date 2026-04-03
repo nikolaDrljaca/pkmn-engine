@@ -29,6 +29,12 @@ data class Battle(
         }
     }
 
+    operator fun get(pokemonId: String): Pokemon = when {
+        team1.hasMember(pokemonId) -> team1[pokemonId]
+        team2.hasMember(pokemonId) -> team2[pokemonId]
+        else -> error("Pokemon $pokemonId is not in the current Battle!")
+    }
+
     fun switch(user: Pokemon, target: Pokemon): Battle =
         when (user.id) {
             pokemon1.id -> copy(active1 = target.id)

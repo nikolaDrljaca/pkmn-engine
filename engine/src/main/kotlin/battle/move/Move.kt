@@ -2,7 +2,6 @@ package com.drbrosdev.battle.move
 
 import com.drbrosdev.battle.pokemon.Element
 import com.drbrosdev.battle.pokemon.MajorStatus
-import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonDsl
 import com.drbrosdev.battle.pokemon.stats.StatKey
 import com.drbrosdev.battle.pokemon.stats.StatModifier
@@ -28,19 +27,6 @@ data class Move(
     // not used in MoveEffect, but as part of turn validation
     val status: MoveStatus = MoveStatus.NORMAL
 )
-
-sealed interface MovePower {
-    // Standard power
-    @JvmInline
-    value class Power(val value: Int) : MovePower
-
-    // Moves like Dragon Rage / Sonic Boom deal Direct HP damage
-    @JvmInline
-    value class Direct(val value: Int): MovePower
-
-    // Status Moves have no power
-    data object NoPower: MovePower
-}
 
 fun Move.isStatusMove() = type == MoveType.STATUS
 fun Move.isPhysicalMove() = type == MoveType.PHYSICAL
@@ -88,7 +74,7 @@ class MoveBuilder {
         this.accuracy = MoveAccuracy.AlwaysHit
     }
 
-    fun sequentialEffect(vararg effects: MoveEffect) {
+    fun effects(vararg effects: MoveEffect) {
         this.effect = SequenceMoveEffect(effects.toList())
     }
 
@@ -121,29 +107,20 @@ class MoveBuilder {
 fun buildMove(block: MoveBuilder.() -> Unit): Move =
     MoveBuilder().apply(block).build()
 
-data class MoveContext(
-    val user: Pokemon,
-    val target: Pokemon,
-    val move: Move
-)
-
-
 // Eg example move
-private val flamethrower = Move(
-    id = "flamethrower",
-    name = "Flamethrower",
-    element = Element.FIRE,
-    power = 90,
-    powerPoints = 18,
-    accuracy = MoveAccuracy.Percent(Percentage(100)),
-    type = MoveType.SPECIAL,
-    effect = SequenceMoveEffect(
-        listOf(
-            ApplyFormulaDamage,
-            ApplyStatusCondition(Percentage(10), MajorStatus.Burned)
-        )
+val Flamethrower = buildMove {
+    id = "flamethrower"
+    name = "Flamethrower"
+    element = Element.FIRE
+    power = 90
+    powerPoints = 18
+    percentAccuracy(100)
+    special()
+    effects(
+        ApplyFormulaDamage,
+        ApplyStatusCondition(Percentage(100), MajorStatus.Burned)
     )
-)
+}
 
 val Tackle = buildMove {
     id = "tackle"
@@ -153,7 +130,7 @@ val Tackle = buildMove {
     powerPoints = 35
     percentAccuracy(95)
     type = MoveType.PHYSICAL
-    sequentialEffect(ApplyFormulaDamage)
+    effects(ApplyFormulaDamage)
 }
 
 val Scratch = buildMove {
@@ -164,7 +141,7 @@ val Scratch = buildMove {
     powerPoints = 35
     percentAccuracy(100)
     type = MoveType.PHYSICAL
-    sequentialEffect(ApplyFormulaDamage)
+    effects(ApplyFormulaDamage)
 }
 
 val Leer = buildMove {
@@ -175,7 +152,7 @@ val Leer = buildMove {
     powerPoints = 30
     percentAccuracy(100)
     type = MoveType.STATUS
-    sequentialEffect(
+    effects(
         ApplyStatModification { StatModifiers(mapOf(StatKey.DEFENCE to StatModifier.Stage(-1))) }
     )
 }
@@ -188,7 +165,7 @@ val Growl = buildMove {
     powerPoints = 30
     percentAccuracy(100)
     type = MoveType.STATUS
-    sequentialEffect(
+    effects(
         ApplyStatModification { StatModifiers(mapOf(StatKey.ATTACK to StatModifier.Stage(-1))) }
     )
 }
@@ -201,5 +178,16 @@ val Pursuit = buildMove {
     powerPoints = 20
     percentAccuracy(100)
     type = MoveType.PHYSICAL
-    sequentialEffect(ApplyFormulaDamage)
+    effects(ApplyFormulaDamage)
+}
+
+val SonicBoom = buildMove {
+    id = "sonicBoom"
+    name = "Sonic Boom"
+    element = Element.NORMAL
+    power = 20
+    powerPoints = 20
+    percentAccuracy(90)
+    special()
+    effects(ApplyDirectDamage)
 }

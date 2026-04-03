@@ -1,10 +1,10 @@
 package com.drbrosdev.battle.pokemon
 
+import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.pokemon.stats.StatKey
 import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModifier
 import com.drbrosdev.battle.pokemon.stats.StatModifiers
-import kotlin.random.Random
 
 
 // Conditions which persist and require
@@ -57,7 +57,7 @@ sealed interface VolatileStatus {
     data class Taunt(override val expiresOnTurn: Int) : VolatileStatus
 
     companion object {
-        fun computeExpiry(currentTurn: Int): Int = currentTurn + Random.nextInt(2, 6)
+        fun computeExpiry(currentTurn: Int): Int = currentTurn + RandomGen.nextInt(2, 6)
 
         // factory functions
         fun confusion(currentTurn: Int): VolatileStatus = Confusion(computeExpiry(currentTurn))
