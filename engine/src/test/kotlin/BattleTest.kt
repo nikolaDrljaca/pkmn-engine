@@ -25,6 +25,11 @@ class BattleTest {
             specialDefence = 44
             speed = 61
         }
+        individualValues { allMax() }
+        effortValues {
+            maxHp()
+            maxAttack()
+        }
         addMoves(Scratch, Leer)
     }
 
@@ -41,6 +46,11 @@ class BattleTest {
             specialAttack = 60
             specialDefence = 50
             speed = 65
+        }
+        individualValues { allMax() }
+        effortValues {
+            maxHp()
+            maxAttack()
         }
         addMoves(Scratch, Growl)
     }

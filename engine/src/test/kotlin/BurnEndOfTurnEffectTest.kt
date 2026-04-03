@@ -23,7 +23,7 @@ class BurnEndOfTurnEffectTest {
         }
         val result = with(BurnEndOfTurnEffect) { apply(pokemon) }
         assertEquals(
-            150,
+            207,
             result.inBattleHp.value
         )
     }

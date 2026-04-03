@@ -4,6 +4,8 @@ import com.drbrosdev.battle.Team
 import com.drbrosdev.battle.move.*
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.BaseStats
+import com.drbrosdev.battle.pokemon.stats.EffortValues
+import com.drbrosdev.battle.pokemon.stats.IndividualValues
 import com.drbrosdev.battle.turn.PowerPointsTurnValidator
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
@@ -35,6 +37,8 @@ class PowerPointTurnValidatorTest {
         elements = Elements.of(Element.NORMAL),
         nature = Quirky,
         ability = Overgrow,
+        effortValues = EffortValues(),
+        individualValues = IndividualValues(),
         baseStats = BaseStats(),
     )
 

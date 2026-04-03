@@ -4,11 +4,15 @@ import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.move.Move
 import com.drbrosdev.battle.pokemon.stats.BaseStats
 import com.drbrosdev.battle.pokemon.stats.BaseStatsBuilder
+import com.drbrosdev.battle.pokemon.stats.EffectiveStats
+import com.drbrosdev.battle.pokemon.stats.EffortValues
+import com.drbrosdev.battle.pokemon.stats.EffortValuesBuilder
+import com.drbrosdev.battle.pokemon.stats.IndividualValues
+import com.drbrosdev.battle.pokemon.stats.IndividualValuesBuilder
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModificationContext
 import com.drbrosdev.battle.pokemon.stats.resolve
-import java.util.UUID
 
 data class Pokemon(
     // from static config - used w/ lookup
@@ -18,7 +22,7 @@ data class Pokemon(
 
     // from static config
     val elements: Elements,
-    val level: Level = Level(50),
+    val level: Level = Level(),
     val happiness: Happiness = Happiness(),
 
     // from input
@@ -26,11 +30,21 @@ data class Pokemon(
     // from input
     val ability: Ability,
 
-    // from static config
+    // stats
     val baseStats: BaseStats,
+    val effortValues: EffortValues,
+    val individualValues: IndividualValues,
+
+    // in battle stats
+    val effectiveStats: EffectiveStats = EffectiveStats.from(
+        baseStats = baseStats,
+        effortValues = effortValues,
+        individualValues = individualValues,
+        level = level
+    ),
     val statModifications: List<StatModification> = emptyList(),
 
-    val inBattleHp: Stat = baseStats.hp,
+    val inBattleHp: Stat = effectiveStats.hp,
 
     val majorStatus: MajorStatus = MajorStatus.Normal,
     val volatileStatus: Set<VolatileStatus> = emptySet(),
@@ -56,10 +70,10 @@ data class Pokemon(
 
 fun Pokemon.hasFainted() = inBattleHp.value == 0
 
-fun Pokemon.computeInBattleStats(battle: Battle): BaseStats =
+fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
     allStatModifications
         .map { it.compute(StatModificationContext(this, battle)) }
-        .fold(baseStats) { stats, mod -> stats.resolve(mod) }
+        .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
 
 
 @JvmInline
@@ -75,9 +89,14 @@ value class Happiness(val value: Int = BASE_VALUE) {
 }
 
 @JvmInline
-value class Level(val value: Int) {
+value class Level(val value: Int = CURRENT) {
     init {
-        require(value in 1..100)
+        require(value in 1..MAX)
+    }
+
+    companion object {
+        const val CURRENT = 50
+        const val MAX = 100
     }
 }
 
@@ -86,7 +105,7 @@ class PokemonBuilder {
 
     var id: String = "test-pokemon"
     var name: String = "Test Pokemon"
-    var level: Level = Level(50)
+    var level: Level = Level()
     var happiness: Happiness = Happiness()
     var nature: Nature = Quirky
     var ability: Ability = RunAway
@@ -98,10 +117,22 @@ class PokemonBuilder {
     private var baseStats: BaseStats = BaseStats()
     var inBattleHp: Int? = null
 
+    private var effortValues = EffortValues()
+    private var individualValues = IndividualValues()
+
     private var moves: MutableList<Move> = mutableListOf()
 
     fun elements(vararg elements: Element) {
         this.elements = Elements(elements.toSet())
+    }
+
+    fun effortValues(block: EffortValuesBuilder.() -> Unit) {
+        val built = EffortValuesBuilder().apply(block).build()
+        this.effortValues = built
+    }
+
+    fun individualValues(block: IndividualValuesBuilder.() -> Unit) {
+        this.individualValues = IndividualValuesBuilder().apply(block).build()
     }
 
     fun baseStats(block: BaseStatsBuilder.() -> Unit) {
@@ -129,7 +160,10 @@ class PokemonBuilder {
         statModifications = statModifications,
         majorStatus = majorStatus,
         volatileStatus = volatileStatus,
-        moves = moves.toList()
+        moves = moves.toList(),
+        // TODO
+        effortValues = effortValues,
+        individualValues = individualValues
     ).let {
         when {
             inBattleHp != null -> it.copy(inBattleHp = Stat(inBattleHp!!))
