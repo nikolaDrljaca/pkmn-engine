@@ -1,0 +1,193 @@
+package com.drbrosdev.battle.turn
+
+import com.drbrosdev.battle.Battle
+import com.drbrosdev.battle.abilities
+import com.drbrosdev.battle.move.Move
+import com.drbrosdev.battle.pokemon.Pokemon
+import com.drbrosdev.battle.pokemon.computeInBattleStats
+import kotlin.random.Random
+
+fun interface TurnActionOrderRule {
+    fun Turn.determine(battle: Battle): OrderingResult
+}
+
+// the design pattern is Chain of Responsibility
+// effectively like request middleware - either process/transform or passthrough to next
+// except here the chain breaks once the first thing is resolved
+sealed interface OrderingResult {
+    // NOTE: to support bigger battles than 1v1
+    // this can contain a list of ActionContext
+    data class Resolved(
+        val first: ActionContext,
+        val second: ActionContext
+    ) : OrderingResult {
+        constructor(
+            selection1: Pair<Pokemon, TurnAction>,
+            selection2: Pair<Pokemon, TurnAction>
+        ) : this(
+            first = ActionContext(
+                user = selection1.first,
+                target = selection2.first,
+                action = selection1.second
+            ),
+            second = ActionContext(
+                user = selection2.first,
+                target = selection1.first,
+                action = selection2.second
+            ),
+        )
+
+    }
+
+    data object Deferred : OrderingResult
+}
+
+// Switch actions always go first unless Pursuit is active
+private val SwitchRule = TurnActionOrderRule { battle ->
+    val isSwitch1 = selection1.second is TurnAction.Switch
+    val isSwitch2 = selection2.second is TurnAction.Switch
+    when {
+        isSwitch1 && isSwitch2 -> OrderingResult.Deferred
+
+        isSwitch1 -> OrderingResult.Resolved(selection1, selection2)
+
+        isSwitch2 -> OrderingResult.Resolved(selection2, selection1)
+
+        else -> OrderingResult.Deferred
+    }
+}
+
+private val PursuitRule = TurnActionOrderRule { battle ->
+    val pursuit1 = selection1.second is TurnAction.MoveSelected
+            && (selection1.second as TurnAction.MoveSelected).move.id == "pursuit"
+            && selection2.second is TurnAction.Switch
+
+    val pursuit2 = selection2.second is TurnAction.MoveSelected
+            && (selection2.second as TurnAction.MoveSelected).move.id == "pursuit"
+            && selection1.second is TurnAction.Switch
+
+    when {
+        pursuit1 -> OrderingResult.Resolved(selection1, selection2)
+
+        pursuit2 -> OrderingResult.Resolved(selection2, selection1)
+
+        else -> OrderingResult.Deferred
+    }
+}
+
+// Priority always resolves if moves differ
+private val MovePriorityRule = TurnActionOrderRule { battle ->
+    fun move(action: TurnAction): Move = when (action) {
+        is TurnAction.MoveSelected -> action.move
+        is TurnAction.Switch -> error("Cannot resolve Switch action in MovePriorityRule!")
+    }
+
+    val move1 = move(selection1.second)
+    val move2 = move(selection2.second)
+    when {
+        move1.priority.value > move2.priority.value ->
+            OrderingResult.Resolved(selection1, selection2)
+
+        move2.priority.value > move1.priority.value ->
+            OrderingResult.Resolved(selection2, selection1)
+
+        // prios are equal - defer to speed
+        else -> OrderingResult.Deferred
+    }
+}
+
+// Quick Claw - only fires if priority didn't resolve
+private val QuickClawRule = TurnActionOrderRule { battle ->
+    // check held items on each pokemon, random chance
+    // resolves or defers
+    // TODO impl - waiting for Item support
+    OrderingResult.Deferred
+}
+
+// Trick Room - only fires if neither priority nor quick claw resolved
+private val TrickRoomRule = TurnActionOrderRule { battle ->
+    // check battle conditions for trick room
+    // resolves by reversing speed order, or defers
+    // TODO impl - waiting for TrickRoom / Environment support
+    OrderingResult.Deferred
+}
+
+// Speed comparison
+private val SpeedRule = TurnActionOrderRule { battle ->
+    // compare resolved speed stats
+    val (p1, a1) = selection1
+    val (p2, a2) = selection2
+    val speed1 = p1.computeInBattleStats(battle).speed.value
+    val speed2 = p2.computeInBattleStats(battle).speed.value
+    when {
+        speed1 > speed2 -> OrderingResult.Resolved(
+            ActionContext(p1, p2, a1),
+            ActionContext(p2, p1, a2),
+        )
+
+        speed2 > speed1 -> OrderingResult.Resolved(
+            ActionContext(p2, p1, a2),
+            ActionContext(p1, p2, a1),
+        )
+
+        else -> OrderingResult.Deferred
+    }
+}
+
+// Terminal - always resolves via coin flip
+private val SpeedTieRule = TurnActionOrderRule { battle ->
+    val (p1, a1) = selection1
+    val (p2, a2) = selection2
+    when {
+        Random.nextBoolean() -> OrderingResult.Resolved(
+            first = ActionContext(p1, p2, a1),
+            second = ActionContext(p2, p1, a2)
+        )
+
+        else -> OrderingResult.Resolved(
+            first = ActionContext(p2, p1, a2),
+            second = ActionContext(p1, p2, a1),
+        )
+    }
+}
+
+/*
+Chain of Responsibility pattern.
+Each ActionOrderRule decides to either handle (return) or pass along.
+The first Resolved result ends the chain.
+ */
+fun Battle.resolveActionOrder(
+    turn: Turn,
+): Pair<ActionContext, ActionContext> {
+    val battle = this
+
+    /*
+    NOTE:
+    Abilities might have to insert themselves at different positions in the sequence.
+    To solve for this it's best to introduce a TurnActionOrderRule.priority: Int property
+    and here the sequence can be sorted by it. That way each ability can define its own prio,
+    and existing rules can use 'static' ones.
+     */
+    val applicableRules = sequence {
+        yield(PursuitRule)
+        yieldAll(abilities().flatMap { it.orderingRules })
+        yield(SwitchRule)
+        yield(MovePriorityRule)
+        yield(QuickClawRule)
+        yield(TrickRoomRule)
+        yield(SpeedRule)
+        yield(SpeedTieRule)
+    }
+
+    for (rule in applicableRules) {
+        val result = with(rule) {
+            turn.determine(battle)
+        }
+        when (result) {
+            is OrderingResult.Resolved -> return result.first to result.second
+            OrderingResult.Deferred -> continue
+        }
+    }
+    error("MoveOrderRule sequence must have a terminal rule!")
+}
+
