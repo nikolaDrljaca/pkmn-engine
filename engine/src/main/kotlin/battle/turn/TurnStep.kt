@@ -1,15 +1,11 @@
 package com.drbrosdev.battle.turn
 
-import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.BattleOutcome
-import com.drbrosdev.battle.BattleState
-import com.drbrosdev.battle.Weather
-import com.drbrosdev.battle.allFainted
+import com.drbrosdev.battle.*
 import com.drbrosdev.battle.pokemon.MajorStatus
 import com.drbrosdev.battle.pokemon.Pokemon
-import com.drbrosdev.battle.pokemon.hasFainted
-import com.drbrosdev.battle.turn.HailEndOfTurnEffect
-import com.drbrosdev.battle.turn.LeftoversEndOfTurnEffect
+import java.util.logging.Logger
+
+private val LOG = Logger.getLogger(TurnStep::class.qualifiedName)
 
 fun interface TurnStep {
     fun apply(battle: Battle): Battle
@@ -19,6 +15,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
 
     override fun apply(battle: Battle): Battle = when (context.action) {
         is TurnAction.MoveSelected -> {
+            LOG.info { "${context.user.id} is attempting to execute ${context.action.move.name}" }
             val startOfTurnEffects = ApplyStartOfTurnEffects(context)
             val afterEffectBattle = startOfTurnEffects.apply(battle)
             // move execution
@@ -30,6 +27,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
         }
 
         is TurnAction.Switch -> with(context) {
+            LOG.info { "${context.user.id} is attempting to switch with ${context.target.id}" }
             battle.switch(user = user, target = target)
         }
     }
@@ -151,7 +149,10 @@ Implementations decide to return a new state of the battle
 fun Battle.resolveTurnSteps(steps: Sequence<TurnStep>): Battle {
     return steps.fold(this) { currentBattle, step ->
         when (currentBattle.state) {
-            is BattleState.Concluded -> currentBattle
+            is BattleState.Concluded -> {
+                LOG.info { "Battle has concluded at turn $turnCount with outcode ${currentBattle.state.outcome}" }
+                currentBattle
+            }
             else -> step.apply(currentBattle)
         }
     }

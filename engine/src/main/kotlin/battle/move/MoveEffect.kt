@@ -2,16 +2,12 @@ package com.drbrosdev.battle.move
 
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.pokemon.Element
-import com.drbrosdev.battle.pokemon.MajorStatus
-import com.drbrosdev.battle.pokemon.OwnTempo
-import com.drbrosdev.battle.pokemon.Pressure
-import com.drbrosdev.battle.pokemon.VolatileStatus
-import com.drbrosdev.battle.pokemon.hasAnyOf
+import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModifier
 import com.drbrosdev.battle.pokemon.stats.increaseStageBy
+import java.util.logging.Logger
 
 /*
 Pipeline Design pattern
@@ -19,6 +15,8 @@ Execute-all pipeline.
 All steps run unconditionally.
 Implementations decide to return a new state of the battle
 */
+
+private val LOG = Logger.getLogger(MoveEffect::class.qualifiedName)
 
 fun interface MoveEffect {
     fun MoveContext.apply(battle: Battle): Battle

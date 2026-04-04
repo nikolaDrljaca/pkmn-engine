@@ -124,8 +124,13 @@ fun Battle.validateTurn(
     val battle = this
     val applicableValidators = abilities().flatMap { it.turnValidators }
         .plus(StandardTurnValidators)
-    return applicableValidators
+    val result = applicableValidators
         .map { with(it) { turn.validate(battle) } }
         .firstOrNull { it is TurnValidity.Invalid }
         ?: TurnValidity.Valid
+    when (result) {
+        is TurnValidity.Invalid -> LOG.info { "Turn ${battle.turnCount} invalid due to ${result.reason}" }
+        is TurnValidity.Valid -> Unit
+    }
+    return result
 }

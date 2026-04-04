@@ -1,6 +1,9 @@
 package com.drbrosdev.battle.turn
 
 import com.drbrosdev.battle.Battle
+import java.util.logging.Logger
+
+private val LOG = Logger.getLogger("com.drbrosdev.battle.turn.TurnResolution")
 
 // acts like an orchestrator to describe how a turn is resolved
 fun Battle.resolveTurn(turn: Turn): Battle {
@@ -13,6 +16,7 @@ fun Battle.resolveTurn(turn: Turn): Battle {
     In this case this is not a part of turn resolution, but a part of turn
     construction.
      */
+    LOG.info { "Resolving turn $turnCount. Active: $active1 : $active2" }
     val turnValidity = validateTurn(turn)
     if (turnValidity is TurnValidity.Invalid) {
         return this

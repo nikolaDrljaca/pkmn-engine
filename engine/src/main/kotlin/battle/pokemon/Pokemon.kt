@@ -54,7 +54,10 @@ data class Pokemon(
 ) {
     init {
         require(id.contains("-")) {
-            "Pokemon with no ownership! ID: $id"
+            "Pokemon $id has no ownership!"
+        }
+        require(moves.size <= 4) {
+            "Pokemon $id cannot have more than 4 moves!"
         }
     }
     // consider all stat modification sources

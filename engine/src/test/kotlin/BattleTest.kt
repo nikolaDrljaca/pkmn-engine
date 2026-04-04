@@ -1,18 +1,22 @@
 import com.drbrosdev.battle.Battle
+import com.drbrosdev.battle.BattleState
 import com.drbrosdev.battle.Team
-import com.drbrosdev.battle.move.Flamethrower
-import com.drbrosdev.battle.move.Growl
-import com.drbrosdev.battle.move.Leer
-import com.drbrosdev.battle.move.Pursuit
-import com.drbrosdev.battle.move.SandAttack
-import com.drbrosdev.battle.move.Scratch
+import com.drbrosdev.battle.move.*
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
 import com.drbrosdev.battle.turn.resolveTurn
+import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
 
 class BattleTest {
+
+    companion object {
+        @JvmStatic
+        @BeforeAll
+        fun setup() { TestLoggingConfig }
+    }
+
     val chimchar = buildPokemon {
         id = "chimchar-1"
         elements(Element.WATER)
@@ -42,7 +46,7 @@ class BattleTest {
         nature = Quirky
         ability = Pressure
         baseStats {
-            baseHp = 11
+            baseHp = 39
             attack = 52
             defence = 43
             specialAttack = 60
@@ -54,7 +58,7 @@ class BattleTest {
             maxHp()
             maxAttack()
         }
-        addMoves(Scratch, Growl, Flamethrower, SandAttack)
+        addMoves(Scratch, Growl)
     }
 
     val battle = Battle(
@@ -74,6 +78,11 @@ class BattleTest {
         val foo = updatedBattle.team1[chimchar.id].computeInBattleStats(updatedBattle)
         val bar = updatedBattle.team2[charmander.id].computeInBattleStats(updatedBattle)
         println(updatedBattle)
+    }
+
+    @Test
+    fun `run battle`() {
+        // TODO
     }
 
 }
