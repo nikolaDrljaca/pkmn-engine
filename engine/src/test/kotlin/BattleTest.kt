@@ -4,6 +4,7 @@ import com.drbrosdev.battle.move.Flamethrower
 import com.drbrosdev.battle.move.Growl
 import com.drbrosdev.battle.move.Leer
 import com.drbrosdev.battle.move.Pursuit
+import com.drbrosdev.battle.move.SandAttack
 import com.drbrosdev.battle.move.Scratch
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.turn.Turn
@@ -53,7 +54,7 @@ class BattleTest {
             maxHp()
             maxAttack()
         }
-        addMoves(Scratch, Growl, Flamethrower)
+        addMoves(Scratch, Growl, Flamethrower, SandAttack)
     }
 
     val battle = Battle(
@@ -67,7 +68,7 @@ class BattleTest {
     fun `first single turn test`() {
         val turn = Turn(
             selection1 = chimchar to TurnAction.MoveSelected(Scratch),
-            selection2 = charmander to TurnAction.MoveSelected(Flamethrower)
+            selection2 = charmander to TurnAction.MoveSelected(SandAttack)
         )
         val updatedBattle = battle.resolveTurn(turn)
         val foo = updatedBattle.team1[chimchar.id].computeInBattleStats(updatedBattle)

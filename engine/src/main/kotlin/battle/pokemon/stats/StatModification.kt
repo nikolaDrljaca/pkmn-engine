@@ -29,12 +29,15 @@ sealed interface StatModifier {
         fun hinderingNature() = Percent(90)
 
         fun initialStage() = Stage(0)
+
+        fun negativeStage(value: Int) = Stage(-value)
+        fun positiveStage(value: Int) = Stage(value)
     }
 }
 
-fun StatModifier.increaseStageBy(stage: StatModifier.Stage): StatModifier =
+fun StatModifier.increaseStageBy(stage: StatModifier.Stage): StatModifier.Stage =
     when (this) {
-        is StatModifier.Percent -> this
+        is StatModifier.Percent -> error("Cannot increase Stage of Percent StatModifier!")
         is StatModifier.Stage -> StatModifier.Stage(this.value + stage.value)
     }
 

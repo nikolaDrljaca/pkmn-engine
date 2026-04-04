@@ -35,12 +35,16 @@ data class Battle(
         else -> error("Pokemon $pokemonId is not in the current Battle!")
     }
 
-    fun switch(user: Pokemon, target: Pokemon): Battle =
-        when (user.id) {
-            pokemon1.id -> copy(active1 = target.id)
-            pokemon2.id -> copy(active2 = target.id)
+    fun switch(user: Pokemon, target: Pokemon): Battle {
+        // user volatile status clears when switching out
+        val afterHeal = updateMons(this[user.id].copy(volatileStatus = emptySet()))
+        return when (user.id) {
+            pokemon1.id -> afterHeal.copy(active1 = target.id)
+            pokemon2.id -> afterHeal.copy(active2 = target.id)
             else -> error("Pokemon ${user.id} not found in battle!")
         }
+    }
+
 }
 
 fun Battle.abilities() = sequenceOf(pokemon1.ability, pokemon2.ability)

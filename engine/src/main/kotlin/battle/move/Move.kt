@@ -191,3 +191,14 @@ val SonicBoom = buildMove {
     special()
     effects(ApplyDirectDamage)
 }
+
+val SandAttack = buildMove {
+    id = "sandAttack"
+    name = "Sand Attack"
+    element = Element.GROUND
+    power = 0
+    powerPoints = 24
+    percentAccuracy(100)
+    status()
+    effects(ApplyAccuracyChange(StatModifier.negativeStage(1)))
+}

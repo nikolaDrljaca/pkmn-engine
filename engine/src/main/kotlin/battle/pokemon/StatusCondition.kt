@@ -23,28 +23,25 @@ sealed interface MajorStatus {
     data class BadlyPoisoned(val counter: Int) : MajorStatus
 
     data object Burned : MajorStatus
-    /*
-        TODO
-        These are self-healing statuses - is it chance based or?
-        If so, a system is necessary to allow this to be applied/calculated at start of turn effects
-         */
-    data object Asleep : MajorStatus
+
+    data class Asleep(val expiresOnTurn: Int) : MajorStatus
 
     data object Frozen : MajorStatus
+
+    companion object {
+        /*
+        A frozen pokemon has a 20% to thaw each turn.
+         */
+        fun shouldThaw(): Boolean = RandomGen.nextInt(1, 101) <= 20
+
+        fun shouldParalyze(): Boolean = RandomGen.nextInt(1, 101) <= 25
+    }
 }
 
 /*
 How will this integrate into the system?
 It needs to be a part of the Pokemon state object.
 
-TODO
-We are missing ways to count down the turns - or to keep track of
-which turn it is for these types of systems.
-
-Turn Count system is needed!
-Weather effects (no longer permanent?)
-Volatile status (infatuation/confusion)
-etc?
  */
 // Ephemeral conditions
 sealed interface VolatileStatus {
@@ -57,6 +54,10 @@ sealed interface VolatileStatus {
     data class Taunt(override val expiresOnTurn: Int) : VolatileStatus
 
     companion object {
+        /*
+        Volatile status lasts for a pre-determined number of turns, after which they heal.
+        This rolls and computes number of turns for a new application.
+         */
         fun computeExpiry(currentTurn: Int): Int = currentTurn + RandomGen.nextInt(2, 6)
 
         // factory functions

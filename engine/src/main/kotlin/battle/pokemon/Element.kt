@@ -38,6 +38,9 @@ data class Elements(
 fun Elements.hasAnyOf(vararg element: Element) = element.any { it in values }
 fun Elements.hasAnyOf(element: List<Element>) = element.any { it in values }
 
+fun Set<Element>.hasAnyOf(vararg element: Element) = element.any { it in this }
+fun Set<Element>.hasAnyOf(element: Collection<Element>) = element.any { it in this }
+
 data class ElementRelations(
     val superEffective: Set<Element> = emptySet(),
     val notVeryEffective: Set<Element> = emptySet(),

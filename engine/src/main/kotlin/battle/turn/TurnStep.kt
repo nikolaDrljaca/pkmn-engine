@@ -5,6 +5,7 @@ import com.drbrosdev.battle.BattleOutcome
 import com.drbrosdev.battle.BattleState
 import com.drbrosdev.battle.Weather
 import com.drbrosdev.battle.allFainted
+import com.drbrosdev.battle.pokemon.MajorStatus
 import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.hasFainted
 import com.drbrosdev.battle.turn.HailEndOfTurnEffect
@@ -37,23 +38,50 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
 
 class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
     override fun apply(battle: Battle): Battle {
-        // clear all volatile status conditions which have expired
-        val cleared1 = with(battle.pokemon1) {
-            copy(
-                volatileStatus = volatileStatus
-                    .filter { battle.turnCount < it.expiresOnTurn }
-                    .toSet()
-            )
-        }
-        val cleared2 = with(battle.pokemon2) {
-            copy(
-                volatileStatus = volatileStatus
-                    .filter { battle.turnCount < it.expiresOnTurn }
-                    .toSet()
-            )
+        val cleared1 = computeVolatileAndSelfHealingStatus(
+            pokemon = battle.pokemon1,
+            turnCount = battle.turnCount
+        )
+        val cleared2 = computeVolatileAndSelfHealingStatus(
+            pokemon = battle.pokemon2,
+            turnCount = battle.turnCount
+        )
+        return battle.updateMons(cleared1, cleared2)
+    }
+
+    // Clear all volatile status conditions which have expired
+    // MajorStatus Asleep and Frozen need to be checked here
+    // since they are self-healing.
+    private fun computeVolatileAndSelfHealingStatus(
+        pokemon: Pokemon,
+        turnCount: Int
+    ): Pokemon = with(pokemon) {
+        val afterMajor = when (majorStatus) {
+            is MajorStatus.Asleep -> {
+                val newMajorStatus = when {
+                    turnCount > majorStatus.expiresOnTurn -> MajorStatus.Normal
+                    else -> majorStatus
+                }
+                copy(majorStatus = newMajorStatus)
+            }
+
+            is MajorStatus.Frozen -> {
+                val newStatus = when {
+                    MajorStatus.shouldThaw() -> MajorStatus.Normal
+                    else -> majorStatus
+                }
+
+                copy(majorStatus = newStatus)
+            }
+
+            else -> this
         }
 
-        return battle.updateMons(cleared1, cleared2)
+        afterMajor.copy(
+            volatileStatus = volatileStatus
+                .filter { turnCount < it.expiresOnTurn }
+                .toSet()
+        )
     }
 }
 
@@ -69,8 +97,9 @@ class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
                 add(HailEndOfTurnEffect)
             }
             // held item
-            add(LeftoversEndOfTurnEffect)
-            add(BlackSludgeEndOfTurnEffect)
+            // TODO Waiting for battle system
+//            add(LeftoversEndOfTurnEffect)
+//            add(BlackSludgeEndOfTurnEffect)
             // major status condition
             add(PoisonEndOfTurnEffect)
             add(BadPoisonEndOfTurnEffect)

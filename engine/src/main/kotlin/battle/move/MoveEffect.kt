@@ -10,6 +10,8 @@ import com.drbrosdev.battle.pokemon.VolatileStatus
 import com.drbrosdev.battle.pokemon.hasAnyOf
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatModification
+import com.drbrosdev.battle.pokemon.stats.StatModifier
+import com.drbrosdev.battle.pokemon.stats.increaseStageBy
 
 /*
 Pipeline Design pattern
@@ -94,6 +96,32 @@ fun ApplyStatModification(statModification: StatModification) = MoveEffect { bat
         add(statModification)
     })
     battle.updateMons(updatedTarget)
+}
+
+class ApplyAccuracyChange(private val stage: StatModifier.Stage) : MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle {
+        val target = battle[targetId]
+        val updatedEffectiveStats = target.effectiveStats.copy(
+            accuracy = target.effectiveStats.accuracy.increaseStageBy(stage)
+        )
+        val updatedTarget = target.copy(
+            effectiveStats = updatedEffectiveStats
+        )
+        return battle.updateMons(updatedTarget)
+    }
+}
+
+class ApplyEvasionChange(private val stage: StatModifier.Stage) : MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle {
+        val target = battle[targetId]
+        val updatedEffectiveStats = target.effectiveStats.copy(
+            accuracy = target.effectiveStats.evasion.increaseStageBy(stage)
+        )
+        val updatedTarget = target.copy(
+            effectiveStats = updatedEffectiveStats
+        )
+        return battle.updateMons(updatedTarget)
+    }
 }
 
 class ApplyStatusCondition(

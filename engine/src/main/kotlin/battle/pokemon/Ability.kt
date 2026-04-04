@@ -42,6 +42,12 @@ val Pressure = object : Ability {
 // Prevents Confusion
 val OwnTempo = object : Ability {}
 
+val Scrappy = object : Ability {
+    override val movePrecondition: List<MovePrecondition> = listOf(MovePrecondition {
+        MovePrecondition.Result.PASS
+    })
+}
+
 // TODO
 val SandVeil = object : Ability { /*Effectively does nothing*/ }
 val SandRush = object : Ability { /*Effectively does nothing*/ }

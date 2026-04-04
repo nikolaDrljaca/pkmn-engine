@@ -21,7 +21,6 @@ enum class StatKey {
     SPECIAL_ATTACK,
     SPECIAL_DEFENCE,
     SPEED,
-
 }
 
 enum class InBattleStatKey {

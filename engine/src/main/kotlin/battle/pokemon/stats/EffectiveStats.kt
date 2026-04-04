@@ -4,14 +4,13 @@ import com.drbrosdev.battle.pokemon.Level
 
 data class EffectiveStats(
     val stats: Map<StatKey, Stat> = StatKey.entries.associateWith { Stat() },
-    // evasion and accuracy always start at 100%
-    val inBattleStats: Map<InBattleStatKey, Stat> = InBattleStatKey.entries.associateWith { Stat(100) }
+    // evasion and accuracy are stage based and start at the initial stage
+    val accuracy: StatModifier.Stage = StatModifier.initialStage(),
+    val evasion: StatModifier.Stage = StatModifier.initialStage()
 ) {
     init {
         // all stats are present and have a value
         require(StatKey.entries.all { stats.containsKey(it) && stats[it] != null })
-        // all in-battle stats are present and have a value
-        require(InBattleStatKey.entries.all { inBattleStats.containsKey(it) && inBattleStats[it] != null })
     }
 
     operator fun get(key: StatKey) = getStat(key)
@@ -22,9 +21,6 @@ data class EffectiveStats(
     val specialAttack get() = getStat(StatKey.SPECIAL_ATTACK)
     val specialDefence get() = getStat(StatKey.SPECIAL_DEFENCE)
     val speed get() = getStat(StatKey.SPEED)
-
-    val accuracy get() = requireNotNull(inBattleStats[InBattleStatKey.ACCURACY])
-    val evasion get() = requireNotNull(inBattleStats[InBattleStatKey.EVASION])
 
     private fun getStat(statKey: StatKey): Stat = requireNotNull(stats[statKey]) {
         "Effective stat $statKey cannot be null!"
