@@ -9,7 +9,7 @@ import com.drbrosdev.battle.pokemon.stats.StatModifiers
 import java.util.*
 
 data class Move(
-    val id: String,
+    val id: MoveId,
     val name: String,
 
     val element: Element,
@@ -35,6 +35,17 @@ fun Move.isSpecialMove() = type == MoveType.SPECIAL
 enum class MoveStatus {
     NORMAL,
     DISABLED
+}
+
+@JvmInline
+value class MoveId(val id: String) {
+    init {
+        require(id.isNotBlank()) {
+            "Move cannot have a blank id!"
+        }
+    }
+
+    override fun toString(): String = id
 }
 
 @JvmInline
@@ -91,7 +102,7 @@ class MoveBuilder {
     }
 
     fun build() = Move(
-        id = id,
+        id = MoveId(id),
         name = name,
         element = element,
         type = type,

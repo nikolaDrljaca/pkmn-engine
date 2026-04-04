@@ -7,7 +7,7 @@ import kotlin.test.assertEquals
 class EffectiveStatsTest {
 
     val gliscor = buildPokemon {
-        id = "gliscor-1"
+        pokemonId("gliscor")
         name = "Gliscor"
         nature = Quirky
         ability = RunAway

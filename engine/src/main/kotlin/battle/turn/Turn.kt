@@ -1,7 +1,7 @@
 package com.drbrosdev.battle.turn
 
-import com.drbrosdev.battle.move.Move
 import com.drbrosdev.battle.move.MoveContext
+import com.drbrosdev.battle.move.MoveId
 import com.drbrosdev.battle.pokemon.Pokemon
 
 data class Turn(
@@ -11,7 +11,7 @@ data class Turn(
 
 sealed interface TurnAction {
 
-    data class MoveSelected(val move: Move): TurnAction
+    data class MoveSelected(val move: MoveId): TurnAction
 
     data class Switch(val incoming: Pokemon): TurnAction
 
@@ -27,7 +27,7 @@ fun ActionContext.toMoveContext(): MoveContext = when (action) {
     is TurnAction.MoveSelected -> MoveContext(
         userId = user.id,
         targetId = target.id,
-        moveId = action.move.id
+        moveId = action.move
     )
     else ->  error("Cannot create MoveContext when action is ${action.javaClass.simpleName}!")
 }

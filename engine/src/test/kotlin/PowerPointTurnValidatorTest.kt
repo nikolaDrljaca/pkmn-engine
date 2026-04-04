@@ -20,7 +20,7 @@ class PowerPointTurnValidatorTest {
         pp: Int = 10,
         status: MoveStatus = MoveStatus.NORMAL
     ) = Move(
-        id = "test $pp",
+        id = MoveId("test $pp"),
         name = "Test Move",
         element = Element.NORMAL,
         power = 100,
@@ -31,8 +31,11 @@ class PowerPointTurnValidatorTest {
         status = status
     )
 
+    private val active1 = PokemonId("id")
+    private val active2 = PokemonId("id")
+
     private fun makePokemon() = Pokemon(
-        id = "test-pokemon-${UUID.randomUUID()}",
+        id = active1,
         name = "test Pokemon",
         elements = Elements.of(Element.NORMAL),
         nature = Quirky,
@@ -48,10 +51,10 @@ class PowerPointTurnValidatorTest {
     )
 
     private val battle = Battle(
-        Team(mapOf("id-1" to buildPokemon { id = "id-1" })),
-        Team(mapOf("id-2" to buildPokemon { id = "id-2"})),
-        "id-1",
-        "id-2",
+        Team(mapOf(active1 to buildPokemon { id = active1 })),
+        Team(mapOf(active2 to buildPokemon { id = active2 })),
+        active1,
+        active2,
         BattleState.InProgress
     )
 

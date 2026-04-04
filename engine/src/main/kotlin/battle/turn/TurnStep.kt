@@ -15,14 +15,13 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
 
     override fun apply(battle: Battle): Battle = when (context.action) {
         is TurnAction.MoveSelected -> {
-            LOG.info { "${context.user.id} is attempting to execute ${context.action.move.name}" }
             val startOfTurnEffects = ApplyStartOfTurnEffects(context)
             val afterEffectBattle = startOfTurnEffects.apply(battle)
             // move execution
             with(context.toMoveContext()) {
-                with(context.action.move.effect) {
-                    apply(afterEffectBattle)
-                }
+                val move = battle[userId][context.action.move]
+                LOG.info { "${context.user.id} is attempting to execute ${move.name}" }
+                move.effect.run { apply(battle) }
             }
         }
 

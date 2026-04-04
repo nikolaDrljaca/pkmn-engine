@@ -4,6 +4,7 @@ import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.abilities
 import com.drbrosdev.battle.move.Move
+import com.drbrosdev.battle.move.MoveId
 import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.computeInBattleStats
 import java.util.logging.Logger
@@ -85,8 +86,8 @@ private object PursuitRule : TurnActionOrderRule {
 // Priority always resolves if moves differ
 private object MovePriorityRule : TurnActionOrderRule {
     override fun Turn.determine(battle: Battle): OrderingResult {
-        val move1 = move(selection1.second)
-        val move2 = move(selection2.second)
+        val move1 = battle[selection1.first.id][move(selection1.second)]
+        val move2 = battle[selection2.first.id][move(selection2.second)]
         return when {
             move1.priority.value > move2.priority.value ->
                 OrderingResult.Resolved(selection1, selection2)
@@ -99,7 +100,7 @@ private object MovePriorityRule : TurnActionOrderRule {
         }
     }
 
-    private fun move(action: TurnAction): Move = when (action) {
+    private fun move(action: TurnAction): MoveId = when (action) {
         is TurnAction.MoveSelected -> action.move
         is TurnAction.Switch -> error("Cannot resolve Switch action in MovePriorityRule!")
     }

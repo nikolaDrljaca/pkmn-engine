@@ -1,14 +1,15 @@
 package com.drbrosdev.battle
 
 import com.drbrosdev.battle.pokemon.Pokemon
+import com.drbrosdev.battle.pokemon.PokemonId
 
 // state container for the current battle state
 data class Battle(
     // cross-team pokemon ids (map keys) are unique! (eg pokemonId-1)
     val team1: Team,
     val team2: Team,
-    val active1: String,
-    val active2: String,
+    val active1: PokemonId,
+    val active2: PokemonId,
 
     val state: BattleState = BattleState.InProgress,
     val turnCount: Int = 1,
@@ -29,7 +30,7 @@ data class Battle(
         }
     }
 
-    operator fun get(pokemonId: String): Pokemon = when {
+    operator fun get(pokemonId: PokemonId): Pokemon = when {
         team1.hasMember(pokemonId) -> team1[pokemonId]
         team2.hasMember(pokemonId) -> team2[pokemonId]
         else -> error("Pokemon $pokemonId is not in the current Battle!")

@@ -1,24 +1,20 @@
 import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.BattleState
 import com.drbrosdev.battle.Team
-import com.drbrosdev.battle.move.*
+import com.drbrosdev.battle.move.Growl
+import com.drbrosdev.battle.move.Leer
+import com.drbrosdev.battle.move.Scratch
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
 import com.drbrosdev.battle.turn.resolveTurn
-import org.junit.jupiter.api.BeforeAll
 import org.junit.jupiter.api.Test
+import org.junit.jupiter.api.extension.ExtendWith
 
+@ExtendWith(LoggingExtension::class)
 class BattleTest {
 
-    companion object {
-        @JvmStatic
-        @BeforeAll
-        fun setup() { TestLoggingConfig }
-    }
-
     val chimchar = buildPokemon {
-        id = "chimchar-1"
+        pokemonId("chimchar")
         elements(Element.WATER)
         name = "Chimchar"
         nature = Quirky
@@ -40,7 +36,7 @@ class BattleTest {
     }
 
     val charmander = buildPokemon {
-        id = "charmander-2"
+        pokemonId("charmander")
         elements(Element.FIRE)
         name = "Charmander"
         nature = Quirky
@@ -72,7 +68,7 @@ class BattleTest {
     fun `first single turn test`() {
         val turn = Turn(
             selection1 = chimchar to TurnAction.MoveSelected(Scratch),
-            selection2 = charmander to TurnAction.MoveSelected(SandAttack)
+            selection2 = charmander to TurnAction.MoveSelected(Growl)
         )
         val updatedBattle = battle.resolveTurn(turn)
         val foo = updatedBattle.team1[chimchar.id].computeInBattleStats(updatedBattle)

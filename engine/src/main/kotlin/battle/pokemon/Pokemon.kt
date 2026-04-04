@@ -2,6 +2,7 @@ package com.drbrosdev.battle.pokemon
 
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.move.Move
+import com.drbrosdev.battle.move.MoveId
 import com.drbrosdev.battle.pokemon.stats.BaseStats
 import com.drbrosdev.battle.pokemon.stats.BaseStatsBuilder
 import com.drbrosdev.battle.pokemon.stats.EffectiveStats
@@ -13,12 +14,12 @@ import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModificationContext
 import com.drbrosdev.battle.pokemon.stats.resolve
+import java.util.UUID
 
 data class Pokemon(
     // from static config - used w/ lookup
     val name: String,
-    // from input - derived
-    val id: String,
+    val id: PokemonId,
 
     // from static config
     val elements: Elements,
@@ -53,13 +54,11 @@ data class Pokemon(
     val moves: List<Move> = emptyList()
 ) {
     init {
-        require(id.contains("-")) {
-            "Pokemon $id has no ownership!"
-        }
         require(moves.size <= 4) {
             "Pokemon $id cannot have more than 4 moves!"
         }
     }
+
     // consider all stat modification sources
     val allStatModifications = buildList {
         add(StatModification { nature.changes })
@@ -70,7 +69,7 @@ data class Pokemon(
         addAll(statModifications)
     }
 
-    operator fun get(moveId: String): Move = requireNotNull(moves.find { it.id == moveId }) {
+    operator fun get(moveId: MoveId): Move = requireNotNull(moves.find { it.id == moveId }) {
         "Pokemon $id does not have $moveId assigned!"
     }
 }
@@ -82,6 +81,25 @@ fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
         .map { it.compute(StatModificationContext(this, battle)) }
         .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
 
+@JvmInline
+value class PokemonId private constructor(val id: String) {
+    init {
+        require(id.contains("-")) {
+            "Pokemon $id has no ownership!"
+        }
+    }
+
+    override fun toString(): String = id
+
+    companion object {
+        operator fun invoke(value: CharSequence): PokemonId {
+            val discriminator = UUID.randomUUID()
+                .toString()
+                .take(8)
+            return PokemonId("$value-$discriminator")
+        }
+    }
+}
 
 @JvmInline
 value class Happiness(val value: Int = BASE_VALUE) {
@@ -110,7 +128,7 @@ value class Level(val value: Int = CURRENT) {
 @PokemonDsl
 class PokemonBuilder {
 
-    var id: String = "test-pokemon"
+    var id: PokemonId = PokemonId("test-pokemon")
     var name: String = "Test Pokemon"
     var level: Level = Level()
     var happiness: Happiness = Happiness()
@@ -153,6 +171,10 @@ class PokemonBuilder {
 
     fun addMoves(vararg moves: Move) {
         this.moves = moves.toMutableList()
+    }
+
+    fun pokemonId(value: String) {
+        this.id = PokemonId(value)
     }
 
     fun build() = Pokemon(

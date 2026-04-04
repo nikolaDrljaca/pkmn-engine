@@ -2,6 +2,7 @@ import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.BattleState
 import com.drbrosdev.battle.Team
 import com.drbrosdev.battle.move.buildMove
+import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.VolatileStatus
 import com.drbrosdev.battle.pokemon.buildPokemon
 import com.drbrosdev.battle.turn.TauntTurnValidator
@@ -18,11 +19,14 @@ class TauntTurnValidatorTest {
         selection2 = buildPokemon { } to a2
     )
 
+    private val active1 = PokemonId("id")
+    private val active2 = PokemonId("id")
+
     private val battle = Battle(
-        Team(mapOf("id-1" to buildPokemon { id = "id-1" })),
-        Team(mapOf("id-2" to buildPokemon { id = "id-2" })),
-        "id-1",
-        "id-2",
+        Team(mapOf(active1 to buildPokemon { id = active1 })),
+        Team(mapOf(active2 to buildPokemon { id = active2 })),
+        active1,
+        active2,
         BattleState.InProgress
     )
 
