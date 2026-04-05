@@ -69,13 +69,58 @@ val ReducePowerPoints = MoveEffect { battle ->
     battle.updateMons(updatedUser)
 }
 
+/**
+ * General formula damage application.
+ *
+ * For moves such as Psyshock which change how stas are resolved,
+ * implement anew with [MoveEffect].
+ */
 val ApplyFormulaDamage = MoveEffect { battle ->
-    // TODO
-    // type effectiveness
-    // STAB
+    val user = battle[userId]
+    val target = battle[targetId]
+    val move = battle[userId][moveId]
+
+    require(move.power != 0) {
+        "Cannot apply formula damage with 0 power move!"
+    }
+
+    val userStats = user.computeInBattleStats(battle)
+    val targetStats = target.computeInBattleStats(battle)
+
+    // resolve relevant stats
+    val (attackStat, defenceStat) = when (move.type) {
+        MoveType.PHYSICAL -> userStats.attack to targetStats.defence
+        MoveType.SPECIAL -> userStats.specialAttack to targetStats.specialDefence
+        MoveType.STATUS -> error("Attempting to apply formula damage for a STATUS move!")
+    }
+    // multipliers
+    val stabMultiplier = if (user.elements.hasAnyOf(move.element)) 150 else 100
+    val typeMultiplier = effectiveness(move.element, target.elements).multiplier
+    val burnMultiplier = when {
+        move.isPhysicalMove() && user.isBurned() -> 50
+        else -> 100
+    }
+    val randomMultiplier = RandomGen.nextInt(85, 101)
+
+    val baseDamage = (2 * user.level.value / 5 + 2) * move.power * attackStat.value / defenceStat.value / 50 + 2
+
+    val finalDamage = baseDamage
+        .times(stabMultiplier).div(100)
+        .times(typeMultiplier).div(100)
+        .times(burnMultiplier).div(100)
+        .times(randomMultiplier).div(100)
+        .coerceAtLeast(1)
+
+    val updatedTarget = target.copy(
+        inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
+    )
+
+    LOG.fine { "$userId dealt $finalDamage damage to $targetId with $moveId by formula" }
+
     // NOTE: To add berry support you'd need to hook in here
     // or after a MoveEffect executes since berries usually trigger before/after move execution
-    battle
+
+    battle.updateMons(updatedTarget)
 }
 
 val ApplyDirectDamage = MoveEffect { battle ->
@@ -84,16 +129,18 @@ val ApplyDirectDamage = MoveEffect { battle ->
     val targetMon = battle[targetId]
     val move = battle[userId][moveId]
     val targetHp = (targetMon.inBattleHp.value - move.power).coerceAtLeast(0)
+    LOG.fine { "$userId dealt ${move.power} damage to $targetId with $moveId by direct" }
     battle.updateMons(targetMon.copy(inBattleHp = Stat(targetHp)))
 }
 
 fun ApplyStatModification(statModification: StatModification) = MoveEffect { battle ->
-    val targetMon = battle[targetId]
-    val updatedTarget = targetMon.copy(statModifications = buildList {
-        addAll(targetMon.statModifications)
-        add(statModification)
-    })
-    battle.updateMons(updatedTarget)
+    with(battle[targetId]) {
+        val statMods = buildList {
+            addAll(statModifications)
+            add(statModification)
+        }
+        battle.updateMons(copy(statModifications = statMods))
+    }
 }
 
 class ApplyAccuracyChange(private val stage: StatModifier.Stage) : MoveEffect {

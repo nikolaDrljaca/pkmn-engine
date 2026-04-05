@@ -62,8 +62,8 @@ class PowerPointTurnValidatorTest {
     @Test
     fun `moves with remaining PP are valid`() {
         val turn = makeTurn(
-            TurnAction.MoveSelected(makeMove(10)),
-            TurnAction.MoveSelected(makeMove(10)),
+            TurnAction.MoveSelected(makeMove(10).id),
+            TurnAction.MoveSelected(makeMove(10).id),
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(TurnValidity.Valid, result)
@@ -72,8 +72,8 @@ class PowerPointTurnValidatorTest {
     @Test
     fun `switch actions are always valid`() {
         val turn = makeTurn(
-            TurnAction.Switch(makePokemon()),
-            TurnAction.Switch(makePokemon())
+            TurnAction.Switch(makePokemon().id),
+            TurnAction.Switch(makePokemon().id)
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(TurnValidity.Valid, result)
@@ -82,8 +82,8 @@ class PowerPointTurnValidatorTest {
     @Test
     fun `switch and move with PP are valid`() {
         val turn = makeTurn(
-            TurnAction.Switch(makePokemon()),
-            TurnAction.MoveSelected(makeMove(1))
+            TurnAction.Switch(makePokemon().id),
+            TurnAction.MoveSelected(makeMove(1).id)
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(TurnValidity.Valid, result)
@@ -93,8 +93,8 @@ class PowerPointTurnValidatorTest {
     @Test
     fun `both moves with no PP are invalid`() {
         val turn = makeTurn(
-            TurnAction.MoveSelected(makeMove(0)),
-            TurnAction.MoveSelected(makeMove(0)),
+            TurnAction.MoveSelected(makeMove(0).id),
+            TurnAction.MoveSelected(makeMove(0).id),
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(
@@ -106,8 +106,8 @@ class PowerPointTurnValidatorTest {
     @Test
     fun `moves with no PP are invalid`() {
         val turn = makeTurn(
-            TurnAction.MoveSelected(makeMove(10)),
-            TurnAction.MoveSelected(makeMove(0)),
+            TurnAction.MoveSelected(makeMove(10).id),
+            TurnAction.MoveSelected(makeMove(0).id),
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(
@@ -119,8 +119,8 @@ class PowerPointTurnValidatorTest {
     @Test
     fun `switch and move with no PP is invalid`() {
         val turn = makeTurn(
-            TurnAction.MoveSelected(makeMove(0)),
-            TurnAction.Switch(makePokemon()),
+            TurnAction.MoveSelected(makeMove(0).id),
+            TurnAction.Switch(makePokemon().id),
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(

@@ -75,6 +75,7 @@ data class Pokemon(
 }
 
 fun Pokemon.hasFainted() = inBattleHp.value == 0
+fun Pokemon.isBurned() = majorStatus is MajorStatus.Burned
 
 fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
     allStatModifications

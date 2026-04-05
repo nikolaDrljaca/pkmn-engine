@@ -3,6 +3,7 @@ package com.drbrosdev.battle.turn
 import com.drbrosdev.battle.move.MoveContext
 import com.drbrosdev.battle.move.MoveId
 import com.drbrosdev.battle.pokemon.Pokemon
+import com.drbrosdev.battle.pokemon.PokemonId
 
 data class Turn(
     val selection1: Pair<Pokemon, TurnAction>,
@@ -13,7 +14,7 @@ sealed interface TurnAction {
 
     data class MoveSelected(val move: MoveId): TurnAction
 
-    data class Switch(val incoming: Pokemon): TurnAction
+    data class Switch(val incoming: PokemonId): TurnAction
 
 }
 

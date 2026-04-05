@@ -26,8 +26,9 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
         }
 
         is TurnAction.Switch -> with(context) {
-            LOG.info { "${context.user.id} is attempting to switch with ${context.target.id}" }
-            battle.switch(user = user, target = target)
+            val incoming = battle[context.action.incoming]
+            LOG.info { "${context.user.id} is attempting to switch with ${incoming.id}" }
+            battle.switch(user = user, target = incoming)
         }
     }
 
@@ -149,7 +150,7 @@ fun Battle.resolveTurnSteps(steps: Sequence<TurnStep>): Battle {
     return steps.fold(this) { currentBattle, step ->
         when (currentBattle.state) {
             is BattleState.Concluded -> {
-                LOG.info { "Battle has concluded at turn $turnCount with outcode ${currentBattle.state.outcome}" }
+                LOG.info { "Battle has concluded at turn $turnCount with outcome ${currentBattle.state.outcome}" }
                 currentBattle
             }
             else -> step.apply(currentBattle)

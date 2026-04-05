@@ -33,8 +33,8 @@ class MoveDisabledTurnValidatorTest {
     @Test
     fun `disabled move is invalid`() {
         val turn = makeTurn(
-            TurnAction.MoveSelected(buildMove { status = MoveStatus.DISABLED }),
-            TurnAction.MoveSelected(buildMove { })
+            TurnAction.MoveSelected(buildMove { status = MoveStatus.DISABLED }.id),
+            TurnAction.MoveSelected(buildMove { }.id)
         )
         val result = with(MoveDisabledTurnValidator) { turn.validate(battle) }
         assertEquals(
@@ -46,8 +46,8 @@ class MoveDisabledTurnValidatorTest {
     @Test
     fun `two disabled moves are invalid`() {
         val turn = makeTurn(
-            TurnAction.MoveSelected(buildMove { status = MoveStatus.DISABLED }),
-            TurnAction.MoveSelected(buildMove { status = MoveStatus.DISABLED })
+            TurnAction.MoveSelected(buildMove { status = MoveStatus.DISABLED }.id),
+            TurnAction.MoveSelected(buildMove { status = MoveStatus.DISABLED }.id)
         )
         val result = with(MoveDisabledTurnValidator) { turn.validate(battle) }
         assertEquals(
@@ -59,8 +59,8 @@ class MoveDisabledTurnValidatorTest {
     @Test
     fun `disabled move and switch is invalid`() {
         val turn = makeTurn(
-            TurnAction.MoveSelected(buildMove { status = MoveStatus.DISABLED }),
-            TurnAction.Switch(buildPokemon { })
+            TurnAction.MoveSelected(buildMove { status = MoveStatus.DISABLED }.id),
+            TurnAction.Switch(buildPokemon { }.id)
         )
         val result = with(MoveDisabledTurnValidator) { turn.validate(battle) }
         assertEquals(
@@ -72,8 +72,8 @@ class MoveDisabledTurnValidatorTest {
     @Test
     fun `non-disabled move and switch is valid`() {
         val turn = makeTurn(
-            TurnAction.MoveSelected(buildMove { status = MoveStatus.NORMAL }),
-            TurnAction.Switch(buildPokemon { })
+            TurnAction.MoveSelected(buildMove { status = MoveStatus.NORMAL }.id),
+            TurnAction.Switch(buildPokemon { }.id)
         )
         val result = with(MoveDisabledTurnValidator) { turn.validate(battle) }
         assertEquals(
@@ -85,8 +85,8 @@ class MoveDisabledTurnValidatorTest {
     @Test
     fun `two switches are valid`() {
         val turn = makeTurn(
-            TurnAction.Switch(buildPokemon { }),
-            TurnAction.Switch(buildPokemon { })
+            TurnAction.Switch(buildPokemon { }.id),
+            TurnAction.Switch(buildPokemon { }.id)
         )
         val result = with(MoveDisabledTurnValidator) { turn.validate(battle) }
         assertEquals(
