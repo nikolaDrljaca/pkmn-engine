@@ -16,54 +16,29 @@ import kotlin.test.assertEquals
 
 
 class PowerPointTurnValidatorTest {
-    private fun makeMove(
-        pp: Int = 10,
-        status: MoveStatus = MoveStatus.NORMAL
-    ) = Move(
-        id = MoveId("test $pp"),
-        name = "Test Move",
-        element = Element.NORMAL,
-        power = 100,
-        powerPoints = pp,
-        accuracy = MoveAccuracy.AlwaysHit,
-        type = MoveType.SPECIAL,
-        effect = NoEffect,
-        status = status
-    )
-
     private val active1 = PokemonId("id")
     private val active2 = PokemonId("id")
-
-    private fun makePokemon() = Pokemon(
-        id = active1,
-        name = "test Pokemon",
-        elements = Elements.of(Element.NORMAL),
-        nature = Quirky,
-        ability = Overgrow,
-        effortValues = EffortValues(),
-        individualValues = IndividualValues(),
-        baseStats = BaseStats(),
-    )
-
-    private fun makeTurn(a1: TurnAction, a2: TurnAction) = Turn(
-        selection1 = makePokemon() to a1,
-        selection2 = makePokemon() to a2
-    )
-
-    private val battle = Battle(
-        Team(mapOf(active1 to buildPokemon { id = active1 })),
-        Team(mapOf(active2 to buildPokemon { id = active2 })),
-        active1,
-        active2,
-        BattleState.InProgress
-    )
 
     // === VALID cases
     @Test
     fun `moves with remaining PP are valid`() {
-        val turn = makeTurn(
-            TurnAction.MoveSelected(makeMove(10).id),
-            TurnAction.MoveSelected(makeMove(10).id),
+        val pokemon1 = buildPokemon {
+            id = active1
+            addMove(buildMove { powerPoints = 10 })
+        }
+        val pokemon2 = buildPokemon {
+            id = active2
+            addMove(buildMove { powerPoints = 10 })
+        }
+        val turn = Turn(
+            pokemon1 to TurnAction.MoveSelected(pokemon1.moves.first().id),
+            pokemon2 to TurnAction.MoveSelected(pokemon2.moves.first().id),
+        )
+        val battle = Battle(
+            Team(mapOf(active1 to pokemon1)),
+            Team(mapOf(active2 to pokemon2)),
+            active1,
+            active2,
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(TurnValidity.Valid, result)
@@ -71,9 +46,23 @@ class PowerPointTurnValidatorTest {
 
     @Test
     fun `switch actions are always valid`() {
-        val turn = makeTurn(
-            TurnAction.Switch(makePokemon().id),
-            TurnAction.Switch(makePokemon().id)
+        val pokemon1 = buildPokemon {
+            id = active1
+            addMove(buildMove { powerPoints = 10 })
+        }
+        val pokemon2 = buildPokemon {
+            id = active2
+            addMove(buildMove { powerPoints = 10 })
+        }
+        val turn = Turn(
+            pokemon1 to TurnAction.Switch(active1),
+            pokemon2 to TurnAction.Switch(active2)
+        )
+        val battle = Battle(
+            Team(mapOf(active1 to pokemon1)),
+            Team(mapOf(active2 to pokemon2)),
+            active1,
+            active2,
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(TurnValidity.Valid, result)
@@ -81,9 +70,23 @@ class PowerPointTurnValidatorTest {
 
     @Test
     fun `switch and move with PP are valid`() {
-        val turn = makeTurn(
-            TurnAction.Switch(makePokemon().id),
-            TurnAction.MoveSelected(makeMove(1).id)
+        val pokemon1 = buildPokemon {
+            id = active1
+            addMove(buildMove { powerPoints = 10 })
+        }
+        val pokemon2 = buildPokemon {
+            id = active2
+            addMove(buildMove { powerPoints = 10 })
+        }
+        val turn = Turn(
+            pokemon1 to TurnAction.MoveSelected(pokemon1.moves.first().id),
+            pokemon2 to TurnAction.Switch(pokemon2.id)
+        )
+        val battle = Battle(
+            Team(mapOf(active1 to pokemon1)),
+            Team(mapOf(active2 to pokemon2)),
+            active1,
+            active2,
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(TurnValidity.Valid, result)
@@ -92,9 +95,23 @@ class PowerPointTurnValidatorTest {
     // === INVALID cases
     @Test
     fun `both moves with no PP are invalid`() {
-        val turn = makeTurn(
-            TurnAction.MoveSelected(makeMove(0).id),
-            TurnAction.MoveSelected(makeMove(0).id),
+        val pokemon1 = buildPokemon {
+            id = active1
+            addMove(buildMove { powerPoints = 0 })
+        }
+        val pokemon2 = buildPokemon {
+            id = active2
+            addMove(buildMove { powerPoints = 0 })
+        }
+        val turn = Turn(
+            pokemon1 to TurnAction.MoveSelected(pokemon1.moves.first().id),
+            pokemon2 to TurnAction.MoveSelected(pokemon2.moves.first().id)
+        )
+        val battle = Battle(
+            Team(mapOf(active1 to pokemon1)),
+            Team(mapOf(active2 to pokemon2)),
+            active1,
+            active2,
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(
@@ -105,9 +122,23 @@ class PowerPointTurnValidatorTest {
 
     @Test
     fun `moves with no PP are invalid`() {
-        val turn = makeTurn(
-            TurnAction.MoveSelected(makeMove(10).id),
-            TurnAction.MoveSelected(makeMove(0).id),
+        val pokemon1 = buildPokemon {
+            id = active1
+            addMove(buildMove { powerPoints = 10 })
+        }
+        val pokemon2 = buildPokemon {
+            id = active2
+            addMove(buildMove { powerPoints = 0 })
+        }
+        val turn = Turn(
+            pokemon1 to TurnAction.MoveSelected(pokemon1.moves.first().id),
+            pokemon2 to TurnAction.MoveSelected(pokemon2.moves.first().id)
+        )
+        val battle = Battle(
+            Team(mapOf(active1 to pokemon1)),
+            Team(mapOf(active2 to pokemon2)),
+            active1,
+            active2,
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(
@@ -118,9 +149,23 @@ class PowerPointTurnValidatorTest {
 
     @Test
     fun `switch and move with no PP is invalid`() {
-        val turn = makeTurn(
-            TurnAction.MoveSelected(makeMove(0).id),
-            TurnAction.Switch(makePokemon().id),
+        val pokemon1 = buildPokemon {
+            id = active1
+            addMove(buildMove { powerPoints = 10 })
+        }
+        val pokemon2 = buildPokemon {
+            id = active2
+            addMove(buildMove { powerPoints = 0 })
+        }
+        val turn = Turn(
+            pokemon1 to TurnAction.Switch(pokemon1.id),
+            pokemon2 to TurnAction.MoveSelected(pokemon2.moves.first().id)
+        )
+        val battle = Battle(
+            Team(mapOf(active1 to pokemon1)),
+            Team(mapOf(active2 to pokemon2)),
+            active1,
+            active2,
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(

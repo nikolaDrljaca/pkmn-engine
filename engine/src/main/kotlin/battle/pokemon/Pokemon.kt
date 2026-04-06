@@ -135,9 +135,10 @@ class PokemonBuilder {
     var happiness: Happiness = Happiness()
     var nature: Nature = Quirky
     var ability: Ability = RunAway
-    var majorStatus: MajorStatus = MajorStatus.Normal
-    var volatileStatus: Set<VolatileStatus> = emptySet()
     var statModifications: List<StatModification> = emptyList()
+
+    var majorStatus: MajorStatus = MajorStatus.Normal
+    var volatileStatus: MutableSet<VolatileStatus> = mutableSetOf()
 
     private var elements: Elements = Elements(setOf(Element.NORMAL))
     private var baseStats: BaseStats = BaseStats()
@@ -176,6 +177,10 @@ class PokemonBuilder {
 
     fun pokemonId(value: String) {
         this.id = PokemonId(value)
+    }
+
+    fun addStatus(volatileStatus: VolatileStatus) {
+        this.volatileStatus.add(volatileStatus)
     }
 
     fun build() = Pokemon(
