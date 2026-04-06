@@ -2,6 +2,7 @@ package com.drbrosdev.battle.move
 
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
+import com.drbrosdev.battle.Weather
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatModification
@@ -80,10 +81,13 @@ val ApplyFormulaDamage = MoveEffect { battle ->
     val target = battle[targetId]
     val move = battle[userId][moveId]
 
-    require(move.power != 0) {
-        "Cannot apply formula damage with 0 power move!"
-    }
+    require(move.power != 0) { "Cannot apply formula damage with 0 power move!" }
 
+    // check to land crit
+    if (shouldMoveCrit(user, move)) {
+        return@MoveEffect with(ApplyCriticalHitDamage) { apply(battle) }
+    }
+    // apply regular damage calc
     val userStats = user.computeInBattleStats(battle)
     val targetStats = target.computeInBattleStats(battle)
 
@@ -100,6 +104,19 @@ val ApplyFormulaDamage = MoveEffect { battle ->
         move.isPhysicalMove() && user.isBurned() -> 50
         else -> 100
     }
+    val weatherMultiplier = when (battle.weather) {
+        Weather.HARSH_SUN -> when (move.element) {
+            Element.WATER -> 50
+            Element.FIRE -> 150
+            else -> 100
+        }
+        Weather.RAIN -> when (move.element) {
+            Element.WATER -> 150
+            Element.FIRE -> 50
+            else -> 100
+        }
+        else -> 100
+    }
     val randomMultiplier = RandomGen.nextInt(85, 101)
 
     val baseDamage = (2 * user.level.value / 5 + 2) * move.power * attackStat.value / defenceStat.value / 50 + 2
@@ -107,6 +124,7 @@ val ApplyFormulaDamage = MoveEffect { battle ->
     val finalDamage = baseDamage
         .times(stabMultiplier).div(100)
         .times(typeMultiplier).div(100)
+        .times(weatherMultiplier).div(100)
         .times(burnMultiplier).div(100)
         .times(randomMultiplier).div(100)
         .coerceAtLeast(1)
@@ -131,6 +149,81 @@ val ApplyDirectDamage = MoveEffect { battle ->
     val targetHp = (targetMon.inBattleHp.value - move.power).coerceAtLeast(0)
     LOG.fine { "$userId dealt ${move.power} damage to $targetId with $moveId by direct" }
     battle.updateMons(targetMon.copy(inBattleHp = Stat(targetHp)))
+}
+
+val ApplyCriticalHitDamage =  MoveEffect { battle ->
+    // same as ApplyFormulaDamage but:
+    // - ignores negative attack stages on user
+    // - ignores positive defence stages on target
+    // - ignores burn penalty
+    // - applies 200 critical modifier
+    val user = battle[userId]
+    val target = battle[targetId]
+    val move = battle[userId][moveId]
+
+    val userStats = user.computeInBattleStatsForCrit(battle)
+    val targetStats = target.computeInBattleStatsForCrit(battle)
+
+    // resolve relevant stats
+    val (attackStat, defenceStat) = when (move.type) {
+        MoveType.PHYSICAL -> userStats.attack to targetStats.defence
+        MoveType.SPECIAL -> userStats.specialAttack to targetStats.specialDefence
+        MoveType.STATUS -> error("Attempting to apply crit damage for a STATUS move!")
+    }
+    // multipliers
+    val stabMultiplier = if (user.elements.hasAnyOf(move.element)) 150 else 100
+    val typeMultiplier = effectiveness(move.element, target.elements).multiplier
+    // ignores burn multiplier
+    val weatherMultiplier = when (battle.weather) {
+        Weather.HARSH_SUN -> when (move.element) {
+            Element.WATER -> 50
+            Element.FIRE -> 150
+            else -> 100
+        }
+        Weather.RAIN -> when (move.element) {
+            Element.WATER -> 150
+            Element.FIRE -> 50
+            else -> 100
+        }
+        else -> 100
+    }
+    val randomMultiplier = RandomGen.nextInt(85, 101)
+
+    val baseDamage = (2 * user.level.value / 5 + 2) * move.power * attackStat.value / defenceStat.value / 50 + 2
+
+    val finalDamage = baseDamage
+        .times(stabMultiplier).div(100)
+        .times(typeMultiplier).div(100)
+        .times(weatherMultiplier).div(100)
+        .times(2) // Crit multiplier
+        .times(randomMultiplier).div(100)
+        .coerceAtLeast(1)
+
+    val updatedTarget = target.copy(
+        inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
+    )
+
+    LOG.fine { "$userId dealt $finalDamage damage to $targetId with $moveId by crit formula" }
+
+    // NOTE: To add berry support you'd need to hook in here
+    // or after a MoveEffect executes since berries usually trigger before/after move execution
+
+    battle.updateMons(updatedTarget)
+    battle
+}
+
+fun shouldMoveCrit(user: Pokemon, move: Move): Boolean {
+    val stage = (user.effectiveStats.criticalHit.value + move.critStage.value)
+        .coerceIn(0, 4)
+    val threshold = when (stage) {
+        0 -> 16
+        1 -> 8
+        2 -> 4
+        3 -> 3
+        4 -> 2
+        else -> 16
+    }
+    return RandomGen.nextInt(1, threshold + 1) == 1
 }
 
 fun ApplyStatModification(statModification: StatModification) = MoveEffect { battle ->

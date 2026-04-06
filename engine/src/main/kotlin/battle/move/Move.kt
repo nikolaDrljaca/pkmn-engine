@@ -19,13 +19,14 @@ data class Move(
     val type: MoveType, // physical, status, special
 
     val priority: MovePriority = MovePriority(),
+    val critStage: MoveCritStage = MoveCritStage(),
+
+    // not used in MoveEffect, but as part of turn validation
+    val status: MoveStatus = MoveStatus.NORMAL,
 
     // this needs to become an Impl of MoveEffect!
     // describes what the move does
     val effect: MoveEffect,
-
-    // not used in MoveEffect, but as part of turn validation
-    val status: MoveStatus = MoveStatus.NORMAL
 )
 
 fun Move.isStatusMove() = type == MoveType.STATUS
@@ -46,6 +47,20 @@ value class MoveId(val id: String) {
     }
 
     override fun toString(): String = id
+}
+
+@JvmInline
+value class MoveCritStage(val value: Int = DEFAULT) {
+    init {
+        require(value in RANGE) {
+            "Move Crit stage must be within $RANGE"
+        }
+    }
+
+    companion object {
+        const val DEFAULT = 0
+        val RANGE = 0..4
+    }
 }
 
 @JvmInline
@@ -76,6 +91,7 @@ class MoveBuilder {
     var effect: MoveEffect = NoEffect
     var status: MoveStatus = MoveStatus.NORMAL
     var priority: Int = 0
+    var critStage: Int = 0
 
     fun percentAccuracy(value: Int) {
         this.accuracy = MoveAccuracy.Percent(Percentage(value))
@@ -111,7 +127,8 @@ class MoveBuilder {
         accuracy = accuracy,
         effect = effect,
         status = status,
-        priority = MovePriority(priority)
+        priority = MovePriority(priority),
+        critStage = MoveCritStage(critStage)
     )
 }
 
@@ -193,7 +210,7 @@ val Pursuit = buildMove {
 }
 
 val SonicBoom = buildMove {
-    id = "sonicBoom"
+    id = "sonic-boom"
     name = "Sonic Boom"
     element = Element.NORMAL
     power = 20
@@ -204,7 +221,7 @@ val SonicBoom = buildMove {
 }
 
 val SandAttack = buildMove {
-    id = "sandAttack"
+    id = "sand-attack"
     name = "Sand Attack"
     element = Element.GROUND
     power = 0

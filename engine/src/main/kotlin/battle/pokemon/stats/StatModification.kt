@@ -61,6 +61,10 @@ fun Stat.modify(modifier: StatModifier): Stat = when (modifier) {
 // modifiers applied by nature and held items
 data class StatModifiers(val modifiers: Map<StatKey, StatModifier> = emptyMap())
 
+fun StatModifiers.onlyPercent() = StatModifiers(
+    modifiers = modifiers.filter { (statKey, modifier) -> modifier is StatModifier.Percent }
+)
+
 data class StatModificationContext(
     // pokemon whose stats are being modified
     val pokemon: Pokemon,

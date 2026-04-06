@@ -6,7 +6,8 @@ data class EffectiveStats(
     val stats: Map<StatKey, Stat> = StatKey.entries.associateWith { Stat() },
     // evasion and accuracy are stage based and start at the initial stage
     val accuracy: StatModifier.Stage = StatModifier.initialStage(),
-    val evasion: StatModifier.Stage = StatModifier.initialStage()
+    val evasion: StatModifier.Stage = StatModifier.initialStage(),
+    val criticalHit: StatModifier.Stage = StatModifier.initialStage()
 ) {
     init {
         // all stats are present and have a value

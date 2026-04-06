@@ -13,6 +13,7 @@ import com.drbrosdev.battle.pokemon.stats.IndividualValuesBuilder
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModificationContext
+import com.drbrosdev.battle.pokemon.stats.onlyPercent
 import com.drbrosdev.battle.pokemon.stats.resolve
 import java.util.UUID
 
@@ -80,6 +81,12 @@ fun Pokemon.isBurned() = majorStatus is MajorStatus.Burned
 fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
     allStatModifications
         .map { it.compute(StatModificationContext(this, battle)) }
+        .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
+
+fun Pokemon.computeInBattleStatsForCrit(battle: Battle): EffectiveStats =
+    allStatModifications
+        .map { it.compute(StatModificationContext(this, battle)) }
+        .map { it.onlyPercent() }
         .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
 
 @JvmInline
