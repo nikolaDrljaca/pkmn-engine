@@ -203,7 +203,6 @@ class PokemonBuilder {
         majorStatus = majorStatus,
         volatileStatus = volatileStatus,
         moves = moves.toList(),
-        // TODO
         effortValues = effortValues,
         individualValues = individualValues
     ).let {

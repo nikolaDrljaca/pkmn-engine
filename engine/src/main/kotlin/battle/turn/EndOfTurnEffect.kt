@@ -58,7 +58,7 @@ val BadPoisonEndOfTurnEffect = EndOfTurnEffect { pokemon ->
 }
 
 /*
-TODO
+TODO - waiting for item support
 Later on these belong in the Item subsystem
 NOTE: It should probably be modeled similar to abilities
  */
