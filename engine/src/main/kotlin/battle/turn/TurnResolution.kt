@@ -29,8 +29,10 @@ fun Battle.resolveTurn(turn: Turn): Battle {
     // This way battles can end in a draw, which is legal
     val steps = sequenceOf(
         // first pokemon action
+        ApplyStartOfTurnEffects(first),
         ExecuteActionStep(first),
         // second pokemon action
+        ApplyStartOfTurnEffects(second),
         ExecuteActionStep(second),
         // end of turn effects in order
         ApplyEndOfTurnEffects(first),

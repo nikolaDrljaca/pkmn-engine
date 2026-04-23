@@ -14,15 +14,11 @@ fun interface TurnStep {
 class ExecuteActionStep(private val context: ActionContext) : TurnStep {
 
     override fun apply(battle: Battle): Battle = when (context.action) {
-        is TurnAction.MoveSelected -> {
-            val startOfTurnEffects = ApplyStartOfTurnEffects(context)
-            val afterEffectBattle = startOfTurnEffects.apply(battle)
-            // move execution
-            with(context.toMoveContext()) {
-                val move = afterEffectBattle[userId][moveId]
-                LOG.info { "$userId is attempting to execute ${move.name}" }
-                move.effect.run { apply(afterEffectBattle) }
-            }
+        // move execution
+        is TurnAction.MoveSelected -> with(context.toMoveContext()) {
+            val move = battle[userId][moveId]
+            LOG.info { "$userId is attempting to execute ${move.name}" }
+            move.effect.run { apply(battle) }
         }
 
         is TurnAction.Switch -> {
@@ -35,16 +31,21 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
 }
 
 class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
-    override fun apply(battle: Battle): Battle {
-        val cleared1 = computeVolatileAndSelfHealingStatus(
-            pokemon = battle.pokemon1,
-            turnCount = battle.turnCount
-        )
-        val cleared2 = computeVolatileAndSelfHealingStatus(
-            pokemon = battle.pokemon2,
-            turnCount = battle.turnCount
-        )
-        return battle.updateMons(cleared1, cleared2)
+    override fun apply(battle: Battle): Battle = when (context.action) {
+        // start of turn effects do not apply when switching
+        is TurnAction.Switch -> battle
+
+        is TurnAction.MoveSelected -> {
+            val cleared1 = computeVolatileAndSelfHealingStatus(
+                pokemon = battle.pokemon1,
+                turnCount = battle.turnCount
+            )
+            val cleared2 = computeVolatileAndSelfHealingStatus(
+                pokemon = battle.pokemon2,
+                turnCount = battle.turnCount
+            )
+            battle.updateMons(cleared1, cleared2)
+        }
     }
 
     // Clear all volatile status conditions which have expired
@@ -84,7 +85,6 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
 }
 
 class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
-
     override fun apply(battle: Battle): Battle {
         val applicableEffects = buildList {
             // weather
@@ -103,12 +103,12 @@ class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
             add(BadPoisonEndOfTurnEffect)
             add(BurnEndOfTurnEffect)
         }
+
         return battle.updateMons(
             applicableEffects.fold(battle.pokemon1) { pokemon, effect -> effect.apply(pokemon) },
             applicableEffects.fold(battle.pokemon2) { pokemon, effect -> effect.apply(pokemon) }
         )
     }
-
 }
 
 val CheckConclusion = TurnStep { battle ->
@@ -153,6 +153,7 @@ fun Battle.resolveTurnSteps(steps: Sequence<TurnStep>): Battle {
                 LOG.info { "Battle has concluded at turn $turnCount with outcome ${currentBattle.state.outcome}" }
                 currentBattle
             }
+
             else -> step.apply(currentBattle)
         }
     }
