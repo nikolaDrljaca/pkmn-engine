@@ -20,6 +20,12 @@ data class Battle(
     val pokemon1 = team1[active1]
     val pokemon2 = team2[active2]
 
+    operator fun get(pokemonId: PokemonId): Pokemon = when {
+        team1.hasMember(pokemonId) -> team1[pokemonId]
+        team2.hasMember(pokemonId) -> team2[pokemonId]
+        else -> error("Pokemon $pokemonId is not in the current Battle!")
+    }
+
     fun updateMons(vararg pokemon: Pokemon): Battle {
         return pokemon.fold(this) { battle, mon ->
             when {
@@ -28,12 +34,6 @@ data class Battle(
                 else -> error("Pokemon ${mon.id} is not in the current Battle!")
             }
         }
-    }
-
-    operator fun get(pokemonId: PokemonId): Pokemon = when {
-        team1.hasMember(pokemonId) -> team1[pokemonId]
-        team2.hasMember(pokemonId) -> team2[pokemonId]
-        else -> error("Pokemon $pokemonId is not in the current Battle!")
     }
 
     fun switch(user: Pokemon, target: Pokemon): Battle {
@@ -45,7 +45,6 @@ data class Battle(
             else -> error("Pokemon ${user.id} not found in battle!")
         }
     }
-
 }
 
 fun Battle.abilities() = sequenceOf(pokemon1.ability, pokemon2.ability)

@@ -19,16 +19,16 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
             val afterEffectBattle = startOfTurnEffects.apply(battle)
             // move execution
             with(context.toMoveContext()) {
-                val move = battle[userId][context.action.move]
-                LOG.info { "${context.user.id} is attempting to execute ${move.name}" }
-                move.effect.run { apply(battle) }
+                val move = afterEffectBattle[userId][moveId]
+                LOG.info { "$userId is attempting to execute ${move.name}" }
+                move.effect.run { apply(afterEffectBattle) }
             }
         }
 
-        is TurnAction.Switch -> with(context) {
+        is TurnAction.Switch -> {
             val incoming = battle[context.action.incoming]
             LOG.info { "${context.user.id} is attempting to switch with ${incoming.id}" }
-            battle.switch(user = user, target = incoming)
+            battle.switch(user = context.user, target = incoming)
         }
     }
 

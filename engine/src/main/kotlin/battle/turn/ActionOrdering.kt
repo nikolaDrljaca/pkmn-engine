@@ -40,7 +40,6 @@ sealed interface OrderingResult {
                 action = selection2.second
             ),
         )
-
     }
 
     data object Deferred : OrderingResult
