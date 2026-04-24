@@ -95,7 +95,7 @@ class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
                 add(HailEndOfTurnEffect)
             }
             // held item
-            // TODO Waiting for item support
+            // TODO: Waiting for item support
 //            add(LeftoversEndOfTurnEffect)
 //            add(BlackSludgeEndOfTurnEffect)
             // major status condition

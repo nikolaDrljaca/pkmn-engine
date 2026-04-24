@@ -109,7 +109,7 @@ private object MovePriorityRule : TurnActionOrderRule {
 private object QuickClawRule : TurnActionOrderRule {
     // check held items on each pokemon, random chance
     // resolves or defers
-    // TODO impl - waiting for Item support
+    // TODO: impl - waiting for Item support
     override fun Turn.determine(battle: Battle): OrderingResult {
         return OrderingResult.Deferred
     }
@@ -119,7 +119,7 @@ private object QuickClawRule : TurnActionOrderRule {
 private object TrickRoomRule : TurnActionOrderRule {
     // check battle conditions for trick room
     // resolves by reversing speed order, or defers
-    // TODO impl - waiting for TrickRoom / Environment support
+    // TODO: impl - waiting for TrickRoom / Environment support
     override fun Turn.determine(battle: Battle): OrderingResult {
         return OrderingResult.Deferred
     }

@@ -15,7 +15,7 @@ fun interface TurnValidator {
 }
 
 val SameSwitchTarget = TurnValidator { battle ->
-    // TODO Impl
+    // TODO: Impl
     // if switching, pokemon cannot switch into itself
     TurnValidity.Valid
 }

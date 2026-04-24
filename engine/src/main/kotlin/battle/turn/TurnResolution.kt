@@ -9,7 +9,7 @@ private val LOG = Logger.getLogger("com.drbrosdev.battle.turn.TurnResolution")
 fun Battle.resolveTurn(turn: Turn): Battle {
     // 1 validate turn
     /*
-    TODO
+    TODO:
     NOTE This piece might need to be separate from turn Resolution
     as it returns back for user input immediately (in the games)
     This ofc depends on how we want to handle user input and turn construction.

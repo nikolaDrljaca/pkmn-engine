@@ -113,11 +113,13 @@ object ApplyFormulaDamage : MoveEffect {
                 Element.FIRE -> 150
                 else -> 100
             }
+
             Weather.RAIN -> when (move.element) {
                 Element.WATER -> 150
                 Element.FIRE -> 50
                 else -> 100
             }
+
             else -> 100
         }
         val randomMultiplier = RandomGen.nextInt(85, 101)
@@ -171,7 +173,7 @@ val ApplyDirectDamage = MoveEffect { battle ->
     battle.updateMons(targetMon.copy(inBattleHp = Stat(targetHp)))
 }
 
-val ApplyCriticalHitDamage =  MoveEffect { battle ->
+val ApplyCriticalHitDamage = MoveEffect { battle ->
     // same as ApplyFormulaDamage but:
     // - ignores negative attack stages on user
     // - ignores positive defence stages on target
@@ -200,11 +202,13 @@ val ApplyCriticalHitDamage =  MoveEffect { battle ->
             Element.FIRE -> 150
             else -> 100
         }
+
         Weather.RAIN -> when (move.element) {
             Element.WATER -> 150
             Element.FIRE -> 50
             else -> 100
         }
+
         else -> 100
     }
     val randomMultiplier = RandomGen.nextInt(85, 101)
@@ -244,7 +248,7 @@ fun ApplyStatModification(statModification: StatModification) = MoveEffect { bat
 }
 
 /**
-* Damage effect from the [VolatileStatus.Confusion] status.
+ * Damage effect from the [VolatileStatus.Confusion] status.
  *
  * Following apply:
  * - 40 power
@@ -254,8 +258,8 @@ fun ApplyStatModification(statModification: StatModification) = MoveEffect { bat
  * - Typeless - no weather modifiers
  * - Unaffected by items like "Life Orb", "Choice X" etc.
  * - Physical move, but ignores [MajorStatus.Burned]
-*/
-object ApplyConfusionStatusDamage: MoveEffect {
+ */
+object ApplyConfusionStatusDamage : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
         // damages is applied to itself
         val user = battle[userId]
@@ -285,7 +289,7 @@ object ApplyConfusionStatusDamage: MoveEffect {
             inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
         )
 
-        LOG.fine { "$userId hurt itself in confusion for $finalDamage"}
+        LOG.fine { "$userId hurt itself in confusion for $finalDamage" }
 
         // NOTE: To add berry support you'd need to hook in here
         // or after a MoveEffect executes since berries usually trigger before/after move execution
@@ -338,6 +342,7 @@ class ApplyStatusCondition(
             is MajorStatus.Paralyzed -> targetMon.elements.hasAnyOf(Element.ELECTRIC)
             is MajorStatus.Poisoned, is MajorStatus.BadlyPoisoned ->
                 targetMon.elements.hasAnyOf(Element.POISON, Element.STEEL)
+
             else -> false
         }
         if (immune) return battle
@@ -346,7 +351,7 @@ class ApplyStatusCondition(
         if (RandomGen.nextInt(1, 101) > percentage.value) return battle
         // apply major status condition
         val updatedTarget = targetMon.copy(majorStatus = condition)
-        // TODO We need to account for abilities which prevent status conditions
+        // TODO: We need to account for abilities which prevent status conditions
         // EG: Water Veil prevents burn effects etc, Insomnia prevents sleep etc
         return battle.updateMons(updatedTarget)
     }
@@ -361,7 +366,7 @@ class ApplyVolatileStatusCondition(
         val volatileStatus = volatileStatusFactory(battle.turnCount)
         // OwnTempo support
         if (targetMon.ability == OwnTempo && volatileStatus is VolatileStatus.Confusion) return battle
-        // TODO Add other abilities which prevent volatile status changes
+        // TODO: Add other abilities which prevent volatile status changes
         // a mon cannot receive a volatile status it already has
         if (targetMon.volatileStatus.any { it::class == volatileStatus::class }) return battle
         // probability check

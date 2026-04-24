@@ -37,8 +37,9 @@ val Overgrow = object : Ability {
 
 val RunAway = object : Ability { /*Effectively does nothing*/ }
 val Pressure = object : Ability {
- /* Effectively does nothing */
+    /* Effectively does nothing */
 }
+
 // Prevents Confusion
 val OwnTempo = object : Ability {}
 
@@ -48,7 +49,6 @@ val Scrappy = object : Ability {
     })
 }
 
-// TODO
 val SandVeil = object : Ability { /*Effectively does nothing*/ }
 val SandRush = object : Ability { /*Effectively does nothing*/ }
 val SandForce = object : Ability { /*Effectively does nothing*/ }

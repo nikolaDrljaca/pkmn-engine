@@ -12,7 +12,7 @@ val BurnEndOfTurnEffect = EndOfTurnEffect { pokemon ->
         is MajorStatus.Burned -> {
             val damage = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value - damage)
-                    // cannot go below 0
+                // cannot go below 0
                 .coerceAtLeast(0)
             pokemon.copy(
                 inBattleHp = Stat(newHp)
@@ -28,7 +28,7 @@ val PoisonEndOfTurnEffect = EndOfTurnEffect { pokemon ->
         is MajorStatus.Poisoned -> {
             val damage = (pokemon.effectiveStats.hp.value / 8).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value - damage)
-                    // cannot go below 0
+                // cannot go below 0
                 .coerceAtLeast(0)
             pokemon.copy(
                 inBattleHp = Stat(newHp)
@@ -45,7 +45,7 @@ val BadPoisonEndOfTurnEffect = EndOfTurnEffect { pokemon ->
             val counter = (pokemon.majorStatus.counter + 1).coerceAtMost(15)
             val toxicDamage = (pokemon.effectiveStats.hp.value * counter / 16).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value - toxicDamage)
-                    // cannot go below 0
+                // cannot go below 0
                 .coerceAtLeast(0)
             pokemon.copy(
                 inBattleHp = Stat(newHp),
@@ -58,7 +58,7 @@ val BadPoisonEndOfTurnEffect = EndOfTurnEffect { pokemon ->
 }
 
 /*
-TODO - waiting for item support
+TODO: - waiting for item support
 Later on these belong in the Item subsystem
 NOTE: It should probably be modeled similar to abilities
  */
@@ -66,7 +66,7 @@ val LeftoversEndOfTurnEffect = EndOfTurnEffect { pokemon ->
     // healing is calculated of maxHp
     val healing = (pokemon.effectiveStats.hp.value / 8).coerceAtLeast(1)
     val newHp = (pokemon.inBattleHp.value + healing)
-            // cannot over-heal
+        // cannot over-heal
         .coerceAtMost(pokemon.effectiveStats.hp.value)
     pokemon.copy(
         inBattleHp = Stat(newHp)
@@ -78,7 +78,7 @@ val BlackSludgeEndOfTurnEffect = EndOfTurnEffect { pokemon ->
         pokemon.elements.values.contains(Element.POISON) -> {
             val healing = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value + healing)
-                    // cannot over-heal
+                // cannot over-heal
                 .coerceAtMost(pokemon.effectiveStats.hp.value)
             pokemon.copy(
                 inBattleHp = Stat(newHp)
@@ -88,7 +88,7 @@ val BlackSludgeEndOfTurnEffect = EndOfTurnEffect { pokemon ->
         else -> {
             val damage = (pokemon.effectiveStats.hp.value / 8).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value - damage)
-                    // hp cannot go below 0
+                // hp cannot go below 0
                 .coerceAtLeast(0)
             pokemon.copy(
                 inBattleHp = Stat(newHp)
@@ -119,7 +119,7 @@ val SandstormEndOfTurnEffect = EndOfTurnEffect { pokemon ->
         else -> {
             val damage = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value - damage)
-                    // cannot go below 0
+                // cannot go below 0
                 .coerceAtLeast(0)
             pokemon.copy(
                 inBattleHp = Stat(newHp)
@@ -144,7 +144,7 @@ val HailEndOfTurnEffect = EndOfTurnEffect { pokemon ->
         else -> {
             val damage = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value - damage)
-                    // cannot go below 0
+                // cannot go below 0
                 .coerceAtLeast(0)
             pokemon.copy(
                 inBattleHp = Stat(newHp)
