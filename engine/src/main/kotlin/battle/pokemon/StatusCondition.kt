@@ -38,6 +38,11 @@ sealed interface MajorStatus {
     }
 }
 
+fun MajorStatus.statModifications(): StatModification = when (this) {
+    is MajorStatus.Paralyzed -> this.modification
+    else -> StatModification { StatModifiers() }
+}
+
 /*
 How will this integrate into the system?
 It needs to be a part of the Pokemon state object.

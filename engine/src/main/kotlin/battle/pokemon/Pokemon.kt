@@ -62,11 +62,9 @@ data class Pokemon(
 
     // consider all stat modification sources
     val allStatModifications = buildList {
-        add(StatModification { nature.changes })
+        add(nature.statModification)
         addAll(ability.statModifications)
-        if (majorStatus is MajorStatus.Paralyzed) {
-            add(majorStatus.modification)
-        }
+        add(majorStatus.statModifications())
         addAll(statModifications)
     }
 
@@ -86,6 +84,7 @@ fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
 fun Pokemon.computeInBattleStatsForCrit(battle: Battle): EffectiveStats =
     allStatModifications
         .map { it.compute(StatModificationContext(this, battle)) }
+        // stage based changes are ignored when computing stats for crit damage application
         .map { it.onlyPercent() }
         .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
 
@@ -103,7 +102,7 @@ value class PokemonId private constructor(val id: String) {
         operator fun invoke(value: CharSequence): PokemonId {
             val discriminator = UUID.randomUUID()
                 .toString()
-                .take(8)
+                .take(4)
             return PokemonId("$value-$discriminator")
         }
     }

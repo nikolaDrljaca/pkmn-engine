@@ -1,6 +1,7 @@
 package com.drbrosdev.battle.pokemon
 
 import com.drbrosdev.battle.pokemon.stats.StatKey
+import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModifier
 import com.drbrosdev.battle.pokemon.stats.StatModifiers
 
@@ -25,6 +26,9 @@ class Nature(
         )
     }
 }
+
+val Nature.statModification: StatModification
+    get() = StatModification { changes }
 
 // Neutral natures
 val Hardy = Nature.neutral("Hardy")
