@@ -3,6 +3,7 @@ package com.drbrosdev.battle.move
 import com.drbrosdev.battle.pokemon.Element
 import com.drbrosdev.battle.pokemon.MajorStatus
 import com.drbrosdev.battle.pokemon.PokemonDsl
+import com.drbrosdev.battle.pokemon.VolatileStatus
 import com.drbrosdev.battle.pokemon.stats.StatKey
 import com.drbrosdev.battle.pokemon.stats.StatModifier
 import com.drbrosdev.battle.pokemon.stats.StatModifiers
@@ -229,4 +230,20 @@ val SandAttack = buildMove {
     percentAccuracy(100)
     status()
     effects(ApplyAccuracyChange(StatModifier.negativeStage(1)))
+}
+
+val ConfuseRay = buildMove {
+    id = "confuse-ray"
+    name = "Confuse Ray"
+    element = Element.GHOST
+    power = 0
+    powerPoints = 16
+    percentAccuracy(100)
+    status()
+    effects(
+        ApplyVolatileStatusCondition(
+            percentage = Percentage(100),
+            volatileStatusFactory = { VolatileStatus.confusion(it) }
+        )
+    )
 }

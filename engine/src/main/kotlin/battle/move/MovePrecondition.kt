@@ -6,6 +6,8 @@ import com.drbrosdev.battle.abilities
 import com.drbrosdev.battle.pokemon.MajorStatus
 import com.drbrosdev.battle.pokemon.VolatileStatus
 import com.drbrosdev.battle.pokemon.hasAnyOf
+import com.drbrosdev.battle.pokemon.isConfused
+import com.drbrosdev.battle.pokemon.isInfatuated
 import com.drbrosdev.battle.pokemon.relations
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.modify
@@ -18,7 +20,15 @@ fun interface MovePrecondition {
 
     enum class Result {
         PASS,
-        TRIGGER
+        TRIGGER,
+        MISS,
+        PROTECTED,
+        IMMUNE,
+        PARALYZED,
+        FROZEN,
+        ASLEEP,
+        CONFUSED,
+        INFATUATED
     }
 }
 
@@ -42,7 +52,7 @@ private object AccuracyPrecondition : MovePrecondition {
                 when {
                     RandomGen.nextInt(1, 101) <= effectiveAccuracy -> MovePrecondition.Result.PASS
 
-                    else -> MovePrecondition.Result.TRIGGER
+                    else -> MovePrecondition.Result.MISS
                 }
             }
         }
@@ -52,28 +62,31 @@ private object AccuracyPrecondition : MovePrecondition {
 private object StatusPrecondition : MovePrecondition {
     override fun MoveContext.check(battle: Battle): MovePrecondition.Result {
         val user = battle[userId]
-        // To check user pokemon status, like paralysis, freeze, confusion, sleep
-        // paralysis chance 25% to prevent attack - we check that here
+
         if (user.majorStatus is MajorStatus.Paralyzed && MajorStatus.shouldParalyze()) {
-            return MovePrecondition.Result.TRIGGER
+            return MovePrecondition.Result.PARALYZED
+        }
+
+        if (user.isConfused() && VolatileStatus.Confusion.shouldTrigger()) {
+            return MovePrecondition.Result.CONFUSED
+        }
+
+        if (user.isInfatuated() && VolatileStatus.Infatuation.shouldTrigger()) {
+            return MovePrecondition.Result.INFATUATED
         }
 
         // other status conditions are simple checks since their healing is handled
         // with ApplyStartOfTurnEffects
-        return when {
-            user.majorStatus is MajorStatus.Frozen -> MovePrecondition.Result.TRIGGER
-            user.majorStatus is MajorStatus.Asleep -> MovePrecondition.Result.TRIGGER
-            // taunt does not prevent move usage during MovePrecondition
-            // Taunt is checked as a part of TurnValidation
-            // if any of volatileStatus are not Taunt
-            user.volatileStatus.any { it !is VolatileStatus.Taunt } -> MovePrecondition.Result.TRIGGER
+        return when (user.majorStatus) {
+            is MajorStatus.Frozen -> MovePrecondition.Result.FROZEN
+            is MajorStatus.Asleep -> MovePrecondition.Result.ASLEEP
             else -> MovePrecondition.Result.PASS
         }
     }
 }
 
 private object ProtectionPrecondition : MovePrecondition {
-    // TODO
+    // TODO impl
     // To check things like Protect/Detect/Wide Guard etc
     override fun MoveContext.check(battle: Battle): MovePrecondition.Result {
         return MovePrecondition.Result.PASS
@@ -86,7 +99,7 @@ private object ElementImmunityPrecondition : MovePrecondition {
         val moveElement = battle[userId][moveId].element
         return when {
             moveElement.relations.immune.hasAnyOf(target.elements.values) ->
-                MovePrecondition.Result.TRIGGER
+                MovePrecondition.Result.IMMUNE
 
             else -> MovePrecondition.Result.PASS
         }
@@ -120,13 +133,13 @@ fun MoveContext.resolvePreconditions(
         yield(ElementImmunityPrecondition)
         yieldAll(battle.abilities().flatMap { it.movePrecondition })
     }
+    val applicablePreconditionResults = MovePrecondition.Result.entries
+        .filter { it != MovePrecondition.Result.PASS }
     return conditions
-        .map { it to with(it) { check(battle) } }
-        .firstOrNull { (_, result) -> result == MovePrecondition.Result.TRIGGER }
-        ?.also { (condition, _) ->
-            LOG.info { "$userId fails to execute move due to ${condition::class.simpleName}" }
+        .map { with(it) { check(battle) } }
+        .firstOrNull { result -> applicablePreconditionResults.contains(result) }
+        ?.also { result ->
+            LOG.info { "$userId fails to execute move - $result" }
         }
-        ?.second
         ?: MovePrecondition.Result.PASS
-
 }

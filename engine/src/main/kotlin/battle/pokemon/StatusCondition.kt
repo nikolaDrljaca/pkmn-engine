@@ -52,9 +52,17 @@ It needs to be a part of the Pokemon state object.
 sealed interface VolatileStatus {
     val expiresOnTurn: Int
 
-    data class Confusion(override val expiresOnTurn: Int) : VolatileStatus
+    data class Confusion(override val expiresOnTurn: Int) : VolatileStatus {
+        companion object {
+            fun shouldTrigger(): Boolean = RandomGen.nextInt(1, 101) <= 50
+        }
+    }
 
-    data class Infatuation(override val expiresOnTurn: Int) : VolatileStatus
+    data class Infatuation(override val expiresOnTurn: Int) : VolatileStatus {
+        companion object {
+            fun shouldTrigger(): Boolean = RandomGen.nextInt(1, 101) <= 50
+        }
+    }
 
     data class Taunt(override val expiresOnTurn: Int) : VolatileStatus
 

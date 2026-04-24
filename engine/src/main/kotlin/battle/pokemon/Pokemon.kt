@@ -45,9 +45,7 @@ data class Pokemon(
         level = level
     ),
     val statModifications: List<StatModification> = emptyList(),
-
     val inBattleHp: Stat = effectiveStats.hp,
-
     val majorStatus: MajorStatus = MajorStatus.Normal,
     val volatileStatus: Set<VolatileStatus> = emptySet(),
 
@@ -75,6 +73,8 @@ data class Pokemon(
 
 fun Pokemon.hasFainted() = inBattleHp.value == 0
 fun Pokemon.isBurned() = majorStatus is MajorStatus.Burned
+fun Pokemon.isConfused() = volatileStatus.any { it is VolatileStatus.Confusion }
+fun Pokemon.isInfatuated() = volatileStatus.any { it is VolatileStatus.Infatuation }
 
 fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
     allStatModifications

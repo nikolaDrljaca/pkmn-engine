@@ -17,7 +17,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
         // move execution
         is TurnAction.MoveSelected -> with(context.toMoveContext()) {
             val move = battle[userId][moveId]
-            LOG.info { "$userId is attempting to execute ${move.name}" }
+            LOG.info { "$userId is attempting to use ${move.name}" }
             move.effect.run { apply(battle) }
         }
 

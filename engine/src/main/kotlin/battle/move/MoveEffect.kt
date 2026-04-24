@@ -34,15 +34,17 @@ class SequenceMoveEffect(private val effects: List<MoveEffect>) : MoveEffect {
         val preconditionResult = resolvePreconditions(afterPP)
         // 3 execute effects
         return when (preconditionResult) {
-            // a precondition has triggered, no effects are applied
-            MovePrecondition.Result.TRIGGER -> afterPP
-
             // all preconditions passed - execute move
             MovePrecondition.Result.PASS -> effects.fold(afterPP) { current, effect ->
                 with(effect) {
                     apply(current)
                 }
             }
+            // Precondition already checks if confusion should trigger
+            // means you fail to execute AND you hit yourself
+            MovePrecondition.Result.CONFUSED -> with(ApplyConfusionStatusDamage) { apply(battle) }
+            // a precondition has triggered, no effects are applied
+            else -> afterPP
         }
     }
 }
@@ -73,77 +75,95 @@ val ReducePowerPoints = MoveEffect { battle ->
 /**
  * General formula damage application.
  *
- * For moves such as Psyshock which change how stas are resolved,
- * implement anew with [MoveEffect].
+ * For moves such as "Psyshock" which change how stats are resolved,
+ * implement a new with [MoveEffect].
  */
-val ApplyFormulaDamage = MoveEffect { battle ->
-    val user = battle[userId]
-    val target = battle[targetId]
-    val move = battle[userId][moveId]
+object ApplyFormulaDamage : MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle {
+        val user = battle[userId]
+        val target = battle[targetId]
+        val move = battle[userId][moveId]
 
-    require(move.power != 0) { "Cannot apply formula damage with 0 power move!" }
+        require(move.power != 0) { "Cannot apply formula damage with 0 power move!" }
 
-    // check to land crit
-    if (shouldMoveCrit(user, move)) {
-        return@MoveEffect with(ApplyCriticalHitDamage) { apply(battle) }
-    }
-    // apply regular damage calc
-    val userStats = user.computeInBattleStats(battle)
-    val targetStats = target.computeInBattleStats(battle)
+        // check to land crit
+        if (shouldMoveCrit(user, move)) {
+            return with(ApplyCriticalHitDamage) { apply(battle) }
+        }
+        // apply regular damage calc
+        val userStats = user.computeInBattleStats(battle)
+        val targetStats = target.computeInBattleStats(battle)
 
-    // resolve relevant stats
-    val (attackStat, defenceStat) = when (move.type) {
-        MoveType.PHYSICAL -> userStats.attack to targetStats.defence
-        MoveType.SPECIAL -> userStats.specialAttack to targetStats.specialDefence
-        MoveType.STATUS -> error("Attempting to apply formula damage for a STATUS move!")
-    }
-    // multipliers
-    val stabMultiplier = if (user.elements.hasAnyOf(move.element)) 150 else 100
-    val typeMultiplier = effectiveness(move.element, target.elements).multiplier
-    val burnMultiplier = when {
-        move.isPhysicalMove() && user.isBurned() -> 50
-        else -> 100
-    }
-    val weatherMultiplier = when (battle.weather) {
-        Weather.HARSH_SUN -> when (move.element) {
-            Element.WATER -> 50
-            Element.FIRE -> 150
+        // resolve relevant stats
+        val (attackStat, defenceStat) = when (move.type) {
+            MoveType.PHYSICAL -> userStats.attack to targetStats.defence
+            MoveType.SPECIAL -> userStats.specialAttack to targetStats.specialDefence
+            MoveType.STATUS -> error("Attempting to apply formula damage for a STATUS move!")
+        }
+        // multipliers
+        val stabMultiplier = if (user.elements.hasAnyOf(move.element)) 150 else 100
+        val typeMultiplier = effectiveness(move.element, target.elements).multiplier
+        val burnMultiplier = when {
+            move.isPhysicalMove() && user.isBurned() -> 50
             else -> 100
         }
-        Weather.RAIN -> when (move.element) {
-            Element.WATER -> 150
-            Element.FIRE -> 50
+        val weatherMultiplier = when (battle.weather) {
+            Weather.HARSH_SUN -> when (move.element) {
+                Element.WATER -> 50
+                Element.FIRE -> 150
+                else -> 100
+            }
+            Weather.RAIN -> when (move.element) {
+                Element.WATER -> 150
+                Element.FIRE -> 50
+                else -> 100
+            }
             else -> 100
         }
-        else -> 100
+        val randomMultiplier = RandomGen.nextInt(85, 101)
+
+        val baseDamage = (2 * user.level.value / 5 + 2) * move.power * attackStat.value / defenceStat.value / 50 + 2
+
+        val finalDamage = baseDamage
+            .times(stabMultiplier).div(100)
+            .times(typeMultiplier).div(100)
+            .times(weatherMultiplier).div(100)
+            .times(burnMultiplier).div(100)
+            .times(randomMultiplier).div(100)
+            .coerceAtLeast(1)
+
+        val updatedTarget = target.copy(
+            inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
+        )
+
+        LOG.fine { "$userId dealt $finalDamage damage to $targetId with $moveId by formula" }
+
+        // NOTE: To add berry support you'd need to hook in here
+        // or after a MoveEffect executes since berries usually trigger before/after move execution
+        return battle.updateMons(updatedTarget)
     }
-    val randomMultiplier = RandomGen.nextInt(85, 101)
 
-    val baseDamage = (2 * user.level.value / 5 + 2) * move.power * attackStat.value / defenceStat.value / 50 + 2
-
-    val finalDamage = baseDamage
-        .times(stabMultiplier).div(100)
-        .times(typeMultiplier).div(100)
-        .times(weatherMultiplier).div(100)
-        .times(burnMultiplier).div(100)
-        .times(randomMultiplier).div(100)
-        .coerceAtLeast(1)
-
-    val updatedTarget = target.copy(
-        inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
-    )
-
-    LOG.fine { "$userId dealt $finalDamage damage to $targetId with $moveId by formula" }
-
-    // NOTE: To add berry support you'd need to hook in here
-    // or after a MoveEffect executes since berries usually trigger before/after move execution
-
-    battle.updateMons(updatedTarget)
+    private fun shouldMoveCrit(user: Pokemon, move: Move): Boolean {
+        val stage = (user.effectiveStats.criticalHit.value + move.critStage.value)
+            .coerceIn(0, 4)
+        val threshold = when (stage) {
+            0 -> 16
+            1 -> 8
+            2 -> 4
+            3 -> 3
+            4 -> 2
+            else -> 16
+        }
+        return RandomGen.nextInt(1, threshold + 1) == 1
+    }
 }
 
+/**
+ * Support for moves like "Dragon Rage", "Sonic Boom"
+ *
+ * Take [Move.power] and apply it directly as damage.
+ */
 val ApplyDirectDamage = MoveEffect { battle ->
-    // NOTE support for moves like dragon rage, sonic boom
-    // take power of a move and apply it directly as damage
     val targetMon = battle[targetId]
     val move = battle[userId][moveId]
     val targetHp = (targetMon.inBattleHp.value - move.power).coerceAtLeast(0)
@@ -212,27 +232,64 @@ val ApplyCriticalHitDamage =  MoveEffect { battle ->
     battle
 }
 
-fun shouldMoveCrit(user: Pokemon, move: Move): Boolean {
-    val stage = (user.effectiveStats.criticalHit.value + move.critStage.value)
-        .coerceIn(0, 4)
-    val threshold = when (stage) {
-        0 -> 16
-        1 -> 8
-        2 -> 4
-        3 -> 3
-        4 -> 2
-        else -> 16
-    }
-    return RandomGen.nextInt(1, threshold + 1) == 1
-}
-
 fun ApplyStatModification(statModification: StatModification) = MoveEffect { battle ->
     with(battle[targetId]) {
         val statMods = buildList {
             addAll(statModifications)
             add(statModification)
         }
+        LOG.fine { "$userId lowers stats of $targetId with $moveId" }
         battle.updateMons(copy(statModifications = statMods))
+    }
+}
+
+/**
+* Damage effect from the [VolatileStatus.Confusion] status.
+ *
+ * Following apply:
+ * - 40 power
+ * - Always hit accuracy
+ * - Cannot Crit
+ * - Does not apply STAB
+ * - Typeless - no weather modifiers
+ * - Unaffected by items like "Life Orb", "Choice X" etc.
+ * - Physical move, but ignores [MajorStatus.Burned]
+*/
+object ApplyConfusionStatusDamage: MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle {
+        // damages is applied to itself
+        val user = battle[userId]
+        // user must be confused
+        require(user.isConfused()) {
+            "Cannot apply confusion damage when $userId is not confused! Should not happen!"
+        }
+        val target = battle[userId]
+        val movePower = 40
+
+        // apply regular damage calc
+        val userStats = user.computeInBattleStats(battle)
+        val targetStats = target.computeInBattleStats(battle)
+
+        // resolve relevant stats
+        val (attackStat, defenceStat) = userStats.attack to targetStats.defence
+        // multipliers
+        val randomMultiplier = RandomGen.nextInt(85, 101)
+
+        val baseDamage = (2 * user.level.value / 5 + 2) * movePower * attackStat.value / defenceStat.value / 50 + 2
+
+        val finalDamage = baseDamage
+            .times(randomMultiplier).div(100)
+            .coerceAtLeast(1)
+
+        val updatedTarget = target.copy(
+            inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
+        )
+
+        LOG.fine { "$userId hurt itself in confusion for $finalDamage"}
+
+        // NOTE: To add berry support you'd need to hook in here
+        // or after a MoveEffect executes since berries usually trigger before/after move execution
+        return battle.updateMons(updatedTarget)
     }
 }
 
@@ -297,10 +354,11 @@ class ApplyStatusCondition(
 
 class ApplyVolatileStatusCondition(
     private val percentage: Percentage,
-    private val volatileStatus: VolatileStatus
+    private val volatileStatusFactory: (turnCount: Int) -> VolatileStatus
 ) : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
         val targetMon = battle[targetId]
+        val volatileStatus = volatileStatusFactory(battle.turnCount)
         // OwnTempo support
         if (targetMon.ability == OwnTempo && volatileStatus is VolatileStatus.Confusion) return battle
         // TODO Add other abilities which prevent volatile status changes
