@@ -21,6 +21,10 @@ private val LOG = Logger.getLogger(MoveEffect::class.qualifiedName)
 
 fun interface MoveEffect {
     fun MoveContext.apply(battle: Battle): Battle
+
+    companion object {
+        val NoEffect = MoveEffect { it }
+    }
 }
 
 /*
@@ -56,7 +60,6 @@ value class Percentage(val value: Int = 100) {
     }
 }
 
-val NoEffect = MoveEffect { it }
 
 val ReducePowerPoints = MoveEffect { battle ->
     val targetMon = battle[targetId]
@@ -90,7 +93,7 @@ object ApplyFormulaDamage : MoveEffect {
         if (shouldMoveCrit(user, move)) {
             return with(ApplyCriticalHitDamage) { apply(battle) }
         }
-        // apply regular damage calc
+        // compute effective battle stats by resolving stat modifications
         val userStats = user.computeInBattleStats(battle)
         val targetStats = target.computeInBattleStats(battle)
 
@@ -100,6 +103,8 @@ object ApplyFormulaDamage : MoveEffect {
             MoveType.SPECIAL -> userStats.specialAttack to targetStats.specialDefence
             MoveType.STATUS -> error("Attempting to apply formula damage for a STATUS move!")
         }
+        // base damage
+        val baseDamage = (2 * user.level.value / 5 + 2) * move.power * attackStat.value / defenceStat.value / 50 + 2
         // multipliers
         val stabMultiplier = if (user.elements.hasAnyOf(move.element)) 150 else 100
         val typeMultiplier = effectiveness(move.element, target.elements).multiplier
@@ -124,8 +129,7 @@ object ApplyFormulaDamage : MoveEffect {
         }
         val randomMultiplier = RandomGen.nextInt(85, 101)
 
-        val baseDamage = (2 * user.level.value / 5 + 2) * move.power * attackStat.value / defenceStat.value / 50 + 2
-
+        // base times all multipliers
         val finalDamage = baseDamage
             .times(stabMultiplier).div(100)
             .times(typeMultiplier).div(100)
@@ -183,7 +187,8 @@ val ApplyCriticalHitDamage = MoveEffect { battle ->
     val target = battle[targetId]
     val move = battle[userId][moveId]
 
-    val userStats = user.computeInBattleStatsForCrit(battle)
+    val userStats = user.computeInBattleStats(battle)
+    // target stage based stat changes are ignored
     val targetStats = target.computeInBattleStatsForCrit(battle)
 
     // resolve relevant stats

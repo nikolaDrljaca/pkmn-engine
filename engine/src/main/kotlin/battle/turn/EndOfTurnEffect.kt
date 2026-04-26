@@ -2,9 +2,16 @@ package com.drbrosdev.battle.turn
 
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.Stat
+import java.util.logging.Logger
+
+private val LOG = Logger.getLogger("com.drbrosdev.battle.turn.EndOfTurnEffect")
 
 fun interface EndOfTurnEffect {
     fun apply(pokemon: Pokemon): Pokemon
+
+    companion object {
+        val NoEffect = EndOfTurnEffect { it }
+    }
 }
 
 val BurnEndOfTurnEffect = EndOfTurnEffect { pokemon ->
@@ -54,46 +61,6 @@ val BadPoisonEndOfTurnEffect = EndOfTurnEffect { pokemon ->
         }
 
         else -> pokemon
-    }
-}
-
-/*
-TODO: - waiting for item support
-Later on these belong in the Item subsystem
-NOTE: It should probably be modeled similar to abilities
- */
-val LeftoversEndOfTurnEffect = EndOfTurnEffect { pokemon ->
-    // healing is calculated of maxHp
-    val healing = (pokemon.effectiveStats.hp.value / 8).coerceAtLeast(1)
-    val newHp = (pokemon.inBattleHp.value + healing)
-        // cannot over-heal
-        .coerceAtMost(pokemon.effectiveStats.hp.value)
-    pokemon.copy(
-        inBattleHp = Stat(newHp)
-    )
-}
-
-val BlackSludgeEndOfTurnEffect = EndOfTurnEffect { pokemon ->
-    when {
-        pokemon.elements.values.contains(Element.POISON) -> {
-            val healing = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
-            val newHp = (pokemon.inBattleHp.value + healing)
-                // cannot over-heal
-                .coerceAtMost(pokemon.effectiveStats.hp.value)
-            pokemon.copy(
-                inBattleHp = Stat(newHp)
-            )
-        }
-        // take 1/16 damage
-        else -> {
-            val damage = (pokemon.effectiveStats.hp.value / 8).coerceAtLeast(1)
-            val newHp = (pokemon.inBattleHp.value - damage)
-                // hp cannot go below 0
-                .coerceAtLeast(0)
-            pokemon.copy(
-                inBattleHp = Stat(newHp)
-            )
-        }
     }
 }
 

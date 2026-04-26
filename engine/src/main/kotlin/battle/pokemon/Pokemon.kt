@@ -1,6 +1,7 @@
 package com.drbrosdev.battle.pokemon
 
 import com.drbrosdev.battle.Battle
+import com.drbrosdev.battle.item.Item
 import com.drbrosdev.battle.move.Move
 import com.drbrosdev.battle.move.MoveId
 import com.drbrosdev.battle.pokemon.stats.BaseStats
@@ -50,7 +51,8 @@ data class Pokemon(
     val volatileStatus: Set<VolatileStatus> = emptySet(),
 
     // from input
-    val moves: List<Move> = emptyList()
+    val moves: List<Move> = emptyList(),
+    val item: Item = Item.NoItem
 ) {
     init {
         require(moves.size <= 4) {
@@ -154,6 +156,7 @@ class PokemonBuilder {
     private var individualValues = IndividualValues()
 
     private var moves: MutableList<Move> = mutableListOf()
+    var item : Item = Item.NoItem
 
     fun elements(vararg elements: Element) {
         this.elements = Elements(elements.toSet())
@@ -203,7 +206,8 @@ class PokemonBuilder {
         volatileStatus = volatileStatus,
         moves = moves.toList(),
         effortValues = effortValues,
-        individualValues = individualValues
+        individualValues = individualValues,
+        item = this.item
     ).let {
         when {
             inBattleHp != null -> it.copy(inBattleHp = Stat(inBattleHp!!))

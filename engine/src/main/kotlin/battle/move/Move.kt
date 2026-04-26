@@ -89,7 +89,7 @@ class MoveBuilder {
     var powerPoints: Int = 10
     var accuracy: MoveAccuracy = MoveAccuracy.AlwaysHit
     var type: MoveType = MoveType.PHYSICAL
-    var effect: MoveEffect = NoEffect
+    var effect: MoveEffect = MoveEffect.NoEffect
     var status: MoveStatus = MoveStatus.NORMAL
     var priority: Int = 0
     var critStage: Int = 0

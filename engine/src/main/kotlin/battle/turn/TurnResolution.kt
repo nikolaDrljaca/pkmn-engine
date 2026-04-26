@@ -35,6 +35,7 @@ fun Battle.resolveTurn(turn: Turn): Battle {
         ApplyStartOfTurnEffects(second),
         ExecuteActionStep(second),
         // end of turn effects in order
+        // BUG: End of turn effects applied twice
         ApplyEndOfTurnEffects(first),
         ApplyEndOfTurnEffects(second),
         // check for conclusion - can be a draw here

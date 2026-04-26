@@ -3,7 +3,9 @@ package com.drbrosdev.battle.turn
 import com.drbrosdev.battle.*
 import com.drbrosdev.battle.pokemon.MajorStatus
 import com.drbrosdev.battle.pokemon.Pokemon
+import com.drbrosdev.battle.pokemon.hasFainted
 import java.util.logging.Logger
+import kotlin.collections.fold
 
 private val LOG = Logger.getLogger(TurnStep::class.qualifiedName)
 
@@ -36,15 +38,11 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
         is TurnAction.Switch -> battle
 
         is TurnAction.MoveSelected -> {
-            val cleared1 = computeVolatileAndSelfHealingStatus(
-                pokemon = battle.pokemon1,
+            val updated = computeVolatileAndSelfHealingStatus(
+                pokemon = battle[context.user.id],
                 turnCount = battle.turnCount
             )
-            val cleared2 = computeVolatileAndSelfHealingStatus(
-                pokemon = battle.pokemon2,
-                turnCount = battle.turnCount
-            )
-            battle.updateMons(cleared1, cleared2)
+            battle.updateMons(updated)
         }
     }
 
@@ -86,6 +84,10 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
 
 class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
     override fun apply(battle: Battle): Battle {
+        val user = battle[context.user.id]
+        if (user.hasFainted()) {
+            return battle
+        }
         val applicableEffects = buildList {
             // weather
             if (battle.weather == Weather.SANDSTORM) {
@@ -94,10 +96,8 @@ class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
             if (battle.weather == Weather.HAIL) {
                 add(HailEndOfTurnEffect)
             }
-            // held item
-            // TODO: Waiting for item support
-//            add(LeftoversEndOfTurnEffect)
-//            add(BlackSludgeEndOfTurnEffect)
+            // held item support for Leftovers etc
+            // TODO: waiting for item support
             // major status condition
             add(PoisonEndOfTurnEffect)
             add(BadPoisonEndOfTurnEffect)
@@ -105,8 +105,7 @@ class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
         }
 
         return battle.updateMons(
-            applicableEffects.fold(battle.pokemon1) { pokemon, effect -> effect.apply(pokemon) },
-            applicableEffects.fold(battle.pokemon2) { pokemon, effect -> effect.apply(pokemon) }
+            applicableEffects.fold(user) { pokemon, effect -> effect.apply(pokemon) },
         )
     }
 }
