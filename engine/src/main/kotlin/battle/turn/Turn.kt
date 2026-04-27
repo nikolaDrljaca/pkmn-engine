@@ -19,15 +19,15 @@ sealed interface TurnAction {
 }
 
 data class ActionContext(
-    val user: Pokemon,
-    val target: Pokemon,
+    val user: PokemonId,
+    val target: PokemonId,
     val action: TurnAction
 )
 
 fun ActionContext.toMoveContext(): MoveContext = when (action) {
     is TurnAction.MoveSelected -> MoveContext(
-        userId = user.id,
-        targetId = target.id,
+        userId = user,
+        targetId = target,
         moveId = action.move
     )
     else ->  error("Cannot create MoveContext when action is ${action.javaClass.simpleName}!")

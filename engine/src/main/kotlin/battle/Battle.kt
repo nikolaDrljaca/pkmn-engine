@@ -17,9 +17,6 @@ data class Battle(
     val weather: Weather = Weather.NONE
 ) {
 
-    val pokemon1 = team1[active1]
-    val pokemon2 = team2[active2]
-
     operator fun get(pokemonId: PokemonId): Pokemon = when {
         team1.hasMember(pokemonId) -> team1[pokemonId]
         team2.hasMember(pokemonId) -> team2[pokemonId]
@@ -36,18 +33,21 @@ data class Battle(
         }
     }
 
-    fun switch(user: Pokemon, target: Pokemon): Battle {
+    fun switch(user: PokemonId, target: PokemonId): Battle {
         // user volatile status clears when switching out
-        val afterHeal = updateMons(this[user.id].copy(volatileStatus = emptySet()))
-        return when (user.id) {
-            pokemon1.id -> afterHeal.copy(active1 = target.id)
-            pokemon2.id -> afterHeal.copy(active2 = target.id)
+        val afterHeal = updateMons(this[user].copy(volatileStatus = emptySet()))
+        return when (user) {
+            active1 -> afterHeal.copy(active1 = target)
+            active2 -> afterHeal.copy(active2 = target)
             else -> error("Pokemon ${user.id} not found in battle!")
         }
     }
 }
 
-fun Battle.abilities() = sequenceOf(pokemon1.ability, pokemon2.ability)
+fun Battle.abilities() = sequenceOf(
+    this[active1].ability,
+    this[active2].ability
+)
 
 sealed interface BattleOutcome {
     data class Winner(val team: Team) : BattleOutcome

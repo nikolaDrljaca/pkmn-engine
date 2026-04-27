@@ -26,7 +26,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
         is TurnAction.Switch -> {
             val incoming = battle[context.action.incoming]
             LOG.info { "${context.user.id} is attempting to switch with ${incoming.id}" }
-            battle.switch(user = context.user, target = incoming)
+            battle.switch(user = context.user, target = incoming.id)
         }
     }
 
@@ -39,7 +39,7 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
 
         is TurnAction.MoveSelected -> {
             val updated = computeVolatileAndSelfHealingStatus(
-                pokemon = battle[context.user.id],
+                pokemon = battle[context.user],
                 turnCount = battle.turnCount
             )
             battle.updateMons(updated)
@@ -84,7 +84,7 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
 
 class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
     override fun apply(battle: Battle): Battle {
-        val user = battle[context.user.id]
+        val user = battle[context.user]
         if (user.hasFainted()) {
             return battle
         }

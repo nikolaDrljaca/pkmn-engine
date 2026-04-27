@@ -30,13 +30,13 @@ sealed interface OrderingResult {
             selection2: Pair<Pokemon, TurnAction>
         ) : this(
             first = ActionContext(
-                user = selection1.first,
-                target = selection2.first,
+                user = selection1.first.id,
+                target = selection2.first.id,
                 action = selection1.second
             ),
             second = ActionContext(
-                user = selection2.first,
-                target = selection1.first,
+                user = selection2.first.id,
+                target = selection1.first.id,
                 action = selection2.second
             ),
         )
@@ -135,13 +135,13 @@ private object SpeedRule : TurnActionOrderRule {
         val speed2 = p2.computeInBattleStats(battle).speed.value
         return when {
             speed1 > speed2 -> OrderingResult.Resolved(
-                ActionContext(p1, p2, a1),
-                ActionContext(p2, p1, a2),
+                ActionContext(p1.id, p2.id, a1),
+                ActionContext(p2.id, p1.id, a2),
             )
 
             speed2 > speed1 -> OrderingResult.Resolved(
-                ActionContext(p2, p1, a2),
-                ActionContext(p1, p2, a1),
+                ActionContext(p2.id, p1.id, a2),
+                ActionContext(p1.id, p2.id, a1),
             )
 
             else -> OrderingResult.Deferred
@@ -156,13 +156,13 @@ private object SpeedTieRule : TurnActionOrderRule {
         val (p2, a2) = selection2
         return when {
             RandomGen.nextBoolean() -> OrderingResult.Resolved(
-                first = ActionContext(p1, p2, a1),
-                second = ActionContext(p2, p1, a2)
+                first = ActionContext(p1.id, p2.id, a1),
+                second = ActionContext(p2.id, p1.id, a2)
             )
 
             else -> OrderingResult.Resolved(
-                first = ActionContext(p2, p1, a2),
-                second = ActionContext(p1, p2, a1),
+                first = ActionContext(p2.id, p1.id, a2),
+                second = ActionContext(p1.id, p2.id, a1),
             )
         }
     }
