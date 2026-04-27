@@ -161,7 +161,7 @@ val Flamethrower = buildMove {
     percentAccuracy(100)
     special()
     effects(
-        ApplyFormulaDamage,
+        ApplyDamage,
         ApplyStatusCondition(Percentage(100), MajorStatus.Burned)
     )
 }
@@ -174,7 +174,7 @@ val Tackle = buildMove {
     powerPoints = 35
     percentAccuracy(95)
     type = MoveType.PHYSICAL
-    effects(ApplyFormulaDamage)
+    effects(ApplyDamage)
 }
 
 val Scratch = buildMove {
@@ -222,7 +222,7 @@ val Pursuit = buildMove {
     powerPoints = 20
     percentAccuracy(100)
     type = MoveType.PHYSICAL
-    effects(ApplyFormulaDamage)
+    effects(ApplyDamage)
 }
 
 val SonicBoom = buildMove {
