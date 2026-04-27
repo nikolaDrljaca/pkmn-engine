@@ -56,3 +56,5 @@ val MagicGuard = object : Ability { /*Effectively does nothing*/ }
 val IceBody = object : Ability { /*Effectively does nothing*/ }
 val Overcoat = object : Ability { /*Effectively does nothing*/ }
 val SnowCloak = object : Ability { /*Effectively does nothing*/ }
+val ShellArmor = object : Ability { /*Effectively does nothing*/ }
+val BattleArmor = object : Ability { /*Effectively does nothing*/ }

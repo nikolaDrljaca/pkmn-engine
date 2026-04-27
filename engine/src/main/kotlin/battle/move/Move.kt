@@ -20,7 +20,7 @@ data class Move(
     val type: MoveType, // physical, status, special
 
     val priority: MovePriority = MovePriority(),
-    val critStage: MoveCritStage = MoveCritStage(),
+    val critApplication: CritApplication = CritApplication.Normal(MoveCritStage()),
 
     // not used in MoveEffect, but as part of turn validation
     val status: MoveStatus = MoveStatus.NORMAL,
@@ -31,7 +31,7 @@ data class Move(
 )
 
 fun Move.isStatusMove() = type == MoveType.STATUS
-fun Move.isPhysicalMove() = type == MoveType.PHYSICAL
+fun Move.isPhysical() = type == MoveType.PHYSICAL
 fun Move.isSpecialMove() = type == MoveType.SPECIAL
 
 enum class MoveStatus {
@@ -50,8 +50,14 @@ value class MoveId(val id: String) {
     override fun toString(): String = id
 }
 
+sealed interface CritApplication {
+    data class Normal(val stage: MoveCritStage): CritApplication
+
+    data object Always: CritApplication
+}
+
 @JvmInline
-value class MoveCritStage(val value: Int = DEFAULT) {
+value class MoveCritStage(val value: Int = MIN) {
     init {
         require(value in RANGE) {
             "Move Crit stage must be within $RANGE"
@@ -59,8 +65,9 @@ value class MoveCritStage(val value: Int = DEFAULT) {
     }
 
     companion object {
-        const val DEFAULT = 0
-        val RANGE = 0..4
+        const val MIN = 0
+        const val MAX = 4
+        val RANGE = MIN..MAX
     }
 }
 
@@ -92,7 +99,7 @@ class MoveBuilder {
     var effect: MoveEffect = MoveEffect.NoEffect
     var status: MoveStatus = MoveStatus.NORMAL
     var priority: Int = 0
-    var critStage: Int = 0
+    private var critApplication: CritApplication = CritApplication.Normal(MoveCritStage())
 
     fun percentAccuracy(value: Int) {
         this.accuracy = MoveAccuracy.Percent(Percentage(value))
@@ -118,6 +125,14 @@ class MoveBuilder {
         this.type = MoveType.STATUS
     }
 
+    fun alwaysCrits() {
+        this.critApplication = CritApplication.Always
+    }
+
+    fun critStage(stage: Int) {
+        this.critApplication = CritApplication.Normal(MoveCritStage(stage))
+    }
+
     fun build() = Move(
         id = MoveId(id),
         name = name,
@@ -129,7 +144,7 @@ class MoveBuilder {
         effect = effect,
         status = status,
         priority = MovePriority(priority),
-        critStage = MoveCritStage(critStage)
+        critApplication = critApplication
     )
 }
 
@@ -170,7 +185,7 @@ val Scratch = buildMove {
     powerPoints = 35
     percentAccuracy(100)
     type = MoveType.PHYSICAL
-    effects(ApplyFormulaDamage)
+    effects(ApplyDamage)
 }
 
 val Leer = buildMove {
