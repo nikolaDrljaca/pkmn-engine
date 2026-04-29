@@ -62,6 +62,10 @@ object ApplyDamage : MoveEffect {
 }
 
 fun interface StatResolutionStrategy {
+    /**
+     * Computes attacker (special) attack and defender (special) defence
+     * for damage calculation purposes.
+     */
     fun MoveContext.resolve(battle: Battle): Pair<Stat, Stat>
 }
 
@@ -108,10 +112,22 @@ val CritStatResolution = StatResolutionStrategy { battle ->
 }
 
 val ConfusionDamageStatResolution = StatResolutionStrategy { battle ->
-    // TODO: (stat-resolution) implement
-    TODO()
+    val user = battle[userId]
+    val statMods = buildList {
+        add(user.nature.statModification)
+        addAll(user.ability.statModifications)
+        add(user.majorStatus.statModifications())
+        addAll(user.statModifications)
+        // NOTE: ignore choice-band boost
+        if (user.item.id.value != "choice-band") {
+            add(user.item.statModification)
+        }
+    }
+    val stats = statMods
+        .map { it.compute(StatModificationContext(user, battle)) }
+        .fold(user.effectiveStats) { stats, mods -> stats.resolve(mods) }
+    stats.attack to stats.defence
 }
-
 val PsyshockStatResolution = StatResolutionStrategy { battle ->
     // TODO: (stat-resolution) implement
     // Moves like foul play etc.
@@ -180,30 +196,9 @@ val CriticalHitModifier = DamageModifier {
 
 val BurnModifier = DamageModifier { battle ->
     val user = battle[userId]
-    val move = battle[userId][moveId]
+    val move = user[moveId]
     when {
         move.isPhysical() && user.isBurned() -> DamageMultiplier(50)
-        else -> null
-    }
-}
-
-// items
-val ExpertBeltModifier = DamageModifier { battle ->
-    // TODO: waiting for item subsystem
-    val user = battle[userId]
-    val move = battle[userId][moveId]
-    val target = battle[targetId]
-    when {
-        user.item.id.value != "expert-belt" -> return@DamageModifier null
-        effectiveness(move.element, target.elements) != Effectiveness.SUPER -> return@DamageModifier null
-        else -> DamageMultiplier(120)
-    }
-}
-
-val LifeOrbModifier = DamageModifier { battle ->
-    // TODO: waiting for item subsystem
-    when (battle[userId].item.id.value) {
-        "life-orb" -> DamageMultiplier(130)
         else -> null
     }
 }
@@ -323,7 +318,7 @@ object ApplyCriticalDamage : MoveEffect {
  * - Unaffected by items like "Life Orb", "Choice X" etc.
  * - Physical move, but ignores [MajorStatus.Burned]
  */
-object ApplyConfusionStatusDamage: MoveEffect {
+object ApplyConfusionStatusDamage : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
         // damages is applied to itself
         val user = battle[userId]
@@ -334,7 +329,7 @@ object ApplyConfusionStatusDamage: MoveEffect {
         val target = battle[userId]
         val movePower = 40
         // resolve relevant stats
-        val (attackStat, defenceStat) = with(NormalStatResolution) { resolve(battle) }
+        val (attackStat, defenceStat) = with(ConfusionDamageStatResolution) { resolve(battle) }
         val baseDamage = (2 * user.level.value / 5 + 2) * movePower * attackStat.value / defenceStat.value / 50 + 2
         val multipliers = buildList {
             add(RandomModifier)

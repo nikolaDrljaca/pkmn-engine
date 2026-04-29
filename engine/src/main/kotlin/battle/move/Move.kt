@@ -28,7 +28,12 @@ data class Move(
     // this needs to become an Impl of MoveEffect!
     // describes what the move does
     val effect: MoveEffect,
-)
+) {
+
+    // Mutation functions
+    fun enable() = copy(status = MoveStatus.NORMAL)
+    fun disable() = copy(status = MoveStatus.DISABLED)
+}
 
 fun Move.isStatusMove() = type == MoveType.STATUS
 fun Move.isPhysical() = type == MoveType.PHYSICAL
@@ -51,9 +56,9 @@ value class MoveId(val id: String) {
 }
 
 sealed interface CritApplication {
-    data class Normal(val stage: MoveCritStage): CritApplication
+    data class Normal(val stage: MoveCritStage) : CritApplication
 
-    data object Always: CritApplication
+    data object Always : CritApplication
 }
 
 @JvmInline

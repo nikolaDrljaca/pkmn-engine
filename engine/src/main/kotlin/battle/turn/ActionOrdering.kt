@@ -19,8 +19,6 @@ interface TurnActionOrderRule {
 // effectively like request middleware - either process/transform or passthrough to next
 // except here the chain breaks once the first thing is resolved
 sealed interface OrderingResult {
-    // NOTE: to support bigger battles than 1v1
-    // this can contain a list of ActionContext
     data class Resolved(
         val first: ActionContext,
         val second: ActionContext
@@ -108,10 +106,24 @@ private object MovePriorityRule : TurnActionOrderRule {
 // Quick Claw - only fires if priority didn't resolve
 private object QuickClawRule : TurnActionOrderRule {
     // check held items on each pokemon, random chance
-    // resolves or defers
-    // TODO: impl - waiting for Item support
     override fun Turn.determine(battle: Battle): OrderingResult {
-        return OrderingResult.Deferred
+        val (p1, a1) = selection1
+        val (p2, a2) = selection2
+        val claw1 = (p1.item.id.value == "quick-claw")
+            .and(RandomGen.nextInt(1, 101) <= 20)
+        val claw2 = (p2.item.id.value == "quick-claw")
+            .and(RandomGen.nextInt(1, 101) <= 20)
+        return when {
+            // both rolled, so its random
+            claw1 && claw2 -> when {
+                RandomGen.nextBoolean() -> OrderingResult.Resolved(selection1, selection2)
+                else -> OrderingResult.Resolved(selection2, selection1)
+            }
+
+            claw1 -> OrderingResult.Resolved(selection1, selection2)
+            claw2 -> OrderingResult.Resolved(selection2, selection1)
+            else -> OrderingResult.Deferred
+        }
     }
 }
 

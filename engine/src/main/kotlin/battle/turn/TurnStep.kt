@@ -18,9 +18,16 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
     override fun apply(battle: Battle): Battle = when (context.action) {
         // move execution
         is TurnAction.MoveSelected -> with(context.toMoveContext()) {
-            val move = battle[userId][moveId]
+            val user = battle[userId]
+            val move = user[moveId]
             LOG.info { "$userId is attempting to use ${move.name}" }
-            move.effect.run { apply(battle) }
+            val applicableEffects = buildList {
+                add(user.item.preMoveEffect)
+                add(move.effect)
+            }
+            applicableEffects.fold(battle) { inner, effect ->
+                effect.run { apply(inner) }
+            }
         }
 
         is TurnAction.Switch -> {
@@ -97,7 +104,7 @@ class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
                 add(HailEndOfTurnEffect)
             }
             // held item support for Leftovers etc
-            // TODO: waiting for item support
+            add(user.item.endOfTurnEffect)
             // major status condition
             add(PoisonEndOfTurnEffect)
             add(BadPoisonEndOfTurnEffect)

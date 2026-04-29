@@ -35,7 +35,11 @@ data class Battle(
 
     fun switch(user: PokemonId, target: PokemonId): Battle {
         // user volatile status clears when switching out
-        val afterHeal = updateMons(this[user].copy(volatileStatus = emptySet()))
+        // disabled moves are re-enabled
+        val pokemon = this[user]
+            .clearVolatileStatus()
+            .enableMoves()
+        val afterHeal = updateMons(pokemon)
         return when (user) {
             active1 -> afterHeal.copy(active1 = target)
             active2 -> afterHeal.copy(active2 = target)

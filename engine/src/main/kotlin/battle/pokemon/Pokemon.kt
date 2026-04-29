@@ -4,19 +4,8 @@ import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.item.Item
 import com.drbrosdev.battle.move.Move
 import com.drbrosdev.battle.move.MoveId
-import com.drbrosdev.battle.pokemon.stats.BaseStats
-import com.drbrosdev.battle.pokemon.stats.BaseStatsBuilder
-import com.drbrosdev.battle.pokemon.stats.EffectiveStats
-import com.drbrosdev.battle.pokemon.stats.EffortValues
-import com.drbrosdev.battle.pokemon.stats.EffortValuesBuilder
-import com.drbrosdev.battle.pokemon.stats.IndividualValues
-import com.drbrosdev.battle.pokemon.stats.IndividualValuesBuilder
-import com.drbrosdev.battle.pokemon.stats.Stat
-import com.drbrosdev.battle.pokemon.stats.StatModification
-import com.drbrosdev.battle.pokemon.stats.StatModificationContext
-import com.drbrosdev.battle.pokemon.stats.onlyPercent
-import com.drbrosdev.battle.pokemon.stats.resolve
-import java.util.UUID
+import com.drbrosdev.battle.pokemon.stats.*
+import java.util.*
 
 data class Pokemon(
     // from static config - used w/ lookup
@@ -65,12 +54,29 @@ data class Pokemon(
         add(nature.statModification)
         addAll(ability.statModifications)
         add(majorStatus.statModifications())
+        add(item.statModification)
         addAll(statModifications)
     }
 
     operator fun get(moveId: MoveId): Move = requireNotNull(moves.find { it.id == moveId }) {
         "Pokemon $id does not have $moveId assigned!"
     }
+
+    // Mutation functions
+    fun clearVolatileStatus() = copy(volatileStatus = emptySet())
+
+    fun enableMoves() = copy(
+        moves = moves.map { it.enable() }
+    )
+
+    fun choiceMove(moveId: MoveId) = copy(
+        moves = moves.map {
+            when {
+                it.id == moveId -> it.enable()
+                else -> it.disable()
+            }
+        }
+    )
 }
 
 fun Pokemon.hasFainted() = inBattleHp.value == 0
@@ -78,16 +84,10 @@ fun Pokemon.isBurned() = majorStatus is MajorStatus.Burned
 fun Pokemon.isConfused() = volatileStatus.any { it is VolatileStatus.Confusion }
 fun Pokemon.isInfatuated() = volatileStatus.any { it is VolatileStatus.Infatuation }
 
+// NOTE: General purpose
 fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
     allStatModifications
         .map { it.compute(StatModificationContext(this, battle)) }
-        .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
-
-fun Pokemon.computeInBattleStatsForCrit(battle: Battle): EffectiveStats =
-    allStatModifications
-        .map { it.compute(StatModificationContext(this, battle)) }
-        // stage based changes are ignored when computing stats for crit damage application
-        .map { it.onlyPercent() }
         .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
 
 @JvmInline
@@ -156,7 +156,7 @@ class PokemonBuilder {
     private var individualValues = IndividualValues()
 
     private var moves: MutableList<Move> = mutableListOf()
-    var item : Item = Item.NoItem
+    var item: Item = Item.NoItem
 
     fun elements(vararg elements: Element) {
         this.elements = Elements(elements.toSet())

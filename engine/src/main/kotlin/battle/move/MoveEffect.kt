@@ -39,11 +39,13 @@ class SequenceMoveEffect(private val effects: List<MoveEffect>) : MoveEffect {
         // 3 execute effects
         return when (preconditionResult) {
             // all preconditions passed - execute move
-            MovePrecondition.Result.PASS -> effects.fold(afterPP) { current, effect ->
-                with(effect) {
-                    apply(current)
+            MovePrecondition.Result.PASS -> effects
+                .plus(battle[userId].item.afterMoveEffect)
+                .fold(afterPP) { current, effect ->
+                    with(effect) {
+                        apply(current)
+                    }
                 }
-            }
             // Precondition already checks if confusion should trigger
             // means you fail to execute AND you hit yourself
             MovePrecondition.Result.CONFUSED -> with(ApplyConfusionStatusDamage) { apply(battle) }
