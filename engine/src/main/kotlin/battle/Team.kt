@@ -3,9 +3,11 @@ package com.drbrosdev.battle
 import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.hasFainted
+import java.util.UUID
 
 data class Team(
-    val members: Map<PokemonId, Pokemon>
+    val members: Map<PokemonId, Pokemon>,
+    val id: String = UUID.randomUUID().toString().take(4),
 ) {
     init {
         require(members.size <= MEMBER_LIMIT) {
@@ -24,7 +26,7 @@ fun Team.hasMember(pokemon: Pokemon) = members.containsKey(pokemon.id)
 
 fun Team.hasMember(id: PokemonId) = members.containsKey(id)
 
-fun Team.updateMember(pokemon: Pokemon) = Team(members = members.toMutableMap() + (pokemon.id to pokemon))
+fun Team.updateMember(pokemon: Pokemon) = copy(members = members.toMutableMap() + (pokemon.id to pokemon))
 
 fun Team.allFainted() = members.values.all { it.hasFainted() }
 

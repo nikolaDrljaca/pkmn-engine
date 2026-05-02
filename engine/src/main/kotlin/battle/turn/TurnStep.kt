@@ -1,6 +1,8 @@
 package com.drbrosdev.battle.turn
 
 import com.drbrosdev.battle.*
+import com.drbrosdev.battle.environment.SwitchInEffect
+import com.drbrosdev.battle.environment.SwitchOutEffect
 import com.drbrosdev.battle.pokemon.MajorStatus
 import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.hasFainted
@@ -30,10 +32,22 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
             }
         }
 
+        // switch action, applies switch out and switch in effects
         is TurnAction.Switch -> {
             val incoming = battle[context.action.incoming]
+            val outgoing = battle[context.user]
             LOG.info { "${context.user.id} is attempting to switch with ${incoming.id}" }
-            battle.switch(user = context.user, target = incoming.id)
+            // switch out effects are applied to outgoing
+            val afterOutEffects = with(SwitchOutEffect) { apply(outgoing) }
+            // switch in effects are applied to incoming
+            val environment = battle.environment(incoming.id)
+            val afterInEffects = with(SwitchInEffect(environment)) { apply(incoming) }
+            val updatedBattle = battle.updateMons(afterOutEffects, afterInEffects)
+            // perform switch
+            updatedBattle.switch(
+                user = context.user,
+                target = context.action.incoming
+            )
         }
     }
 

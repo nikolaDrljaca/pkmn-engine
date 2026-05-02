@@ -1,8 +1,11 @@
-package com.drbrosdev.battle.move
+package com.drbrosdev.battle.move.damagecalc
 
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.Weather
+import com.drbrosdev.battle.move.CritApplication
+import com.drbrosdev.battle.move.MoveContext
+import com.drbrosdev.battle.move.MoveCritStage
+import com.drbrosdev.battle.move.MoveEffect
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.*
 import java.util.logging.Logger
@@ -61,170 +64,7 @@ object ApplyDamage : MoveEffect {
     }
 }
 
-fun interface StatResolutionStrategy {
-    /**
-     * Computes attacker (special) attack and defender (special) defence
-     * for damage calculation purposes.
-     */
-    fun MoveContext.resolve(battle: Battle): Pair<Stat, Stat>
-}
-
-val NormalStatResolution = StatResolutionStrategy { battle ->
-    val user = battle[userId]
-    val target = battle[targetId]
-    val move = user[moveId]
-
-    val userStats = user.allStatModifications
-        .map { it.compute(StatModificationContext(user, battle)) }
-        .fold(user.effectiveStats) { stats, mod -> stats.resolve(mod) }
-    val targetStats = target.allStatModifications
-        .map { it.compute(StatModificationContext(target, battle)) }
-        .fold(target.effectiveStats) { stats, mod -> stats.resolve(mod) }
-
-    when (move.type) {
-        MoveType.PHYSICAL -> userStats.attack to targetStats.defence
-        MoveType.SPECIAL -> userStats.specialAttack to targetStats.specialDefence
-        MoveType.STATUS -> error("Cannot apply stat resolution for STATUS moves!")
-    }
-}
-
-val CritStatResolution = StatResolutionStrategy { battle ->
-    val user = battle[userId]
-    val target = battle[targetId]
-    val move = user[moveId]
-
-    val userStats = user.allStatModifications
-        .map { it.compute(StatModificationContext(user, battle)) }
-        // ignore negative stage changes on user
-        .filter { mod -> mod.modifiers.values.none { it.isNegativeStage() } }
-        .fold(user.effectiveStats) { stats, mod -> stats.resolve(mod) }
-    val targetStats = target.allStatModifications
-        .map { it.compute(StatModificationContext(target, battle)) }
-        // ignore positive stage changes on target
-        .filter { mod -> mod.modifiers.values.none { it.isPositiveStage() } }
-        .fold(target.effectiveStats) { stats, mod -> stats.resolve(mod) }
-
-    when (move.type) {
-        MoveType.PHYSICAL -> userStats.attack to targetStats.defence
-        MoveType.SPECIAL -> userStats.specialAttack to targetStats.specialDefence
-        MoveType.STATUS -> error("Cannot apply stat resolution for STATUS moves!")
-    }
-}
-
-val ConfusionDamageStatResolution = StatResolutionStrategy { battle ->
-    val user = battle[userId]
-    val statMods = buildList {
-        add(user.nature.statModification)
-        addAll(user.ability.statModifications)
-        add(user.majorStatus.statModifications())
-        addAll(user.statModifications)
-        // NOTE: ignore choice-band boost
-        if (user.item.id.value != "choice-band") {
-            add(user.item.statModification)
-        }
-    }
-    val stats = statMods
-        .map { it.compute(StatModificationContext(user, battle)) }
-        .fold(user.effectiveStats) { stats, mods -> stats.resolve(mods) }
-    stats.attack to stats.defence
-}
-val PsyshockStatResolution = StatResolutionStrategy { battle ->
-    // TODO: (stat-resolution) implement
-    // Moves like foul play etc.
-    TODO()
-}
-
-@JvmInline
-value class DamageMultiplier(val value: Int) // hundreds-scaled
-
-fun interface DamageModifier {
-    /**
-     * Computes a hundreds-scaled damage multiplier or returns null
-     * if no multiplier should be applied.
-     */
-    fun MoveContext.compute(battle: Battle): DamageMultiplier?
-}
-
-// always applies
-val StabModifier = DamageModifier { battle ->
-    val user = battle[userId]
-    val move = user[moveId]
-    when {
-        user.elements.hasAnyOf(move.element) -> DamageMultiplier(150)
-        else -> null
-    }
-}
-
-val TypeEffectivenessModifier = DamageModifier { battle ->
-    val move = battle[userId][moveId]
-    val target = battle[targetId]
-    when (val effectiveness = effectiveness(move.element, target.elements)) {
-        Effectiveness.NEUTRAL -> null
-        else -> DamageMultiplier(effectiveness.multiplier)
-    }
-}
-
 // TODO: introduce Environment, allows light screen to apply modifiers
-
-// TODO: move to weather itself
-val WeatherModifier = DamageModifier { battle ->
-    val move = battle[userId][moveId]
-    when (battle.weather) {
-        Weather.HARSH_SUN -> when (move.element) {
-            Element.FIRE -> DamageMultiplier(150)
-            Element.WATER -> DamageMultiplier(50)
-            else -> null
-        }
-
-        Weather.RAIN -> when (move.element) {
-            Element.WATER -> DamageMultiplier(150)
-            Element.FIRE -> DamageMultiplier(50)
-            else -> null
-        }
-
-        else -> null
-    }
-}
-
-val RandomModifier = DamageModifier { _ ->
-    DamageMultiplier(RandomGen.nextInt(85, 101))
-}
-
-val CriticalHitModifier = DamageModifier {
-    DamageMultiplier(200)
-}
-
-val BurnModifier = DamageModifier { battle ->
-    val user = battle[userId]
-    val move = user[moveId]
-    when {
-        move.isPhysical() && user.isBurned() -> DamageMultiplier(50)
-        else -> null
-    }
-}
-
-// abilities
-val FlashFireModifier = DamageModifier { battle ->
-    val user = battle[userId]
-    val move = battle[userId][moveId]
-    // TODO: implement, move to ability subsystem
-//    if (user.ability !is FlashFire) return@DamageModifier null
-//    if (move.element != Element.FIRE) return@DamageModifier null
-//    if (!(user.ability as FlashFire).isActive) return@DamageModifier null
-//    DamageMultiplier(150)
-    null
-}
-
-val TintedLensModifier = DamageModifier { battle ->
-    val user = battle[userId]
-    val move = battle[userId][moveId]
-    val target = battle[targetId]
-    // TODO: implement, move to ability subsystem
-//    if (user.ability !is TintedLens) return@DamageModifier null
-//    if (effectiveness(move.element, target.elements) != Effectiveness.NOT_VERY) return@DamageModifier null
-//    DamageMultiplier(200)
-    null
-}
 
 object ApplyNormalDamage : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {

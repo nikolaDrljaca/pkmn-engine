@@ -2,13 +2,16 @@ package com.drbrosdev.battle.move
 
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.Weather
+import com.drbrosdev.battle.environment.EnvironmentUnit
+import com.drbrosdev.battle.move.damagecalc.ApplyConfusionStatusDamage
 import com.drbrosdev.battle.pokemon.*
+import com.drbrosdev.battle.pokemon.statModifications
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModifier
 import com.drbrosdev.battle.pokemon.stats.increaseStageBy
 import java.util.logging.Logger
+import kotlin.text.get
 
 /*
 Pipeline Design pattern
@@ -27,9 +30,12 @@ fun interface MoveEffect {
     }
 }
 
-/*
-To be used by most move implementations
-*/
+/**
+ * Applies a sequence of move effects if all [MovePrecondition] resolve to [MovePrecondition.Result.PASS].
+ * To be used by most [Move] implementations.
+ *
+ * Also applies [VolatileStatus.Confusion] self damage if triggered.
+ */
 class SequenceMoveEffect(private val effects: List<MoveEffect>) : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
         // 1 PP reduction happens always
@@ -50,7 +56,14 @@ class SequenceMoveEffect(private val effects: List<MoveEffect>) : MoveEffect {
             // means you fail to execute AND you hit yourself
             MovePrecondition.Result.CONFUSED -> with(ApplyConfusionStatusDamage) { apply(battle) }
             // a precondition has triggered, no effects are applied
-            else -> afterPP
+            MovePrecondition.Result.TRIGGER -> afterPP
+            MovePrecondition.Result.MISS -> afterPP
+            MovePrecondition.Result.PROTECTED -> afterPP
+            MovePrecondition.Result.IMMUNE -> afterPP
+            MovePrecondition.Result.PARALYZED -> afterPP
+            MovePrecondition.Result.FROZEN -> afterPP
+            MovePrecondition.Result.ASLEEP -> afterPP
+            MovePrecondition.Result.INFATUATED -> afterPP
         }
     }
 }
@@ -77,20 +90,21 @@ val ReducePowerPoints = MoveEffect { battle ->
 }
 
 /**
- * Support for moves like "Dragon Rage", "Sonic Boom"
+ * Support for moves like "Dragon Rage", "Sonic Boom".
  *
- * Take [Move.power] and apply it directly as damage.
+ * Applies [directDamage] directly.
  */
-val ApplyDirectDamage = MoveEffect { battle ->
-    val targetMon = battle[targetId]
-    val move = battle[userId][moveId]
-    val targetHp = (targetMon.inBattleHp.value - move.power).coerceAtLeast(0)
-    LOG.fine { "$userId dealt ${move.power} damage to $targetId with $moveId by direct" }
-    battle.updateMons(targetMon.copy(inBattleHp = Stat(targetHp)))
+class ApplyDirectDamage(private val directDamage: Int) : MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle {
+        val targetMon = battle[targetId]
+        val targetHp = (targetMon.inBattleHp.value - directDamage).coerceAtLeast(0)
+        LOG.fine { "$userId dealt $directDamage damage to $targetId with $moveId by direct" }
+        return battle.updateMons(targetMon.copy(inBattleHp = Stat(targetHp)))
+    }
 }
 
-fun ApplyStatModification(statModification: StatModification) = MoveEffect { battle ->
-    with(battle[targetId]) {
+class ApplyStatModification(private val statModification: StatModification) : MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle = with(battle[targetId]) {
         val statMods = buildList {
             addAll(statModifications)
             add(statModification)
@@ -179,5 +193,11 @@ class ApplyVolatileStatusCondition(
             volatileStatus = targetMon.volatileStatus + volatileStatus
         )
         return battle.updateMons(updatedTarget)
+    }
+}
+
+class ApplyEnvironmentUnit(private val unit: EnvironmentUnit): MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle {
+        return battle.updateEnvironment(targetId, unit)
     }
 }

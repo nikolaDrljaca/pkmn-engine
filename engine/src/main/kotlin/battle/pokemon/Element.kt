@@ -143,17 +143,21 @@ val Element.relations
 
 enum class Effectiveness {
     IMMUNE,
+    QUARTER,
     NOT_VERY,
     NEUTRAL,
-    SUPER
+    SUPER,
+    DOUBLE_SUPER
 }
 
 val Effectiveness.multiplier
     get() = when (this) {
         Effectiveness.IMMUNE -> 0
+        Effectiveness.QUARTER -> 25
         Effectiveness.NOT_VERY -> 50
         Effectiveness.NEUTRAL -> 100
         Effectiveness.SUPER -> 200
+        Effectiveness.DOUBLE_SUPER -> 400
     }
 
 
@@ -167,8 +171,8 @@ fun effectiveness(attacker: Element, defender: Element): Effectiveness =
 
 fun Effectiveness.combine(other: Effectiveness): Effectiveness = when {
     this == Effectiveness.IMMUNE || other == Effectiveness.IMMUNE -> Effectiveness.IMMUNE
-    this == Effectiveness.SUPER && other == Effectiveness.SUPER -> Effectiveness.SUPER
-    this == Effectiveness.NOT_VERY && other == Effectiveness.NOT_VERY -> Effectiveness.NOT_VERY
+    this == Effectiveness.SUPER && other == Effectiveness.SUPER -> Effectiveness.DOUBLE_SUPER
+    this == Effectiveness.NOT_VERY && other == Effectiveness.NOT_VERY -> Effectiveness.QUARTER
     this == Effectiveness.SUPER && other == Effectiveness.NOT_VERY -> Effectiveness.NEUTRAL
     this == Effectiveness.NOT_VERY && other == Effectiveness.SUPER -> Effectiveness.NEUTRAL
     else -> other

@@ -1,5 +1,7 @@
 package com.drbrosdev.battle.move
 
+import com.drbrosdev.battle.environment.StealthRockEnvUnit
+import com.drbrosdev.battle.move.damagecalc.ApplyDamage
 import com.drbrosdev.battle.pokemon.Element
 import com.drbrosdev.battle.pokemon.MajorStatus
 import com.drbrosdev.battle.pokemon.PokemonDsl
@@ -234,11 +236,11 @@ val SonicBoom = buildMove {
     id = "sonic-boom"
     name = "Sonic Boom"
     element = Element.NORMAL
-    power = 20
+    power = 0
     powerPoints = 20
     percentAccuracy(90)
     special()
-    effects(ApplyDirectDamage)
+    effects(ApplyDirectDamage(20))
 }
 
 val SandAttack = buildMove {
@@ -266,4 +268,15 @@ val ConfuseRay = buildMove {
             volatileStatusFactory = { VolatileStatus.confusion(it) }
         )
     )
+}
+
+val StealthRock = buildMove {
+    id = "stealth-rock"
+    name = "Stealth Rock"
+    element = Element.ROCK
+    power = 0
+    powerPoints = 32
+    percentAccuracy(100)
+    status()
+    effects(ApplyEnvironmentUnit(StealthRockEnvUnit))
 }

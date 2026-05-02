@@ -1,7 +1,7 @@
 package com.drbrosdev.battle.item
 
-import com.drbrosdev.battle.move.DamageModifier
-import com.drbrosdev.battle.move.DamageMultiplier
+import com.drbrosdev.battle.move.damagecalc.DamageModifier
+import com.drbrosdev.battle.move.damagecalc.DamageMultiplier
 import com.drbrosdev.battle.move.MoveEffect
 import com.drbrosdev.battle.pokemon.Effectiveness
 import com.drbrosdev.battle.pokemon.Element

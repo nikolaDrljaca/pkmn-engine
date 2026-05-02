@@ -1,5 +1,6 @@
 package com.drbrosdev.battle
 
+import com.drbrosdev.battle.environment.EnvironmentUnit
 import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
 
@@ -14,13 +15,25 @@ data class Battle(
     val state: BattleState = BattleState.InProgress,
     val turnCount: Int = 1,
 
-    val weather: Weather = Weather.NONE
+    val weather: Weather = Weather.NONE,
+    // BUG: CARE that only Spikes and ToxicSpikes can be applied twice
+    // Probably this should be its own model!
+    val environmentUnits: Map<String, List<EnvironmentUnit>> = emptyMap()
 ) {
 
     operator fun get(pokemonId: PokemonId): Pokemon = when {
         team1.hasMember(pokemonId) -> team1[pokemonId]
         team2.hasMember(pokemonId) -> team2[pokemonId]
         else -> error("Pokemon $pokemonId is not in the current Battle!")
+    }
+
+    fun environment(pokemon: PokemonId): List<EnvironmentUnit> {
+        val units = when {
+            team1.hasMember(pokemon) -> environmentUnits[team1.id]
+            team2.hasMember(pokemon) -> environmentUnits[team2.id]
+            else -> error("Pokemon ${pokemon.id} is not in the current Battle!")
+        }
+        return requireNotNull(units)
     }
 
     fun updateMons(vararg pokemon: Pokemon): Battle {
@@ -33,16 +46,20 @@ data class Battle(
         }
     }
 
+    fun updateEnvironment(target: PokemonId, unit: EnvironmentUnit): Battle {
+        val teamId = when {
+            team1.hasMember(target) -> team1.id
+            team2.hasMember(target) -> team2.id
+            else -> error("Pokemon $target is not in the current Battle!")
+        }
+        val updatedUnits = environmentUnits[teamId].orEmpty() + unit
+        return copy(environmentUnits = environmentUnits + (teamId to updatedUnits))
+    }
+
     fun switch(user: PokemonId, target: PokemonId): Battle {
-        // user volatile status clears when switching out
-        // disabled moves are re-enabled
-        val pokemon = this[user]
-            .clearVolatileStatus()
-            .enableMoves()
-        val afterHeal = updateMons(pokemon)
         return when (user) {
-            active1 -> afterHeal.copy(active1 = target)
-            active2 -> afterHeal.copy(active2 = target)
+            active1 -> copy(active1 = target)
+            active2 -> copy(active2 = target)
             else -> error("Pokemon ${user.id} not found in battle!")
         }
     }
