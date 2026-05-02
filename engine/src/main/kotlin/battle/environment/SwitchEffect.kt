@@ -6,7 +6,7 @@ fun interface SwitchEffect {
     fun apply(pokemon: Pokemon): Pokemon
 }
 
-class SwitchInEffect(private val units: List<EnvironmentUnit>) : SwitchEffect {
+class SwitchInEffect(private val units: Collection<EnvironmentUnit>) : SwitchEffect {
     override fun apply(pokemon: Pokemon): Pokemon {
         return units.fold(pokemon) { mon, unit ->
             unit.effect.apply(mon)

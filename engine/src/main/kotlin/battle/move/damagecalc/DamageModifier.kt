@@ -5,12 +5,12 @@ import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.Weather
 import com.drbrosdev.battle.move.MoveContext
 import com.drbrosdev.battle.move.isPhysical
-import com.drbrosdev.battle.pokemon.Effectiveness
-import com.drbrosdev.battle.pokemon.Element
-import com.drbrosdev.battle.pokemon.effectiveness
-import com.drbrosdev.battle.pokemon.hasAnyOf
-import com.drbrosdev.battle.pokemon.isBurned
-import com.drbrosdev.battle.pokemon.multiplier
+import com.drbrosdev.battle.move.isSpecialMove
+import com.drbrosdev.battle.pokemon.*
+import java.util.logging.Logger
+
+
+private val LOG = Logger.getLogger(DamageModifier::class.qualifiedName)
 
 @JvmInline
 value class DamageMultiplier(val value: Int) // hundreds-scaled
@@ -42,7 +42,6 @@ val TypeEffectivenessModifier = DamageModifier { battle ->
     }
 }
 
-// TODO: move to weather itself
 val WeatherModifier = DamageModifier { battle ->
     val move = battle[userId][moveId]
     when (battle.weather) {
@@ -76,6 +75,30 @@ val BurnModifier = DamageModifier { battle ->
     when {
         move.isPhysical() && user.isBurned() -> DamageMultiplier(50)
         else -> null
+    }
+}
+
+val ReflectModifier = DamageModifier { battle ->
+    val move = battle[userId][moveId]
+    val hasReflect = battle.environment(targetId)
+        .map { it.id }
+        .contains("reflect")
+    when {
+        move.isPhysical().not() -> null
+        hasReflect.not() -> null
+        else -> DamageMultiplier(50)
+    }
+}
+
+val LightScreenModifier = DamageModifier { battle ->
+    val move = battle[userId][moveId]
+    val hasLightScreen = battle.environment(targetId)
+        .map { it.id }
+        .contains("light-screen")
+    when {
+        move.isSpecialMove().not() -> null
+        hasLightScreen.not() -> null
+        else -> DamageMultiplier(50)
     }
 }
 

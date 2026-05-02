@@ -9,17 +9,13 @@ import java.util.logging.Logger
 
 private val LOG = Logger.getLogger(EnvironmentUnit::class.qualifiedName)
 
-/*
- * Switch system:
- * 1. Switch out effect run 
- *  - clear volatile states
- *  - clear temporary stat changes / modifiers
- *  - enable disabled moves
- * 2. Perform Switch
- * 3. Switch in effects run, from the environment
+/**
+ * [EnvironmentUnit.expiresOnTurn] models environment units which can expire
+ * such as Light Screen and Reflect.
  */
 data class EnvironmentUnit(
     val id: String,
+    val expiresOnTurn: Int? = null,
     val effect: EnvironmentEffect = EnvironmentEffect.NoEffect
 )
 
@@ -60,22 +56,6 @@ val SpikesEnvUnit = EnvironmentUnit(
 
 val ToxicSpikesEnvUnit = EnvironmentUnit(
     id = "toxic-spikes",
-    effect = { pokemon ->
-        // TODO: implement
-        pokemon
-    }
-)
-
-val LightScreenEnvUnit = EnvironmentUnit(
-    id = "light-screen",
-    effect = { pokemon ->
-        // TODO: implement
-        pokemon
-    }
-)
-
-val ReflectEnvUnit = EnvironmentUnit(
-    id = "reflect",
     effect = { pokemon ->
         // TODO: implement
         pokemon

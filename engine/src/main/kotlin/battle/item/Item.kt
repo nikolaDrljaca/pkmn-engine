@@ -10,7 +10,7 @@ import com.drbrosdev.battle.pokemon.stats.*
 import com.drbrosdev.battle.turn.EndOfTurnEffect
 import java.util.logging.Logger
 
-private val LOG = Logger.getLogger("com.drbrosdev.battle.item.Item")
+private val LOG = Logger.getLogger(Item::class.qualifiedName)
 
 data class Item(
     val id: ItemId,

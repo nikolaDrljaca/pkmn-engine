@@ -18,7 +18,7 @@ data class Battle(
     val weather: Weather = Weather.NONE,
     // BUG: CARE that only Spikes and ToxicSpikes can be applied twice
     // Probably this should be its own model!
-    val environmentUnits: Map<String, List<EnvironmentUnit>> = emptyMap()
+    val environmentUnits: Map<String, Set<EnvironmentUnit>> = emptyMap()
 ) {
 
     operator fun get(pokemonId: PokemonId): Pokemon = when {
@@ -27,13 +27,13 @@ data class Battle(
         else -> error("Pokemon $pokemonId is not in the current Battle!")
     }
 
-    fun environment(pokemon: PokemonId): List<EnvironmentUnit> {
+    fun environment(pokemon: PokemonId): Set<EnvironmentUnit> {
         val units = when {
             team1.hasMember(pokemon) -> environmentUnits[team1.id]
             team2.hasMember(pokemon) -> environmentUnits[team2.id]
             else -> error("Pokemon ${pokemon.id} is not in the current Battle!")
         }
-        return requireNotNull(units)
+        return units.orEmpty()
     }
 
     fun updateMons(vararg pokemon: Pokemon): Battle {
@@ -46,7 +46,7 @@ data class Battle(
         }
     }
 
-    fun updateEnvironment(target: PokemonId, unit: EnvironmentUnit): Battle {
+    fun updateEnvironment(target: PokemonId, vararg unit: EnvironmentUnit): Battle {
         val teamId = when {
             team1.hasMember(target) -> team1.id
             team2.hasMember(target) -> team2.id

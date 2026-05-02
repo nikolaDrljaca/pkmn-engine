@@ -16,7 +16,7 @@ fun Battle.resolveTurn(turn: Turn): Battle {
     In this case this is not a part of turn resolution, but a part of turn
     construction.
      */
-    LOG.info { "Resolving turn $turnCount. Active: $active1 : $active2" }
+    LOG.fine { "Resolving turn $turnCount. Active: $active1 : $active2" }
     val turnValidity = validateTurn(turn)
     if (turnValidity is TurnValidity.Invalid) {
         return this

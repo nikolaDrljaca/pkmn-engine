@@ -10,7 +10,7 @@ import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.*
 import java.util.logging.Logger
 
-private val LOG = Logger.getLogger("com.drbrosdev.battle.move.DamageCalculation")
+private val LOG = Logger.getLogger(ApplyDamage::class.qualifiedName)
 
 /*
 Dynamic stat resolution
@@ -85,7 +85,11 @@ object ApplyNormalDamage : MoveEffect {
             add(WeatherModifier)
             add(RandomModifier)
             add(BurnModifier)
-            // TODO Add item and ability support
+            add(LightScreenModifier)
+            add(ReflectModifier)
+            // item support (Eg Black Glasses etc)
+            add(user.item.damageMultiplier)
+            // TODO Add ability support
         }
 
         // base times all multipliers

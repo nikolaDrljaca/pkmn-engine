@@ -214,7 +214,7 @@ fun Battle.resolveActionOrder(
         }
         when (result) {
             is OrderingResult.Resolved -> {
-                LOG.info { "${result.first.user.id} moves first against ${result.second.user.id} - resolved by ${rule::class.simpleName}" }
+                LOG.fine { "${result.first.user.id} moves first against ${result.second.user.id} - resolved by ${rule::class.simpleName}" }
                 return result.first to result.second
             }
 

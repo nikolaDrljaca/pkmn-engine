@@ -1,5 +1,7 @@
 package com.drbrosdev.battle.move
 
+import com.drbrosdev.RandomGen
+import com.drbrosdev.battle.environment.EnvironmentUnit
 import com.drbrosdev.battle.environment.StealthRockEnvUnit
 import com.drbrosdev.battle.move.damagecalc.ApplyDamage
 import com.drbrosdev.battle.pokemon.Element
@@ -279,4 +281,52 @@ val StealthRock = buildMove {
     percentAccuracy(100)
     status()
     effects(ApplyEnvironmentUnit(StealthRockEnvUnit))
+}
+
+val Reflect = buildMove {
+    id = "reflect"
+    name = "Reflect"
+    element = Element.PSYCHIC
+    power = 0
+    powerPoints = 32
+    percentAccuracy(100)
+    status()
+    effects({ battle ->
+        val user = battle[userId]
+        val lowerBound = 5
+        val upperBound = when {
+            user.item.id.value == "light-clay" -> 9
+            else -> 6
+        }
+        val roll = RandomGen.nextInt(lowerBound, upperBound)
+        val unit = EnvironmentUnit(
+            id = "reflect",
+            expiresOnTurn = battle.turnCount + roll
+        )
+        battle.updateEnvironment(userId, unit)
+    })
+}
+
+val LightScreen = buildMove {
+    id = "light-screen"
+    name = "Light Screen"
+    element = Element.PSYCHIC
+    power = 0
+    powerPoints = 32
+    percentAccuracy(100)
+    status()
+    effects({ battle ->
+        val user = battle[userId]
+        val lowerBound = 5
+        val upperBound = when {
+            user.item.id.value == "light-clay" -> 9
+            else -> 6
+        }
+        val roll = RandomGen.nextInt(lowerBound, upperBound)
+        val unit = EnvironmentUnit(
+            id = "light-screen",
+            expiresOnTurn = battle.turnCount + roll
+        )
+        battle.updateEnvironment(userId, unit)
+    })
 }

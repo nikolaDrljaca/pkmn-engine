@@ -5,6 +5,7 @@ import com.drbrosdev.battle.environment.SwitchInEffect
 import com.drbrosdev.battle.environment.SwitchOutEffect
 import com.drbrosdev.battle.pokemon.MajorStatus
 import com.drbrosdev.battle.pokemon.Pokemon
+import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.hasFainted
 import java.util.logging.Logger
 import kotlin.collections.fold
@@ -22,7 +23,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
         is TurnAction.MoveSelected -> with(context.toMoveContext()) {
             val user = battle[userId]
             val move = user[moveId]
-            LOG.info { "$userId is attempting to use ${move.name}" }
+            LOG.info { "${user.name} used ${move.name}!" }
             val applicableEffects = buildList {
                 add(user.item.preMoveEffect)
                 add(move.effect)
@@ -59,21 +60,34 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
         is TurnAction.Switch -> battle
 
         is TurnAction.MoveSelected -> {
-            val updated = computeVolatileAndSelfHealingStatus(
-                pokemon = battle[context.user],
-                turnCount = battle.turnCount
-            )
-            battle.updateMons(updated)
+            battle
+                // resolve pokemon volatile and self-healing status
+                .let { resolveVolatileStatus(it[context.user], it.turnCount) }
+                .let { battle.updateMons(it) }
+                // resolve environment effect which can expire
+                .let { resolveEnvironmentUnits(context.user, it) }
         }
     }
 
-    // Clear all volatile status conditions which have expired
-    // MajorStatus Asleep and Frozen need to be checked here
-    // since they are self-healing.
-    private fun computeVolatileAndSelfHealingStatus(
+    private fun resolveEnvironmentUnits(
+        pokemonId: PokemonId,
+        battle: Battle
+    ): Battle {
+        val updatedEnv = battle.environment(pokemonId)
+            .filter { it.expiresOnTurn != null }
+            .filter { battle.turnCount < it.expiresOnTurn!! }
+            .toSet()
+        return battle.updateEnvironment(
+            target = context.user,
+            *updatedEnv.toTypedArray()
+        )
+    }
+
+    private fun resolveVolatileStatus(
         pokemon: Pokemon,
         turnCount: Int
     ): Pokemon = with(pokemon) {
+        // resolve self-healing major status
         val afterMajor = when (majorStatus) {
             is MajorStatus.Asleep -> {
                 val newMajorStatus = when {
@@ -94,7 +108,7 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
 
             else -> this
         }
-
+        // resolve volatile status
         afterMajor.copy(
             volatileStatus = volatileStatus
                 .filter { turnCount < it.expiresOnTurn }

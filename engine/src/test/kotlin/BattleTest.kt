@@ -4,7 +4,6 @@ import com.drbrosdev.battle.Team
 import com.drbrosdev.battle.move.Growl
 import com.drbrosdev.battle.move.Leer
 import com.drbrosdev.battle.move.Scratch
-import com.drbrosdev.battle.move.StealthRock
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
@@ -17,7 +16,7 @@ class BattleTest {
 
     val chimchar = buildPokemon {
         pokemonId("chimchar")
-        elements(Element.WATER)
+        elements(Element.FIRE)
         name = "Chimchar"
         nature = Quirky
         ability = RunAway
