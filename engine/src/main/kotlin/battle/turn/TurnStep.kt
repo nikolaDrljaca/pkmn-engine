@@ -37,7 +37,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
         is TurnAction.Switch -> {
             val incoming = battle[context.action.incoming]
             val outgoing = battle[context.user]
-            LOG.info { "${context.user.id} is attempting to switch with ${incoming.id}" }
+            LOG.info { "${context.user.id} is switching with ${incoming.id}" }
             // switch out effects are applied to outgoing
             val afterOutEffects = with(SwitchOutEffect) { apply(outgoing) }
             // switch in effects are applied to incoming

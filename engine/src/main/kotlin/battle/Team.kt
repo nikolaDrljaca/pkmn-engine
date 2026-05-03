@@ -7,7 +7,7 @@ import java.util.UUID
 
 data class Team(
     val members: Map<PokemonId, Pokemon>,
-    val id: String = UUID.randomUUID().toString().take(4),
+    val id: TeamId = TeamId()
 ) {
     init {
         require(members.size <= MEMBER_LIMIT) {
@@ -30,3 +30,17 @@ fun Team.updateMember(pokemon: Pokemon) = copy(members = members.toMutableMap() 
 
 fun Team.allFainted() = members.values.all { it.hasFainted() }
 
+@JvmInline
+value class TeamId private constructor(val id: String) {
+
+    override fun toString(): String = id
+
+    companion object {
+        operator fun invoke(): TeamId {
+            val unique = UUID.randomUUID()
+                .toString()
+                .take(4)
+            return TeamId("team-$unique")
+        }
+    }
+}

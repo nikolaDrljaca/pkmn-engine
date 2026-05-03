@@ -5,6 +5,7 @@ import com.drbrosdev.battle.abilities
 import com.drbrosdev.battle.move.MoveStatus
 import com.drbrosdev.battle.move.isStatusMove
 import com.drbrosdev.battle.pokemon.Pokemon
+import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.VolatileStatus
 import java.util.logging.Logger
 
@@ -22,10 +23,10 @@ val SameSwitchTarget = TurnValidator { battle ->
 
 val PowerPointsTurnValidator = TurnValidator { battle ->
     // verify all chosen moves have PP > 0
-    val verify: (Pair<Pokemon, TurnAction>) -> TurnValidity = { (pokemon, action) ->
+    val verify: (Pair<PokemonId, TurnAction>) -> TurnValidity = { (pokemonId, action) ->
         when (action) {
             is TurnAction.MoveSelected -> {
-                val move = battle[pokemon.id][action.move]
+                val move = battle[pokemonId][action.move]
                 when {
                     move.powerPoints > 0 -> TurnValidity.Valid
                     else -> TurnValidity.Invalid(TurnValidity.InvalidReason.NoPowerPoints)
@@ -43,10 +44,10 @@ val PowerPointsTurnValidator = TurnValidator { battle ->
 
 val MoveDisabledTurnValidator = TurnValidator { battle ->
     // verify chosen moves are not disabled
-    val verify: (Pair<Pokemon, TurnAction>) -> TurnValidity = { (pokemon, action) ->
+    val verify: (Pair<PokemonId, TurnAction>) -> TurnValidity = { (pokemonId, action) ->
         when (action) {
             is TurnAction.MoveSelected -> {
-                val move = battle[pokemon.id][action.move]
+                val move = battle[pokemonId][action.move]
                 when {
                     move.status == MoveStatus.DISABLED -> TurnValidity.Invalid(TurnValidity.InvalidReason.MoveDisabled)
                     else -> TurnValidity.Valid
@@ -67,8 +68,9 @@ val TauntTurnValidator = TurnValidator { battle ->
     val (pokemon1, action1) = selection1
     val (pokemon2, action2) = selection2
 
-    fun verifyTaunt(selection: Pair<Pokemon, TurnAction>): TurnValidity {
-        val (pokemon, action) = selection
+    fun verifyTaunt(selection: Pair<PokemonId, TurnAction>): TurnValidity {
+        val (pokemonId, action) = selection
+        val pokemon = battle[pokemonId]
         val isTaunted = pokemon.volatileStatus
             .filterIsInstance<VolatileStatus.Taunt>()
             .firstOrNull() != null
@@ -76,7 +78,7 @@ val TauntTurnValidator = TurnValidator { battle ->
             isTaunted -> {
                 when (action) {
                     is TurnAction.MoveSelected -> {
-                        val move = battle[pokemon.id][action.move]
+                        val move = pokemon[action.move]
                         when {
                             move.isStatusMove() ->
                                 TurnValidity.Invalid(TurnValidity.InvalidReason.PokemonTaunted)

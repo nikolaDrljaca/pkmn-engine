@@ -31,8 +31,8 @@ class PowerPointTurnValidatorTest {
             addMove(buildMove { powerPoints = 10 })
         }
         val turn = Turn(
-            pokemon1 to TurnAction.MoveSelected(pokemon1.moves.first().id),
-            pokemon2 to TurnAction.MoveSelected(pokemon2.moves.first().id),
+            pokemon1.id to TurnAction.MoveSelected(pokemon1.moves.first().id),
+            pokemon2.id to TurnAction.MoveSelected(pokemon2.moves.first().id),
         )
         val battle = Battle(
             Team(mapOf(active1 to pokemon1)),
@@ -55,8 +55,8 @@ class PowerPointTurnValidatorTest {
             addMove(buildMove { powerPoints = 10 })
         }
         val turn = Turn(
-            pokemon1 to TurnAction.Switch(active1),
-            pokemon2 to TurnAction.Switch(active2)
+            pokemon1.id to TurnAction.Switch(active1),
+            pokemon2.id to TurnAction.Switch(active2)
         )
         val battle = Battle(
             Team(mapOf(active1 to pokemon1)),
@@ -79,8 +79,8 @@ class PowerPointTurnValidatorTest {
             addMove(buildMove { powerPoints = 10 })
         }
         val turn = Turn(
-            pokemon1 to TurnAction.MoveSelected(pokemon1.moves.first().id),
-            pokemon2 to TurnAction.Switch(pokemon2.id)
+            pokemon1.id to TurnAction.MoveSelected(pokemon1.moves.first().id),
+            pokemon2.id to TurnAction.Switch(pokemon2.id)
         )
         val battle = Battle(
             Team(mapOf(active1 to pokemon1)),
@@ -104,8 +104,8 @@ class PowerPointTurnValidatorTest {
             addMove(buildMove { powerPoints = 0 })
         }
         val turn = Turn(
-            pokemon1 to TurnAction.MoveSelected(pokemon1.moves.first().id),
-            pokemon2 to TurnAction.MoveSelected(pokemon2.moves.first().id)
+            pokemon1.id to TurnAction.MoveSelected(pokemon1.moves.first().id),
+            pokemon2.id to TurnAction.MoveSelected(pokemon2.moves.first().id)
         )
         val battle = Battle(
             Team(mapOf(active1 to pokemon1)),
@@ -131,8 +131,8 @@ class PowerPointTurnValidatorTest {
             addMove(buildMove { powerPoints = 0 })
         }
         val turn = Turn(
-            pokemon1 to TurnAction.MoveSelected(pokemon1.moves.first().id),
-            pokemon2 to TurnAction.MoveSelected(pokemon2.moves.first().id)
+            pokemon1.id to TurnAction.MoveSelected(pokemon1.moves.first().id),
+            pokemon2.id to TurnAction.MoveSelected(pokemon2.moves.first().id)
         )
         val battle = Battle(
             Team(mapOf(active1 to pokemon1)),
@@ -158,8 +158,8 @@ class PowerPointTurnValidatorTest {
             addMove(buildMove { powerPoints = 0 })
         }
         val turn = Turn(
-            pokemon1 to TurnAction.Switch(pokemon1.id),
-            pokemon2 to TurnAction.MoveSelected(pokemon2.moves.first().id)
+            pokemon1.id to TurnAction.Switch(pokemon1.id),
+            pokemon2.id to TurnAction.MoveSelected(pokemon2.moves.first().id)
         )
         val battle = Battle(
             Team(mapOf(active1 to pokemon1)),

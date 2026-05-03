@@ -1,9 +1,9 @@
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.BattleState
 import com.drbrosdev.battle.Team
-import com.drbrosdev.battle.move.Growl
-import com.drbrosdev.battle.move.Leer
-import com.drbrosdev.battle.move.Scratch
+import com.drbrosdev.battle.move.registry.Growl
+import com.drbrosdev.battle.move.registry.Leer
+import com.drbrosdev.battle.move.registry.Scratch
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
@@ -68,8 +68,8 @@ class BattleTest {
     @Test
     fun `first single turn test`() {
         val turn = Turn(
-            selection1 = chimchar to TurnAction.MoveSelected(Scratch.id),
-            selection2 = charmander to TurnAction.MoveSelected(Growl.id)
+            selection1 = chimchar.id to TurnAction.MoveSelected(Scratch.id),
+            selection2 = charmander.id to TurnAction.MoveSelected(Growl.id)
         )
         val updatedBattle = battle.resolveTurn(turn)
         val foo = updatedBattle.team1[chimchar.id].computeInBattleStats(updatedBattle)
@@ -80,15 +80,15 @@ class BattleTest {
     @Test
     fun `run battle test`() {
         val turn = Turn(
-            selection1 = chimchar to TurnAction.MoveSelected(chimchar.moves.first().id),
-            selection2 = charmander to TurnAction.MoveSelected(charmander.moves.first().id)
+            selection1 = chimchar.id to TurnAction.MoveSelected(chimchar.moves.first().id),
+            selection2 = charmander.id to TurnAction.MoveSelected(charmander.moves.first().id)
         )
         var updatedBattle = battle.resolveTurn(turn)
         while (updatedBattle.state is BattleState.InProgress) {
             updatedBattle = updatedBattle.resolveTurn(
                 Turn(
-                    selection1 = chimchar to TurnAction.MoveSelected(chimchar.moves.random().id),
-                    selection2 = charmander to TurnAction.MoveSelected(charmander.moves.random().id)
+                    selection1 = chimchar.id to TurnAction.MoveSelected(chimchar.moves.random().id),
+                    selection2 = charmander.id to TurnAction.MoveSelected(charmander.moves.random().id)
                 )
             )
         }

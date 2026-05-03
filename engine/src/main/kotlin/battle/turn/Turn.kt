@@ -6,8 +6,8 @@ import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
 
 data class Turn(
-    val selection1: Pair<Pokemon, TurnAction>,
-    val selection2: Pair<Pokemon, TurnAction>
+    val selection1: Pair<PokemonId, TurnAction>,
+    val selection2: Pair<PokemonId, TurnAction>
 )
 
 sealed interface TurnAction {

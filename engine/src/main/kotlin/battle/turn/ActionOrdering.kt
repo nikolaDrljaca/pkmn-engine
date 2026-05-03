@@ -6,6 +6,7 @@ import com.drbrosdev.battle.abilities
 import com.drbrosdev.battle.move.Move
 import com.drbrosdev.battle.move.MoveId
 import com.drbrosdev.battle.pokemon.Pokemon
+import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.computeInBattleStats
 import java.util.logging.Logger
 
@@ -24,17 +25,17 @@ sealed interface OrderingResult {
         val second: ActionContext
     ) : OrderingResult {
         constructor(
-            selection1: Pair<Pokemon, TurnAction>,
-            selection2: Pair<Pokemon, TurnAction>
+            selection1: Pair<PokemonId, TurnAction>,
+            selection2: Pair<PokemonId, TurnAction>
         ) : this(
             first = ActionContext(
-                user = selection1.first.id,
-                target = selection2.first.id,
+                user = selection1.first,
+                target = selection2.first,
                 action = selection1.second
             ),
             second = ActionContext(
-                user = selection2.first.id,
-                target = selection1.first.id,
+                user = selection2.first,
+                target = selection1.first,
                 action = selection2.second
             ),
         )
@@ -83,8 +84,8 @@ private object PursuitRule : TurnActionOrderRule {
 // Priority always resolves if moves differ
 private object MovePriorityRule : TurnActionOrderRule {
     override fun Turn.determine(battle: Battle): OrderingResult {
-        val move1 = battle[selection1.first.id][move(selection1.second)]
-        val move2 = battle[selection2.first.id][move(selection2.second)]
+        val move1 = battle[selection1.first][move(selection1.second)]
+        val move2 = battle[selection2.first][move(selection2.second)]
         return when {
             move1.priority.value > move2.priority.value ->
                 OrderingResult.Resolved(selection1, selection2)
@@ -109,9 +110,11 @@ private object QuickClawRule : TurnActionOrderRule {
     override fun Turn.determine(battle: Battle): OrderingResult {
         val (p1, a1) = selection1
         val (p2, a2) = selection2
-        val claw1 = (p1.item.id.value == "quick-claw")
+        val mon1 = battle[p1]
+        val mon2 = battle[p2]
+        val claw1 = (mon1.item.id.value == "quick-claw")
             .and(RandomGen.nextInt(1, 101) <= 20)
-        val claw2 = (p2.item.id.value == "quick-claw")
+        val claw2 = (mon2.item.id.value == "quick-claw")
             .and(RandomGen.nextInt(1, 101) <= 20)
         return when {
             // both rolled, so its random
@@ -143,18 +146,14 @@ private object SpeedRule : TurnActionOrderRule {
         // compare resolved speed stats
         val (p1, a1) = selection1
         val (p2, a2) = selection2
-        val speed1 = p1.computeInBattleStats(battle).speed.value
-        val speed2 = p2.computeInBattleStats(battle).speed.value
+        val mon1 = battle[p1]
+        val mon2 = battle[p2]
+        val speed1 = mon1.computeInBattleStats(battle).speed.value
+        val speed2 = mon2.computeInBattleStats(battle).speed.value
         return when {
-            speed1 > speed2 -> OrderingResult.Resolved(
-                ActionContext(p1.id, p2.id, a1),
-                ActionContext(p2.id, p1.id, a2),
-            )
+            speed1 > speed2 -> OrderingResult.Resolved(selection1, selection2)
 
-            speed2 > speed1 -> OrderingResult.Resolved(
-                ActionContext(p2.id, p1.id, a2),
-                ActionContext(p1.id, p2.id, a1),
-            )
+            speed2 > speed1 -> OrderingResult.Resolved(selection2, selection1)
 
             else -> OrderingResult.Deferred
         }
@@ -164,18 +163,10 @@ private object SpeedRule : TurnActionOrderRule {
 // Terminal - always resolves via coin flip
 private object SpeedTieRule : TurnActionOrderRule {
     override fun Turn.determine(battle: Battle): OrderingResult {
-        val (p1, a1) = selection1
-        val (p2, a2) = selection2
         return when {
-            RandomGen.nextBoolean() -> OrderingResult.Resolved(
-                first = ActionContext(p1.id, p2.id, a1),
-                second = ActionContext(p2.id, p1.id, a2)
-            )
+            RandomGen.nextBoolean() -> OrderingResult.Resolved(selection1, selection2)
 
-            else -> OrderingResult.Resolved(
-                first = ActionContext(p2.id, p1.id, a2),
-                second = ActionContext(p1.id, p2.id, a1),
-            )
+            else -> OrderingResult.Resolved(selection2, selection1)
         }
     }
 }
