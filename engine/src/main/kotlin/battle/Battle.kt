@@ -3,6 +3,7 @@ package com.drbrosdev.battle
 import com.drbrosdev.battle.environment.EnvironmentUnit
 import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
+import com.sun.org.apache.xml.internal.serializer.utils.Utils.messages
 
 // state container for the current battle state
 data class Battle(
@@ -12,13 +13,15 @@ data class Battle(
     val active1: PokemonId,
     val active2: PokemonId,
 
-    val state: BattleState = BattleState.InProgress,
-    val turnCount: Int = 1,
-
     val weather: Weather = Weather.NONE,
     // BUG: CARE that only Spikes and ToxicSpikes can be applied twice
     // Probably this should be its own model!
-    val environmentUnits: Map<TeamId, Set<EnvironmentUnit>> = emptyMap()
+    val environmentUnits: Map<TeamId, Set<EnvironmentUnit>> = emptyMap(),
+
+    // state information
+    val state: BattleState = BattleState.InProgress,
+    val turnCount: Int = 1,
+    val turnLog: List<String> = emptyList()
 ) {
 
     operator fun get(pokemonId: PokemonId): Pokemon = when {
@@ -70,6 +73,11 @@ data class Battle(
         }
     }
 }
+
+/**
+ * Use to append a narrative message into the turn log.
+ */
+fun Battle.log(message: String): Battle = copy(turnLog = turnLog + message)
 
 fun Battle.abilities() = sequenceOf(
     this[active1].ability,

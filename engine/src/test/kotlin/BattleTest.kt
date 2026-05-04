@@ -72,12 +72,10 @@ class BattleTest {
             selection2 = charmander.id to TurnAction.MoveSelected(Growl.id)
         )
         val updatedBattle = battle.resolveTurn(turn)
-        val foo = updatedBattle.team1[chimchar.id].computeInBattleStats(updatedBattle)
-        val bar = updatedBattle.team2[charmander.id].computeInBattleStats(updatedBattle)
         println(updatedBattle)
     }
 
-    @Test
+    //@Test
     fun `run battle test`() {
         val turn = Turn(
             selection1 = chimchar.id to TurnAction.MoveSelected(chimchar.moves.first().id),

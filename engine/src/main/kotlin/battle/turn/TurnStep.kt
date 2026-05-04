@@ -28,9 +28,16 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
                 add(user.item.preMoveEffect)
                 add(move.effect)
             }
-            applicableEffects.fold(battle) { inner, effect ->
-                effect.run { apply(inner) }
-            }
+
+            battle
+                // log narrative message
+                .log("${user.name} used ${move.name}!")
+                // resolve move
+                .let {
+                    applicableEffects.fold(it) { inner, effect ->
+                        effect.run { apply(inner) }
+                    }
+                }
         }
 
         // switch action, applies switch out and switch in effects
