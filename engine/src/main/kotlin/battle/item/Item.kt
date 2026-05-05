@@ -8,6 +8,7 @@ import com.drbrosdev.battle.pokemon.Element
 import com.drbrosdev.battle.pokemon.effectiveness
 import com.drbrosdev.battle.pokemon.stats.*
 import com.drbrosdev.battle.turn.EndOfTurnEffect
+import com.drbrosdev.battle.turn.EndOfTurnEffectResult
 import java.util.logging.Logger
 
 private val LOG = Logger.getLogger(Item::class.qualifiedName)
@@ -99,8 +100,9 @@ val Leftovers = Item(
             // cannot over-heal
             .coerceAtMost(pokemon.effectiveStats.hp.value)
         LOG.fine { "${pokemon.id} heals $healing using Leftovers" }
-        pokemon.copy(
-            inBattleHp = Stat(newHp)
+        EndOfTurnEffectResult(
+            pokemon = pokemon.copy(inBattleHp = Stat(newHp)),
+            narrativeMessage = "${pokemon.name} restored $healing using Leftovers."
         )
     }
 )
@@ -114,8 +116,9 @@ val BlackSludge = Item(
                 val newHp = (pokemon.inBattleHp.value + healing)
                     // cannot over-heal
                     .coerceAtMost(pokemon.effectiveStats.hp.value)
-                pokemon.copy(
-                    inBattleHp = Stat(newHp)
+                EndOfTurnEffectResult(
+                    pokemon = pokemon.copy(inBattleHp = Stat(newHp)),
+                    narrativeMessage = "${pokemon.name} restored $healing using Black Sludge."
                 )
             }
             // take 1/16 damage
@@ -124,8 +127,9 @@ val BlackSludge = Item(
                 val newHp = (pokemon.inBattleHp.value - damage)
                     // hp cannot go below 0
                     .coerceAtLeast(0)
-                pokemon.copy(
-                    inBattleHp = Stat(newHp)
+                EndOfTurnEffectResult(
+                    pokemon = pokemon.copy(inBattleHp = Stat(newHp)),
+                    narrativeMessage = "${pokemon.name} took $damage from Black Sludge."
                 )
             }
         }

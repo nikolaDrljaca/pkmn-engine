@@ -41,29 +41,31 @@ class SequenceMoveEffect(private val effects: List<MoveEffect>) : MoveEffect {
         // 1 PP reduction happens always
         val afterPP = with(ReducePowerPoints) { apply(battle) }
         // 2 check preconditions
-        val preconditionResult = resolvePreconditions(afterPP)
+        val movePreconditionResult = resolvePreconditions(afterPP)
+        val preconditionResult = movePreconditionResult.result
+        val updatedBattle = afterPP.narrative(movePreconditionResult.narrativeMessage)
         // 3 execute effects
         return when (preconditionResult) {
             // all preconditions passed - execute move
             MovePrecondition.Result.PASS -> effects
                 .plus(battle[userId].item.afterMoveEffect)
-                .fold(afterPP) { current, effect ->
+                .fold(updatedBattle) { current, effect ->
                     with(effect) {
                         apply(current)
                     }
                 }
             // Precondition already checks if confusion should trigger
             // means you fail to execute AND you hit yourself
-            MovePrecondition.Result.CONFUSED -> with(ApplyConfusionStatusDamage) { apply(battle) }
+            MovePrecondition.Result.CONFUSED -> with(ApplyConfusionStatusDamage) { apply(updatedBattle) }
             // a precondition has triggered, no effects are applied
-            MovePrecondition.Result.TRIGGER -> afterPP
-            MovePrecondition.Result.MISS -> afterPP
-            MovePrecondition.Result.PROTECTED -> afterPP
-            MovePrecondition.Result.IMMUNE -> afterPP
-            MovePrecondition.Result.PARALYZED -> afterPP
-            MovePrecondition.Result.FROZEN -> afterPP
-            MovePrecondition.Result.ASLEEP -> afterPP
-            MovePrecondition.Result.INFATUATED -> afterPP
+            MovePrecondition.Result.TRIGGER -> updatedBattle
+            MovePrecondition.Result.MISS -> updatedBattle
+            MovePrecondition.Result.PROTECTED -> updatedBattle
+            MovePrecondition.Result.IMMUNE -> updatedBattle
+            MovePrecondition.Result.PARALYZED -> updatedBattle
+            MovePrecondition.Result.FROZEN -> updatedBattle
+            MovePrecondition.Result.ASLEEP -> updatedBattle
+            MovePrecondition.Result.INFATUATED -> updatedBattle
         }
     }
 }

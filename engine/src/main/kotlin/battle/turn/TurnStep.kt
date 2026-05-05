@@ -8,7 +8,6 @@ import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.hasFainted
 import java.util.logging.Logger
-import kotlin.collections.fold
 
 private val LOG = Logger.getLogger(TurnStep::class.qualifiedName)
 
@@ -31,7 +30,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
 
             battle
                 // log narrative message
-                .log("${user.name} used ${move.name}!")
+                .narrative("${user.name} used ${move.name}!")
                 // resolve move
                 .let {
                     applicableEffects.fold(it) { inner, effect ->
@@ -45,17 +44,17 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
             val incoming = battle[context.action.incoming]
             val outgoing = battle[context.user]
             LOG.info { "${context.user.id} is switching with ${incoming.id}" }
+            // TODO: group these so they can be applied for moves like U-Turn
             // switch out effects are applied to outgoing
             val afterOutEffects = with(SwitchOutEffect) { apply(outgoing) }
             // switch in effects are applied to incoming
             val environment = battle.environment(incoming.id)
             val afterInEffects = with(SwitchInEffect(environment)) { apply(incoming) }
-            val updatedBattle = battle.updateMons(afterOutEffects, afterInEffects)
-            // perform switch
-            updatedBattle.switch(
-                user = context.user,
-                target = context.action.incoming
-            )
+
+            battle
+                .narrative("${context.user.id} is switching with ${incoming.id}")
+                .updateMons(afterOutEffects, afterInEffects)
+                .switch(context.user, context.action.incoming)
         }
     }
 
@@ -146,9 +145,15 @@ class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
             add(BurnEndOfTurnEffect)
         }
 
-        return battle.updateMons(
-            applicableEffects.fold(user) { pokemon, effect -> effect.apply(pokemon) },
-        )
+        return applicableEffects
+            .fold(battle to user) { (currentBattle, currentPokemon), effect ->
+                val result = effect.apply(currentPokemon)
+                val updatedBattle = currentBattle.narrative(result.narrativeMessage)
+                updatedBattle to result.pokemon
+            }
+            .let { (finalBattle, finalPokemon) ->
+                finalBattle.updateMons(finalPokemon)
+            }
     }
 }
 

@@ -3,7 +3,6 @@ package com.drbrosdev.battle
 import com.drbrosdev.battle.environment.EnvironmentUnit
 import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
-import com.sun.org.apache.xml.internal.serializer.utils.Utils.messages
 
 // state container for the current battle state
 data class Battle(
@@ -72,12 +71,16 @@ data class Battle(
             else -> error("Pokemon ${user.id} not found in battle!")
         }
     }
+
+    /**
+     * Use to append a narrative message into the turn log.
+     */
+    fun narrative(message: String): Battle = when {
+        message.isNotBlank() -> copy(turnLog = turnLog + message)
+        else -> this
+    }
 }
 
-/**
- * Use to append a narrative message into the turn log.
- */
-fun Battle.log(message: String): Battle = copy(turnLog = turnLog + message)
 
 fun Battle.abilities() = sequenceOf(
     this[active1].ability,
@@ -88,6 +91,7 @@ sealed interface BattleOutcome {
     data class Winner(val team: Team) : BattleOutcome {
         override fun toString(): String = team.id.toString()
     }
+
     data object Draw : BattleOutcome
 }
 

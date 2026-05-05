@@ -75,7 +75,7 @@ class BattleTest {
         println(updatedBattle)
     }
 
-    //@Test
+    @Test
     fun `run battle test`() {
         val turn = Turn(
             selection1 = chimchar.id to TurnAction.MoveSelected(chimchar.moves.first().id),

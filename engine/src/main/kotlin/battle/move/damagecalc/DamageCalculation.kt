@@ -7,7 +7,7 @@ import com.drbrosdev.battle.move.MoveContext
 import com.drbrosdev.battle.move.MoveCritStage
 import com.drbrosdev.battle.move.MoveEffect
 import com.drbrosdev.battle.pokemon.*
-import com.drbrosdev.battle.pokemon.stats.*
+import com.drbrosdev.battle.pokemon.stats.Stat
 import java.util.logging.Logger
 
 private val LOG = Logger.getLogger(ApplyDamage::class.qualifiedName)
@@ -89,7 +89,7 @@ object ApplyNormalDamage : MoveEffect {
             add(ReflectModifier)
             // item support (Eg Black Glasses etc)
             add(user.item.damageMultiplier)
-            // TODO Add ability support
+            // TODO: Add ability support
         }
 
         // base times all multipliers
@@ -104,9 +104,19 @@ object ApplyNormalDamage : MoveEffect {
             inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
         )
 
-        LOG.fine { "$userId dealt $finalDamage damage to $targetId with $moveId by formula" }
+        // handle logging
+        // get effectiveness for narrative logging
+        val effectiveness = effectiveness(move.element, target.elements)
+        LOG.fine { "$userId dealt $finalDamage($effectiveness) damage to $targetId with $moveId by formula" }
+        val narrativeLog = buildString {
+            if (effectiveness.narrativeMessage.isNotBlank())
+                appendLine(effectiveness.narrativeMessage)
+            appendLine("The opposing ${target.name} lost $finalDamage health.")
+        }
 
-        return battle.updateMons(updatedTarget)
+        return battle
+            .narrative(narrativeLog)
+            .updateMons(updatedTarget)
     }
 }
 
@@ -144,9 +154,17 @@ object ApplyCriticalDamage : MoveEffect {
             inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
         )
 
-        LOG.fine { "$userId dealt $finalDamage damage to $targetId with $moveId by crit!" }
+        // handle logging
+        // get effectiveness for narrative logging
+        LOG.fine { "$userId dealt $finalDamage damage to $targetId with $moveId by crit" }
+        val narrativeLog = buildString {
+            appendLine("It's a critical hit!")
+            appendLine("The opposing ${target.name} lost $finalDamage health.")
+        }
 
-        return battle.updateMons(updatedTarget)
+        return battle
+            .narrative(narrativeLog)
+            .updateMons(updatedTarget)
     }
 }
 
@@ -190,7 +208,13 @@ object ApplyConfusionStatusDamage : MoveEffect {
             inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
         )
         LOG.fine { "$userId hurt itself in confusion for $finalDamage" }
-        return battle.updateMons(updatedTarget)
+        val narrativeLog = buildString {
+            appendLine("${user.name} hurt itself in confusion!")
+            appendLine("${user.name} dealt $finalDamage to itself.")
+        }
+        return battle
+            .narrative(narrativeLog)
+            .updateMons(updatedTarget)
     }
 }
 

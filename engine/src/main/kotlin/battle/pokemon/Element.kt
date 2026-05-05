@@ -160,6 +160,15 @@ val Effectiveness.multiplier
         Effectiveness.DOUBLE_SUPER -> 400
     }
 
+val Effectiveness.narrativeMessage
+    get() = when (this) {
+        Effectiveness.IMMUNE -> ""
+        Effectiveness.QUARTER -> "It's not very effective..."
+        Effectiveness.NOT_VERY -> "It's not very effective..."
+        Effectiveness.NEUTRAL -> ""
+        Effectiveness.SUPER -> "It's super effective!"
+        Effectiveness.DOUBLE_SUPER -> "It's super effective!"
+    }
 
 fun effectiveness(attacker: Element, defender: Element): Effectiveness =
     when (defender) {

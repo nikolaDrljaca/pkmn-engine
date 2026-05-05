@@ -16,7 +16,8 @@ import java.util.logging.Logger
 private val LOG = Logger.getLogger(MovePrecondition::class.qualifiedName)
 
 fun interface MovePrecondition {
-    fun MoveContext.check(battle: Battle): Result
+    fun MoveContext.check(battle: Battle): MovePreconditionResult
+
 
     enum class Result {
         PASS,
@@ -32,11 +33,22 @@ fun interface MovePrecondition {
     }
 }
 
+data class MovePreconditionResult(
+    val result: MovePrecondition.Result,
+    val narrativeMessage: String = ""
+)
+
+// Extension is only for scoping.
+fun MovePrecondition.result(preconditionResult: MovePrecondition.Result, message: () -> String = { "" }) = MovePreconditionResult(
+    result = preconditionResult,
+    narrativeMessage = message()
+)
+
 private object AccuracyPrecondition : MovePrecondition {
-    override fun MoveContext.check(battle: Battle): MovePrecondition.Result {
+    override fun MoveContext.check(battle: Battle): MovePreconditionResult {
         val move = battle[userId][moveId]
         return when (val accuracy = move.accuracy) {
-            is MoveAccuracy.AlwaysHit -> MovePrecondition.Result.PASS
+            is MoveAccuracy.AlwaysHit -> result(MovePrecondition.Result.PASS)
             is MoveAccuracy.Percent -> {
                 val user = battle[userId]
                 val target = battle[targetId]
@@ -50,9 +62,11 @@ private object AccuracyPrecondition : MovePrecondition {
                     .coerceIn(1, 100)
 
                 when {
-                    RandomGen.nextInt(1, 101) <= effectiveAccuracy -> MovePrecondition.Result.PASS
+                    RandomGen.nextInt(1, 101) <= effectiveAccuracy -> result(MovePrecondition.Result.PASS)
 
-                    else -> MovePrecondition.Result.MISS
+                    else -> result(MovePrecondition.Result.MISS) {
+                        "${user.name} attack missed!"
+                    }
                 }
             }
         }
@@ -60,27 +74,37 @@ private object AccuracyPrecondition : MovePrecondition {
 }
 
 private object StatusPrecondition : MovePrecondition {
-    override fun MoveContext.check(battle: Battle): MovePrecondition.Result {
+    override fun MoveContext.check(battle: Battle): MovePreconditionResult {
         val user = battle[userId]
 
         if (user.majorStatus is MajorStatus.Paralyzed && MajorStatus.shouldParalyze()) {
-            return MovePrecondition.Result.PARALYZED
+            return result(MovePrecondition.Result.PARALYZED) {
+                "${user.name} is paralyzed! It can't move!"
+            }
         }
 
         if (user.isConfused() && VolatileStatus.Confusion.shouldTrigger()) {
-            return MovePrecondition.Result.CONFUSED
+            return result(MovePrecondition.Result.CONFUSED) {
+                "${user.name} is confused!"
+            }
         }
 
         if (user.isInfatuated() && VolatileStatus.Infatuation.shouldTrigger()) {
-            return MovePrecondition.Result.INFATUATED
+            return result(MovePrecondition.Result.INFATUATED) {
+                "${user.name} is incapacitated with affection!"
+            }
         }
 
         // other status conditions are simple checks since their healing is handled
         // with ApplyStartOfTurnEffects
         return when (user.majorStatus) {
-            is MajorStatus.Frozen -> MovePrecondition.Result.FROZEN
-            is MajorStatus.Asleep -> MovePrecondition.Result.ASLEEP
-            else -> MovePrecondition.Result.PASS
+            is MajorStatus.Frozen -> result(MovePrecondition.Result.FROZEN) {
+                "${user.name} is frozen solid!"
+            }
+            is MajorStatus.Asleep -> result(MovePrecondition.Result.ASLEEP) {
+                "${user.name} is fast asleep."
+            }
+            else -> result(MovePrecondition.Result.PASS)
         }
     }
 }
@@ -88,31 +112,35 @@ private object StatusPrecondition : MovePrecondition {
 private object ProtectionPrecondition : MovePrecondition {
     // TODO impl
     // To check things like Protect/Detect/Wide Guard etc
-    override fun MoveContext.check(battle: Battle): MovePrecondition.Result {
-        return MovePrecondition.Result.PASS
+    override fun MoveContext.check(battle: Battle): MovePreconditionResult {
+        return result(MovePrecondition.Result.PASS)
     }
 }
 
 private object ElementImmunityPrecondition : MovePrecondition {
-    override fun MoveContext.check(battle: Battle): MovePrecondition.Result {
+    override fun MoveContext.check(battle: Battle): MovePreconditionResult {
         val target = battle[targetId]
         val moveElement = battle[userId][moveId].element
         return when {
             moveElement.relations.immune.hasAnyOf(target.elements.values) ->
-                MovePrecondition.Result.IMMUNE
+                result(MovePrecondition.Result.IMMUNE) {
+                    "It does not affect ${target.name}!"
+                }
 
-            else -> MovePrecondition.Result.PASS
+            else -> result(MovePrecondition.Result.PASS)
         }
     }
 }
 
 private object TargetFaintedPrecondition : MovePrecondition {
-    override fun MoveContext.check(battle: Battle): MovePrecondition.Result {
+    override fun MoveContext.check(battle: Battle): MovePreconditionResult {
         // If the target is 0 HP already
         val target = battle[targetId]
         return when {
-            target.inBattleHp.value == 0 -> MovePrecondition.Result.TRIGGER
-            else -> MovePrecondition.Result.PASS
+            target.inBattleHp.value == 0 -> result(MovePrecondition.Result.TRIGGER) {
+                "But it failed!"
+            }
+            else -> result(MovePrecondition.Result.PASS)
         }
     }
 }
@@ -124,7 +152,7 @@ The first Trigger result ends the chain.
  */
 fun MoveContext.resolvePreconditions(
     battle: Battle,
-): MovePrecondition.Result {
+): MovePreconditionResult {
     val conditions = sequence {
         yield(TargetFaintedPrecondition)
         yield(StatusPrecondition)
@@ -137,9 +165,9 @@ fun MoveContext.resolvePreconditions(
         .filter { it != MovePrecondition.Result.PASS }
     return conditions
         .map { with(it) { check(battle) } }
-        .firstOrNull { result -> applicablePreconditionResults.contains(result) }
+        .firstOrNull { result -> applicablePreconditionResults.any { it == result.result } }
         ?.also { result ->
             LOG.info { "$userId fails to execute move - $result" }
         }
-        ?: MovePrecondition.Result.PASS
+        ?: MovePreconditionResult(MovePrecondition.Result.PASS)
 }

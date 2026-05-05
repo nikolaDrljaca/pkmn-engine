@@ -4,118 +4,132 @@ import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.Stat
 import java.util.logging.Logger
 
-private val LOG = Logger.getLogger("com.drbrosdev.battle.turn.EndOfTurnEffect")
-
 fun interface EndOfTurnEffect {
-    fun apply(pokemon: Pokemon): Pokemon
+    fun apply(pokemon: Pokemon): EndOfTurnEffectResult
 
     companion object {
-        val NoEffect = EndOfTurnEffect { it }
+        val NoEffect = EndOfTurnEffect { EndOfTurnEffectResult(it) }
     }
 }
 
-val BurnEndOfTurnEffect = EndOfTurnEffect { pokemon ->
-    when (pokemon.majorStatus) {
+data class EndOfTurnEffectResult(
+    val pokemon: Pokemon,
+    val narrativeMessage: String = ""
+)
+
+// Extension is for scoping
+fun EndOfTurnEffect.result(pokemon: Pokemon, message: () -> String = { "" }): EndOfTurnEffectResult =
+    EndOfTurnEffectResult(pokemon, message())
+
+val BurnEndOfTurnEffect = object : EndOfTurnEffect {
+    override fun apply(pokemon: Pokemon): EndOfTurnEffectResult = when (pokemon.majorStatus) {
         is MajorStatus.Burned -> {
             val damage = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value - damage)
                 // cannot go below 0
                 .coerceAtLeast(0)
-            pokemon.copy(
-                inBattleHp = Stat(newHp)
-            )
+            result(pokemon.copy(inBattleHp = Stat(newHp))) {
+                "${pokemon.name} is burned for $damage!"
+            }
         }
 
-        else -> pokemon
+        else -> result(pokemon)
     }
 }
 
-val PoisonEndOfTurnEffect = EndOfTurnEffect { pokemon ->
-    when (pokemon.majorStatus) {
+val PoisonEndOfTurnEffect = object : EndOfTurnEffect {
+    override fun apply(pokemon: Pokemon): EndOfTurnEffectResult = when (pokemon.majorStatus) {
         is MajorStatus.Poisoned -> {
             val damage = (pokemon.effectiveStats.hp.value / 8).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value - damage)
                 // cannot go below 0
                 .coerceAtLeast(0)
-            pokemon.copy(
-                inBattleHp = Stat(newHp)
-            )
+            result(pokemon.copy(inBattleHp = Stat(newHp))) {
+                "${pokemon.name} is poisoned for $damage!"
+            }
         }
 
-        else -> pokemon
+        else -> result(pokemon)
     }
 }
 
-val BadPoisonEndOfTurnEffect = EndOfTurnEffect { pokemon ->
-    when (pokemon.majorStatus) {
+val BadPoisonEndOfTurnEffect = object : EndOfTurnEffect {
+    override fun apply(pokemon: Pokemon): EndOfTurnEffectResult = when (pokemon.majorStatus) {
         is MajorStatus.BadlyPoisoned -> {
             val counter = (pokemon.majorStatus.counter + 1).coerceAtMost(15)
             val toxicDamage = (pokemon.effectiveStats.hp.value * counter / 16).coerceAtLeast(1)
             val newHp = (pokemon.inBattleHp.value - toxicDamage)
                 // cannot go below 0
                 .coerceAtLeast(0)
-            pokemon.copy(
+            val updated = pokemon.copy(
                 inBattleHp = Stat(newHp),
                 majorStatus = MajorStatus.BadlyPoisoned(counter)
             )
+            result(updated) {
+                "${pokemon.name} is badly poisoned for $toxicDamage!"
+            }
         }
 
-        else -> pokemon
+        else -> result(pokemon)
     }
 }
 
-val SandstormEndOfTurnEffect = EndOfTurnEffect { pokemon ->
-    val immuneElements = listOf(
-        Element.ROCK,
-        Element.GROUND,
-        Element.STEEL,
-    )
-    val immuneAbilities = listOf(
-        SandForce,
-        SandVeil,
-        SandRush,
-        MagicGuard,
-        Overcoat
-    )
+val SandstormEndOfTurnEffect = object : EndOfTurnEffect {
+    override fun apply(pokemon: Pokemon): EndOfTurnEffectResult {
+        val immuneElements = listOf(
+            Element.ROCK,
+            Element.GROUND,
+            Element.STEEL,
+        )
+        val immuneAbilities = listOf(
+            SandForce,
+            SandVeil,
+            SandRush,
+            MagicGuard,
+            Overcoat
+        )
 
-    when {
-        pokemon.elements.hasAnyOf(immuneElements) -> pokemon
+        return when {
+            pokemon.elements.hasAnyOf(immuneElements) -> result(pokemon)
 
-        immuneAbilities.contains(pokemon.ability) -> pokemon
+            immuneAbilities.contains(pokemon.ability) -> result(pokemon)
 
-        else -> {
-            val damage = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
-            val newHp = (pokemon.inBattleHp.value - damage)
-                // cannot go below 0
-                .coerceAtLeast(0)
-            pokemon.copy(
-                inBattleHp = Stat(newHp)
-            )
+            else -> {
+                val damage = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
+                val newHp = (pokemon.inBattleHp.value - damage)
+                    // cannot go below 0
+                    .coerceAtLeast(0)
+                result(pokemon.copy(inBattleHp = Stat(newHp))) {
+                    "${pokemon.name} is buffeted for $damage by the Sandstorm."
+                }
+            }
         }
     }
 }
 
-val HailEndOfTurnEffect = EndOfTurnEffect { pokemon ->
-    val immuneAbilities = listOf(
-        Overcoat,
-        MagicGuard,
-        SnowCloak,
-        IceBody
-    )
+val HailEndOfTurnEffect = object : EndOfTurnEffect {
+    override fun apply(pokemon: Pokemon): EndOfTurnEffectResult {
+        val immuneAbilities = listOf(
+            Overcoat,
+            MagicGuard,
+            SnowCloak,
+            IceBody
+        )
 
-    when {
-        pokemon.elements.hasAnyOf(Element.ICE) -> pokemon
+        return when {
+            pokemon.elements.hasAnyOf(Element.ICE) -> result(pokemon)
 
-        immuneAbilities.contains(pokemon.ability) -> pokemon
+            immuneAbilities.contains(pokemon.ability) -> result(pokemon)
 
-        else -> {
-            val damage = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
-            val newHp = (pokemon.inBattleHp.value - damage)
-                // cannot go below 0
-                .coerceAtLeast(0)
-            pokemon.copy(
-                inBattleHp = Stat(newHp)
-            )
+            else -> {
+                val damage = (pokemon.effectiveStats.hp.value / 16).coerceAtLeast(1)
+                val newHp = (pokemon.inBattleHp.value - damage)
+                    // cannot go below 0
+                    .coerceAtLeast(0)
+                result(pokemon.copy(inBattleHp = Stat(newHp))) {
+                    "${pokemon.name} is pelted for $damage by Hail."
+                }
+            }
         }
     }
 }

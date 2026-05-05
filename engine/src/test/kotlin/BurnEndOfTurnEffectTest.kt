@@ -11,7 +11,7 @@ class BurnEndOfTurnEffectTest {
         val pokemon = buildPokemon {
             baseStats { baseHp = 100 }
         }
-        val result = with(BurnEndOfTurnEffect) { apply(pokemon) }
+        val result = with(BurnEndOfTurnEffect) { apply(pokemon) }.pokemon
         assertEquals(pokemon.inBattleHp, result.inBattleHp)
     }
 
@@ -21,7 +21,7 @@ class BurnEndOfTurnEffectTest {
             baseStats { baseHp = 160 }
             majorStatus = MajorStatus.Burned
         }
-        val result = with(BurnEndOfTurnEffect) { apply(pokemon) }
+        val result = with(BurnEndOfTurnEffect) { apply(pokemon) }.pokemon
         assertEquals(
             207,
             result.inBattleHp.value
