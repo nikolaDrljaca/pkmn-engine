@@ -2,6 +2,7 @@ package com.drbrosdev.battle.pokemon
 
 import com.drbrosdev.battle.move.MoveEffect
 import com.drbrosdev.battle.move.MovePrecondition
+import com.drbrosdev.battle.move.MovePreconditionResult
 import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModifiers
 import com.drbrosdev.battle.turn.TurnActionOrderRule
@@ -45,7 +46,7 @@ val OwnTempo = object : Ability {}
 
 val Scrappy = object : Ability {
     override val movePrecondition: List<MovePrecondition> = listOf(MovePrecondition {
-        MovePrecondition.Result.PASS
+        MovePreconditionResult(MovePrecondition.Result.PASS)
     })
 }
 

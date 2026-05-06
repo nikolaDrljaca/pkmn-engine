@@ -209,7 +209,7 @@ object ApplyConfusionStatusDamage : MoveEffect {
         )
         LOG.fine { "$userId hurt itself in confusion for $finalDamage" }
         val narrativeLog = buildString {
-            appendLine("${user.name} hurt itself in confusion!")
+            appendLine("It hurt itself in confusion!")
             appendLine("${user.name} dealt $finalDamage to itself.")
         }
         return battle

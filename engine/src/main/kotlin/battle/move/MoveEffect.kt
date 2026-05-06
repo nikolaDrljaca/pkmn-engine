@@ -3,15 +3,15 @@ package com.drbrosdev.battle.move
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.environment.EnvironmentUnit
+import com.drbrosdev.battle.environment.Weather
+import com.drbrosdev.battle.environment.enterNarrativeMessage
 import com.drbrosdev.battle.move.damagecalc.ApplyConfusionStatusDamage
 import com.drbrosdev.battle.pokemon.*
-import com.drbrosdev.battle.pokemon.statModifications
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModifier
 import com.drbrosdev.battle.pokemon.stats.increaseStageBy
 import java.util.logging.Logger
-import kotlin.text.get
 
 /*
 Pipeline Design pattern
@@ -170,9 +170,32 @@ class ApplyStatusCondition(
         if (RandomGen.nextInt(1, 101) > percentage.value) return battle
         // apply major status condition
         val updatedTarget = targetMon.copy(majorStatus = condition)
+        val narrativeMessage = condition.enterNarrativeMessage(updatedTarget.name)
         // TODO: We need to account for abilities which prevent status conditions
         // EG: Water Veil prevents burn effects etc, Insomnia prevents sleep etc
-        return battle.updateMons(updatedTarget)
+        return battle
+            .narrative(narrativeMessage)
+            .updateMons(updatedTarget)
+    }
+}
+
+class ApplyWeather(
+    private val weatherFactory: (turnCount: Int, shouldExtend: Boolean) -> Weather
+) : MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle {
+        val user = battle[userId]
+        val itemId = user.item.id.value
+        val shouldExtend = when {
+            itemId == "damp-rock" && moveId.id == "rain" -> true
+            itemId == "smooth-rock" && moveId.id == "sandstorm" -> true
+            itemId == "heat-rock" && moveId.id == "sunny-day" -> true
+            itemId == "icy-rock" && moveId.id == "hail" -> true
+            else -> false
+        }
+        val weather = weatherFactory(battle.turnCount, shouldExtend)
+        return battle
+            .narrative(weather.enterNarrativeMessage)
+            .copy(weather = weather)
     }
 }
 
@@ -194,11 +217,13 @@ class ApplyVolatileStatusCondition(
         val updatedTarget = targetMon.copy(
             volatileStatus = targetMon.volatileStatus + volatileStatus
         )
-        return battle.updateMons(updatedTarget)
+        return battle
+            .narrative(volatileStatus.enterNarrativeMessage(updatedTarget.name))
+            .updateMons(updatedTarget)
     }
 }
 
-class ApplyEnvironmentUnit(private val unit: EnvironmentUnit): MoveEffect {
+class ApplyEnvironmentUnit(private val unit: EnvironmentUnit) : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
         return battle.updateEnvironment(targetId, unit)
     }

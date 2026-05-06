@@ -38,6 +38,23 @@ sealed interface MajorStatus {
     }
 }
 
+fun MajorStatus.enterNarrativeMessage(user: String): String = when (this) {
+    is MajorStatus.Asleep -> "$user fell asleep!"
+    is MajorStatus.BadlyPoisoned -> "$user was badly poisoned!"
+    MajorStatus.Burned -> "$user was burned!"
+    MajorStatus.Frozen -> "$user was frozen solid!"
+    MajorStatus.Paralyzed -> "$user is paralyzed! It may be unable to move."
+    MajorStatus.Poisoned -> "$user was poisoned!"
+    MajorStatus.Normal -> ""
+}
+
+fun MajorStatus.exitNarrativeMessage(user: String): String = when (this) {
+    is MajorStatus.Asleep -> "$user woke up!"
+    MajorStatus.Frozen -> "$user was thawed out!"
+    else -> ""
+}
+
+
 fun MajorStatus.statModifications(): StatModification = when (this) {
     is MajorStatus.Paralyzed -> this.modification
     else -> StatModification { StatModifiers() }
@@ -78,4 +95,16 @@ sealed interface VolatileStatus {
         fun infatuation(currentTurn: Int): VolatileStatus = Infatuation(computeExpiry(currentTurn))
         fun taunt(currentTurn: Int): VolatileStatus = Taunt(computeExpiry(currentTurn))
     }
+}
+
+fun VolatileStatus.enterNarrativeMessage(user: String): String = when (this) {
+    is VolatileStatus.Confusion -> "$user became confused!"
+    is VolatileStatus.Infatuation -> "$user fell in love!"
+    is VolatileStatus.Taunt -> ""
+}
+
+fun VolatileStatus.exitNarrativeMessage(user: String): String = when (this) {
+    is VolatileStatus.Confusion -> "$user snapped out of confusion!"
+    is VolatileStatus.Infatuation -> "$user got over its infatuation!"
+    is VolatileStatus.Taunt -> ""
 }

@@ -27,7 +27,8 @@ val NormalStatResolution = StatResolutionStrategy { battle ->
     val userStats = user.allStatModifications
         .map { it.compute(StatModificationContext(user, battle)) }
         .fold(user.effectiveStats) { stats, mod -> stats.resolve(mod) }
-    val targetStats = target.allStatModifications
+    // NOTE: Sandstorm boosts defenders SpDef by 50% if rock type
+    val targetStats = (target.allStatModifications + battle.weather.statModification)
         .map { it.compute(StatModificationContext(target, battle)) }
         .fold(target.effectiveStats) { stats, mod -> stats.resolve(mod) }
 

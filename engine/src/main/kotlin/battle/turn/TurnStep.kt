@@ -3,9 +3,11 @@ package com.drbrosdev.battle.turn
 import com.drbrosdev.battle.*
 import com.drbrosdev.battle.environment.SwitchInEffect
 import com.drbrosdev.battle.environment.SwitchOutEffect
+import com.drbrosdev.battle.environment.Weather
+import com.drbrosdev.battle.environment.exitNarrativeMessage
 import com.drbrosdev.battle.pokemon.MajorStatus
-import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
+import com.drbrosdev.battle.pokemon.exitNarrativeMessage
 import com.drbrosdev.battle.pokemon.hasFainted
 import java.util.logging.Logger
 
@@ -68,10 +70,23 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
         is TurnAction.MoveSelected -> {
             battle
                 // resolve pokemon volatile and self-healing status
-                .let { resolveVolatileStatus(it[context.user], it.turnCount) }
-                .let { battle.updateMons(it) }
+                .let { resolveUserStatus(context.user, it) }
                 // resolve environment effect which can expire
                 .let { resolveEnvironmentUnits(context.user, it) }
+                // resolve weather
+                .let { resolveWeather(it) }
+        }
+    }
+
+    private fun resolveWeather(battle: Battle): Battle {
+        // indicates permanent weather
+        val expiresOnTurn = battle.weather.expiresOnTurn ?: return battle
+        return when {
+            battle.turnCount > expiresOnTurn -> battle
+                .narrative(battle.weather.exitNarrativeMessage)
+                .copy(weather = Weather.None)
+
+            else -> battle
         }
     }
 
@@ -89,37 +104,43 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
         )
     }
 
-    private fun resolveVolatileStatus(
-        pokemon: Pokemon,
-        turnCount: Int
-    ): Pokemon = with(pokemon) {
-        // resolve self-healing major status
-        val afterMajor = when (majorStatus) {
+    private fun resolveUserStatus(userId: PokemonId, battle: Battle): Battle {
+        // handle self-healing major status
+        val user = battle[userId]
+        val afterMajor = when (val status = user.majorStatus) {
             is MajorStatus.Asleep -> {
-                val newMajorStatus = when {
-                    turnCount > majorStatus.expiresOnTurn -> MajorStatus.Normal
-                    else -> majorStatus
-                }
-                copy(majorStatus = newMajorStatus)
+                val recovered = battle.turnCount > status.expiresOnTurn
+                val newStatus = if (recovered) MajorStatus.Normal else status
+                val updatedBattle = if (recovered) battle.narrative(status.exitNarrativeMessage(user.name)) else battle
+                updatedBattle.updateMons(user.copy(majorStatus = newStatus))
             }
 
             is MajorStatus.Frozen -> {
-                val newStatus = when {
-                    MajorStatus.shouldThaw() -> MajorStatus.Normal
-                    else -> majorStatus
-                }
-
-                copy(majorStatus = newStatus)
+                val thawed = MajorStatus.shouldThaw()
+                val newStatus = if (thawed) MajorStatus.Normal else status
+                val updatedBattle = if (thawed) battle.narrative(status.exitNarrativeMessage(user.name)) else battle
+                updatedBattle.updateMons(user.copy(majorStatus = newStatus))
             }
 
-            else -> this
+            else -> battle
         }
-        // resolve volatile status
-        afterMajor.copy(
-            volatileStatus = volatileStatus
-                .filter { turnCount < it.expiresOnTurn }
-                .toSet()
-        )
+        // handle volatile status
+        return user.volatileStatus.fold(afterMajor) { current, volatile ->
+            when {
+                current.turnCount < volatile.expiresOnTurn -> {
+                    val updatedMon = user.copy(
+                        volatileStatus = user.volatileStatus
+                            .filter { it != volatile }
+                            .toSet()
+                    )
+                    current
+                        .narrative(volatile.exitNarrativeMessage(user.name))
+                        .updateMons(updatedMon)
+                }
+
+                else -> current
+            }
+        }
     }
 }
 
@@ -131,12 +152,7 @@ class ApplyEndOfTurnEffects(private val context: ActionContext) : TurnStep {
         }
         val applicableEffects = buildList {
             // weather
-            if (battle.weather == Weather.SANDSTORM) {
-                add(SandstormEndOfTurnEffect)
-            }
-            if (battle.weather == Weather.HAIL) {
-                add(HailEndOfTurnEffect)
-            }
+            add(battle.weather.endOfTurnEffect)
             // held item support for Leftovers etc
             add(user.item.endOfTurnEffect)
             // major status condition

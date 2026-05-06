@@ -5,6 +5,10 @@ import com.drbrosdev.battle.pokemon.Pokemon
 
 fun interface StatModification {
     fun compute(context: StatModificationContext): StatModifiers
+
+    companion object {
+        val NoModification = StatModification { StatModifiers() }
+    }
 }
 
 sealed interface StatModifier {

@@ -2,7 +2,7 @@ package com.drbrosdev.battle.move.damagecalc
 
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.Weather
+import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.move.MoveContext
 import com.drbrosdev.battle.move.isPhysical
 import com.drbrosdev.battle.move.isSpecialMove
@@ -45,13 +45,13 @@ val TypeEffectivenessModifier = DamageModifier { battle ->
 val WeatherModifier = DamageModifier { battle ->
     val move = battle[userId][moveId]
     when (battle.weather) {
-        Weather.HARSH_SUN -> when (move.element) {
+        is Weather.HarshSun -> when (move.element) {
             Element.FIRE -> DamageMultiplier(150)
             Element.WATER -> DamageMultiplier(50)
             else -> null
         }
 
-        Weather.RAIN -> when (move.element) {
+        is Weather.Rain -> when (move.element) {
             Element.WATER -> DamageMultiplier(150)
             Element.FIRE -> DamageMultiplier(50)
             else -> null

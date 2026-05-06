@@ -16,11 +16,14 @@ private val LOG = Logger.getLogger(EnvironmentUnit::class.qualifiedName)
 data class EnvironmentUnit(
     val id: String,
     val expiresOnTurn: Int? = null,
-    val effect: EnvironmentEffect = EnvironmentEffect.NoEffect
+    val effect: EnvironmentEffect = EnvironmentEffect.NoEffect,
+    val enterNarrativeMessage: String = "",
+    val exitNarrativeMessage: String = ""
 )
 
 val StealthRockEnvUnit = EnvironmentUnit(
     id = "stealth-rock",
+    enterNarrativeMessage = "Pointed stones float in the air!",
     effect = { pokemon ->
         // magic-guard ability is immune
         if (pokemon.ability == MagicGuard) {
@@ -48,6 +51,7 @@ val StealthRockEnvUnit = EnvironmentUnit(
 
 val SpikesEnvUnit = EnvironmentUnit(
     id = "spikes",
+    enterNarrativeMessage = "Spikes were scattered on the ground!",
     effect = { pokemon ->
         // TODO: implement
         pokemon
@@ -56,6 +60,7 @@ val SpikesEnvUnit = EnvironmentUnit(
 
 val ToxicSpikesEnvUnit = EnvironmentUnit(
     id = "toxic-spikes",
+    enterNarrativeMessage = "Toxic spikes were scattered on the ground!",
     effect = { pokemon ->
         // TODO: implement
         pokemon
@@ -64,18 +69,9 @@ val ToxicSpikesEnvUnit = EnvironmentUnit(
 
 val TailwindEnvUnit = EnvironmentUnit(
     id = "tailwind",
+    enterNarrativeMessage = "The tailwind blew from behind!",
     effect = { pokemon ->
         // TODO: implement
         pokemon
     }
 )
-
-val StickyWebEnvUnit = EnvironmentUnit(
-    id = "sticky-web",
-    effect = { pokemon ->
-        // TODO: implement
-        pokemon
-    }
-)
-
-

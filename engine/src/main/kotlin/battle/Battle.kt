@@ -1,6 +1,7 @@
 package com.drbrosdev.battle
 
 import com.drbrosdev.battle.environment.EnvironmentUnit
+import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
 
@@ -12,7 +13,7 @@ data class Battle(
     val active1: PokemonId,
     val active2: PokemonId,
 
-    val weather: Weather = Weather.NONE,
+    val weather: Weather = Weather.None,
     // BUG: CARE that only Spikes and ToxicSpikes can be applied twice
     // Probably this should be its own model!
     val environmentUnits: Map<TeamId, Set<EnvironmentUnit>> = emptyMap(),
@@ -61,7 +62,10 @@ data class Battle(
             else -> error("Pokemon $target is not in the current Battle!")
         }
         val updatedUnits = environmentUnits[teamId].orEmpty() + unit
-        return copy(environmentUnits = environmentUnits + (teamId to updatedUnits))
+        return copy(
+            environmentUnits = environmentUnits + (teamId to updatedUnits),
+            turnLog = turnLog + unit.map { it.enterNarrativeMessage }
+        )
     }
 
     fun switch(user: PokemonId, target: PokemonId): Battle {
@@ -99,12 +103,4 @@ sealed interface BattleOutcome {
 sealed interface BattleState {
     data object InProgress : BattleState
     data class Concluded(val outcome: BattleOutcome) : BattleState
-}
-
-enum class Weather {
-    NONE,
-    HARSH_SUN,
-    RAIN,
-    HAIL,
-    SANDSTORM,
 }

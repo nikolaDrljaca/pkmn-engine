@@ -3,15 +3,8 @@ package com.drbrosdev.battle.move.registry
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.environment.EnvironmentUnit
 import com.drbrosdev.battle.environment.StealthRockEnvUnit
-import com.drbrosdev.battle.move.ApplyAccuracyChange
-import com.drbrosdev.battle.move.ApplyDirectDamage
-import com.drbrosdev.battle.move.ApplyEnvironmentUnit
-import com.drbrosdev.battle.move.ApplyStatModification
-import com.drbrosdev.battle.move.ApplyStatusCondition
-import com.drbrosdev.battle.move.ApplyVolatileStatusCondition
-import com.drbrosdev.battle.move.MoveType
-import com.drbrosdev.battle.move.Percentage
-import com.drbrosdev.battle.move.buildMove
+import com.drbrosdev.battle.environment.Weather
+import com.drbrosdev.battle.move.*
 import com.drbrosdev.battle.move.damagecalc.ApplyDamage
 import com.drbrosdev.battle.pokemon.Element
 import com.drbrosdev.battle.pokemon.MajorStatus
@@ -187,5 +180,18 @@ val LightScreen = buildMove {
             expiresOnTurn = battle.turnCount + roll
         )
         battle.updateEnvironment(userId, unit)
+    })
+}
+
+val Sandstorm = buildMove {
+    id = "sandstorm"
+    name = "Sandstorm"
+    element = Element.GROUND
+    power = 0
+    powerPoints = 16
+    percentAccuracy(100)
+    status()
+    effects(ApplyWeather { turnCount, shouldExtend ->
+        Weather.sandstorm(turnCount, shouldExtend)
     })
 }

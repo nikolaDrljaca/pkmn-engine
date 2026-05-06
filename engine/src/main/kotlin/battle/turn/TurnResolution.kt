@@ -42,6 +42,6 @@ fun Battle.resolveTurn(turn: Turn): Battle {
         HandleTurnCounter
     )
     // 4 clear logs and execute pipeline
-    return copy(turnLog = emptyList())
+    return copy(turnLog = listOf("Turn $turnCount started."))
         .resolveTurnSteps(steps)
 }
