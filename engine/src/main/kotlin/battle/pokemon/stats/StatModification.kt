@@ -45,6 +45,12 @@ fun StatModifier.increaseStageBy(stage: StatModifier.Stage): StatModifier.Stage 
         is StatModifier.Stage -> StatModifier.Stage(this.value + stage.value)
     }
 
+fun StatModifier.stage(): Int =
+    when (this) {
+        is StatModifier.Percent -> error("Cannot access Stage for Percent StatModifier!")
+        is StatModifier.Stage -> value
+    }
+
 fun StatModifier.isNegativeStage() = when (this) {
     is StatModifier.Percent -> error("Percent StatModifier cannot be negative!")
     is StatModifier.Stage -> value < 0

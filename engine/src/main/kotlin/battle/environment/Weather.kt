@@ -106,3 +106,12 @@ val Weather.exitNarrativeMessage: String
         is Weather.Hail -> "The hail stopped."
         is Weather.Sandstorm -> "The sandstorm subsided."
     }
+
+val Weather.name: String
+    get() = when (this) {
+        Weather.None -> ""
+        is Weather.HarshSun -> "SUNNY"
+        is Weather.Rain -> "RAIN"
+        is Weather.Hail -> "HAIL"
+        is Weather.Sandstorm -> "SANDSTORM"
+    }

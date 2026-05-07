@@ -36,6 +36,12 @@ data class Battle(
         else -> error("Team $teamId is not in the current Battle!")
     }
 
+    fun team(teamId: TeamId) = when {
+        team1.id == teamId -> team1
+        team2.id == teamId -> team2
+        else -> error("Team $teamId is not in the current Battle!")
+    }
+
     fun environment(pokemon: PokemonId): Set<EnvironmentUnit> {
         val units = when {
             team1.hasMember(pokemon) -> environmentUnits[team1.id]

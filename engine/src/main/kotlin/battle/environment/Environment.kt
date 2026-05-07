@@ -17,6 +17,7 @@ data class EnvironmentUnit(
     val id: String,
     val expiresOnTurn: Int? = null,
     val effect: EnvironmentEffect = EnvironmentEffect.NoEffect,
+    val name: String = "",
     val enterNarrativeMessage: String = "",
     val exitNarrativeMessage: String = ""
 )
@@ -24,6 +25,7 @@ data class EnvironmentUnit(
 val StealthRockEnvUnit = EnvironmentUnit(
     id = "stealth-rock",
     enterNarrativeMessage = "Pointed stones float in the air!",
+    name = "Stealth Rock",
     effect = { pokemon ->
         // magic-guard ability is immune
         if (pokemon.ability == MagicGuard) {
@@ -52,6 +54,7 @@ val StealthRockEnvUnit = EnvironmentUnit(
 val SpikesEnvUnit = EnvironmentUnit(
     id = "spikes",
     enterNarrativeMessage = "Spikes were scattered on the ground!",
+    name = "Spikes",
     effect = { pokemon ->
         // TODO: implement
         pokemon
@@ -60,6 +63,7 @@ val SpikesEnvUnit = EnvironmentUnit(
 
 val ToxicSpikesEnvUnit = EnvironmentUnit(
     id = "toxic-spikes",
+    name = "Toxic Spikes",
     enterNarrativeMessage = "Toxic spikes were scattered on the ground!",
     effect = { pokemon ->
         // TODO: implement
@@ -69,6 +73,7 @@ val ToxicSpikesEnvUnit = EnvironmentUnit(
 
 val TailwindEnvUnit = EnvironmentUnit(
     id = "tailwind",
+    name = "Tailwind",
     enterNarrativeMessage = "The tailwind blew from behind!",
     effect = { pokemon ->
         // TODO: implement

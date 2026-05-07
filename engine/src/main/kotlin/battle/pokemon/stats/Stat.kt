@@ -6,6 +6,8 @@ value class Stat(val value: Int = 1) {
         require(value >= 0)
     }
 
+    override fun toString(): String = value.toString()
+
     operator fun minus(other: Stat): Stat =
         Stat((value - other.value).coerceAtLeast(0))
 

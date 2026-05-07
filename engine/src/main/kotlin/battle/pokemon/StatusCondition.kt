@@ -54,6 +54,17 @@ fun MajorStatus.exitNarrativeMessage(user: String): String = when (this) {
     else -> ""
 }
 
+val MajorStatus.name: String
+    get() = when (this) {
+        is MajorStatus.Asleep -> "SLEEP"
+        is MajorStatus.BadlyPoisoned -> "POISONED"
+        MajorStatus.Burned -> "BURNED"
+        MajorStatus.Frozen -> "FROZEN"
+        MajorStatus.Paralyzed -> "PARALYZED"
+        MajorStatus.Poisoned -> "POISONED"
+        MajorStatus.Normal -> ""
+    }
+
 
 fun MajorStatus.statModifications(): StatModification = when (this) {
     is MajorStatus.Paralyzed -> this.modification
@@ -108,3 +119,10 @@ fun VolatileStatus.exitNarrativeMessage(user: String): String = when (this) {
     is VolatileStatus.Infatuation -> "$user got over its infatuation!"
     is VolatileStatus.Taunt -> ""
 }
+
+val VolatileStatus.name: String
+    get() = when (this) {
+        is VolatileStatus.Confusion -> "CONFUSED"
+        is VolatileStatus.Infatuation -> "INFATUATED"
+        is VolatileStatus.Taunt -> "TAUNTED"
+    }
