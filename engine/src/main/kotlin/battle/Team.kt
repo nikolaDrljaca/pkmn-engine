@@ -42,5 +42,10 @@ value class TeamId private constructor(val id: String) {
                 .take(4)
             return TeamId("team-$unique")
         }
+
+        operator fun invoke(id: String) : TeamId {
+            require(id.contains("-"))
+            return TeamId(id)
+        }
     }
 }

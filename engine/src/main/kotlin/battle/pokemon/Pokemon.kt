@@ -91,23 +91,14 @@ fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
         .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
 
 @JvmInline
-value class PokemonId private constructor(val id: String) {
+value class PokemonId(val id: String) {
     init {
-        require(id.contains("-")) {
+        require(id.isNotBlank()) {
             "Pokemon $id has no ownership!"
         }
     }
 
     override fun toString(): String = id
-
-    companion object {
-        operator fun invoke(value: CharSequence): PokemonId {
-            val discriminator = UUID.randomUUID()
-                .toString()
-                .take(4)
-            return PokemonId("$value-$discriminator")
-        }
-    }
 }
 
 @JvmInline
