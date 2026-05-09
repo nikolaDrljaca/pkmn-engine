@@ -108,6 +108,15 @@ class PresenterTest {
     }
 
     @Test
+    fun `show output of TEXT team censored presenter`() {
+        val result = TextTeamPresenter.present(battle, battle.team1.id, true)
+        assertNotNull(result)
+        assert(result.isNotBlank())
+        println(result)
+        println("---")
+    }
+
+    @Test
     fun `show output of TEXT move presenter`() {
         val result = TextMovePresenter.present(charmander)
         assertNotNull(result)
