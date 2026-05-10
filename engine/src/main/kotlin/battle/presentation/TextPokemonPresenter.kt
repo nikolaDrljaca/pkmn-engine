@@ -29,6 +29,9 @@ object TextPokemonPresenter {
         appendHeader(pokemon)
         appendHpBar(pokemon)
         appendStatus(pokemon)
+        if (censor.not()) {
+            appendItem(pokemon)
+        }
         appendLine(DIVIDER)
         appendStats(pokemon, battle, censor)
         appendLine(DIVIDER)
@@ -65,6 +68,10 @@ object TextPokemonPresenter {
         pokemon.volatileStatus.forEach { status ->
             appendLine(" Minor: ${status.name}")
         }
+    }
+
+    private fun StringBuilder.appendItem(pokemon: Pokemon) {
+        appendLine(" Item: ${pokemon.item.name}")
     }
 
     private fun StringBuilder.appendStats(
@@ -112,7 +119,7 @@ object TextPokemonPresenter {
                 MoveType.STATUS -> "ST"
             }
             val name = move.name.padEnd(14)
-            val element = move.element.name.padEnd(7)
+            val element = move.element.name.padEnd(12)
             val pp = "${move.powerPoints}"
             appendLine(" [${index + 1}] $name$element$category  $pp")
         }

@@ -28,6 +28,7 @@ fun Battle.resolveTurn(turn: Turn): Battle {
     // 3 construct TurnStep pipeline
     // This way battles can end in a draw, which is legal
     val steps = sequenceOf(
+        ResolveStartOfTurnWeather(),
         // first pokemon action
         ApplyStartOfTurnEffects(first),
         ExecuteActionStep(first),

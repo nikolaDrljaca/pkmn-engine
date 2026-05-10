@@ -1,9 +1,11 @@
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.Team
 import com.drbrosdev.battle.environment.Weather
-import com.drbrosdev.battle.move.registry.Growl
-import com.drbrosdev.battle.move.registry.Leer
-import com.drbrosdev.battle.move.registry.Scratch
+import com.drbrosdev.battle.item.BlackSludge
+import com.drbrosdev.battle.item.Leftovers
+import com.drbrosdev.battle.move.registry.MoveIndex.Growl
+import com.drbrosdev.battle.move.registry.MoveIndex.Leer
+import com.drbrosdev.battle.move.registry.MoveIndex.Scratch
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.presentation.TextBattlePresenter
 import com.drbrosdev.battle.presentation.TextMovePresenter
@@ -21,6 +23,7 @@ class PresenterTest {
         name = "Chimchar"
         nature = Quirky
         ability = RunAway
+        item = Leftovers
         baseStats {
             baseHp = 44
             attack = 58
@@ -43,6 +46,7 @@ class PresenterTest {
         name = "Charmander"
         nature = Quirky
         ability = Pressure
+        item = BlackSludge
         baseStats {
             baseHp = 39
             attack = 52

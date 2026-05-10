@@ -167,7 +167,7 @@ fun MoveContext.resolvePreconditions(
         .map { with(it) { check(battle) } }
         .firstOrNull { result -> applicablePreconditionResults.any { it == result.result } }
         ?.also { result ->
-            LOG.info { "$userId fails to execute move - $result" }
+            LOG.fine { "$userId fails to execute move - $result" }
         }
         ?: MovePreconditionResult(MovePrecondition.Result.PASS)
 }

@@ -2,6 +2,7 @@ package com.drbrosdev.battle.turn
 
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
+import com.drbrosdev.battle.Team
 import com.drbrosdev.battle.abilities
 import com.drbrosdev.battle.move.Move
 import com.drbrosdev.battle.move.MoveId
@@ -25,17 +26,18 @@ sealed interface OrderingResult {
         val second: ActionContext
     ) : OrderingResult {
         constructor(
+            teamMapper: (PokemonId) -> Team,
             selection1: Pair<PokemonId, TurnAction>,
             selection2: Pair<PokemonId, TurnAction>
         ) : this(
             first = ActionContext(
-                user = selection1.first,
-                target = selection2.first,
+                user = teamMapper(selection1.first).id,
+                target = teamMapper(selection2.first).id,
                 action = selection1.second
             ),
             second = ActionContext(
-                user = selection2.first,
-                target = selection1.first,
+                user = teamMapper(selection2.first).id,
+                target = teamMapper(selection1.first).id,
                 action = selection2.second
             ),
         )
@@ -52,9 +54,9 @@ private object SwitchRule : TurnActionOrderRule {
         return when {
             isSwitch1 && isSwitch2 -> OrderingResult.Deferred
 
-            isSwitch1 -> OrderingResult.Resolved(selection1, selection2)
+            isSwitch1 -> OrderingResult.Resolved(battle::team, selection1, selection2)
 
-            isSwitch2 -> OrderingResult.Resolved(selection2, selection1)
+            isSwitch2 -> OrderingResult.Resolved(battle::team, selection2, selection1)
 
             else -> OrderingResult.Deferred
         }
@@ -72,9 +74,9 @@ private object PursuitRule : TurnActionOrderRule {
                 && selection1.second is TurnAction.Switch
 
         return when {
-            pursuit1 -> OrderingResult.Resolved(selection1, selection2)
+            pursuit1 -> OrderingResult.Resolved(battle::team, selection1, selection2)
 
-            pursuit2 -> OrderingResult.Resolved(selection2, selection1)
+            pursuit2 -> OrderingResult.Resolved(battle::team, selection2, selection1)
 
             else -> OrderingResult.Deferred
         }
@@ -84,14 +86,18 @@ private object PursuitRule : TurnActionOrderRule {
 // Priority always resolves if moves differ
 private object MovePriorityRule : TurnActionOrderRule {
     override fun Turn.determine(battle: Battle): OrderingResult {
+        if (selection1.second is TurnAction.Switch && selection2.second is TurnAction.Switch) {
+            return OrderingResult.Deferred
+        }
+
         val move1 = battle[selection1.first][move(selection1.second)]
         val move2 = battle[selection2.first][move(selection2.second)]
         return when {
             move1.priority.value > move2.priority.value ->
-                OrderingResult.Resolved(selection1, selection2)
+                OrderingResult.Resolved(battle::team, selection1, selection2)
 
             move2.priority.value > move1.priority.value ->
-                OrderingResult.Resolved(selection2, selection1)
+                OrderingResult.Resolved(battle::team, selection2, selection1)
 
             // prios are equal - defer to speed
             else -> OrderingResult.Deferred
@@ -119,12 +125,12 @@ private object QuickClawRule : TurnActionOrderRule {
         return when {
             // both rolled, so its random
             claw1 && claw2 -> when {
-                RandomGen.nextBoolean() -> OrderingResult.Resolved(selection1, selection2)
-                else -> OrderingResult.Resolved(selection2, selection1)
+                RandomGen.nextBoolean() -> OrderingResult.Resolved(battle::team, selection1, selection2)
+                else -> OrderingResult.Resolved(battle::team, selection2, selection1)
             }
 
-            claw1 -> OrderingResult.Resolved(selection1, selection2)
-            claw2 -> OrderingResult.Resolved(selection2, selection1)
+            claw1 -> OrderingResult.Resolved(battle::team, selection1, selection2)
+            claw2 -> OrderingResult.Resolved(battle::team, selection2, selection1)
             else -> OrderingResult.Deferred
         }
     }
@@ -151,9 +157,9 @@ private object SpeedRule : TurnActionOrderRule {
         val speed1 = mon1.computeInBattleStats(battle).speed.value
         val speed2 = mon2.computeInBattleStats(battle).speed.value
         return when {
-            speed1 > speed2 -> OrderingResult.Resolved(selection1, selection2)
+            speed1 > speed2 -> OrderingResult.Resolved(battle::team, selection1, selection2)
 
-            speed2 > speed1 -> OrderingResult.Resolved(selection2, selection1)
+            speed2 > speed1 -> OrderingResult.Resolved(battle::team, selection2, selection1)
 
             else -> OrderingResult.Deferred
         }
@@ -164,9 +170,9 @@ private object SpeedRule : TurnActionOrderRule {
 private object SpeedTieRule : TurnActionOrderRule {
     override fun Turn.determine(battle: Battle): OrderingResult {
         return when {
-            RandomGen.nextBoolean() -> OrderingResult.Resolved(selection1, selection2)
+            RandomGen.nextBoolean() -> OrderingResult.Resolved(battle::team, selection1, selection2)
 
-            else -> OrderingResult.Resolved(selection2, selection1)
+            else -> OrderingResult.Resolved(battle::team, selection2, selection1)
         }
     }
 }

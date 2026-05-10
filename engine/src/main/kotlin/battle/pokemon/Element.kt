@@ -184,6 +184,10 @@ fun Effectiveness.combine(other: Effectiveness): Effectiveness = when {
     this == Effectiveness.NOT_VERY && other == Effectiveness.NOT_VERY -> Effectiveness.QUARTER
     this == Effectiveness.SUPER && other == Effectiveness.NOT_VERY -> Effectiveness.NEUTRAL
     this == Effectiveness.NOT_VERY && other == Effectiveness.SUPER -> Effectiveness.NEUTRAL
+
+    this == Effectiveness.SUPER && other == Effectiveness.NEUTRAL -> Effectiveness.SUPER
+    this == Effectiveness.NEUTRAL && other == Effectiveness.SUPER -> Effectiveness.SUPER
+
     else -> other
 }
 

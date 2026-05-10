@@ -36,10 +36,16 @@ data class Battle(
         else -> error("Team $teamId is not in the current Battle!")
     }
 
-    fun team(teamId: TeamId) = when {
+    fun team(teamId: TeamId): Team = when {
         team1.id == teamId -> team1
         team2.id == teamId -> team2
         else -> error("Team $teamId is not in the current Battle!")
+    }
+
+    fun team(pokemonId: PokemonId): Team = when {
+        team1.hasMember(pokemonId) -> team1
+        team2.hasMember(pokemonId) -> team2
+        else -> error("Team $pokemonId is not in the current Battle!")
     }
 
     fun environment(pokemon: PokemonId): Set<EnvironmentUnit> {

@@ -15,6 +15,7 @@ private val LOG = Logger.getLogger(Item::class.qualifiedName)
 
 data class Item(
     val id: ItemId,
+    val name: String,
     // end of turn effects,
     val endOfTurnEffect: EndOfTurnEffect = EndOfTurnEffect.NoEffect,
     // Move execution hooks
@@ -31,7 +32,7 @@ data class Item(
     val statModification: StatModification = StatModification { StatModifiers() }
 ) {
     companion object {
-        val NoItem = Item(ItemId("no-item"))
+        val NoItem = Item(ItemId("no-item"), name = "")
     }
 }
 
@@ -40,6 +41,7 @@ value class ItemId(val value: String)
 
 val ExpertBelt = Item(
     id = ItemId("expert-belt"),
+    name = "Expert Belt",
     damageMultiplier = { battle ->
         val user = battle[userId]
         val move = battle[userId][moveId]
@@ -54,6 +56,7 @@ val ExpertBelt = Item(
 
 val LifeOrb = Item(
     id = ItemId("life-orb"),
+    name = "Life Orb",
     damageMultiplier = { battle ->
         when (battle[userId].item.id.value) {
             "life-orb" -> DamageMultiplier(130)
@@ -76,6 +79,7 @@ val LifeOrb = Item(
 
 val ChoiceBand = Item(
     id = ItemId("choice-band"),
+    name = "Choice Band",
     statModification = StatModification { context ->
         StatModifiers(
             mapOf(
@@ -91,8 +95,27 @@ val ChoiceBand = Item(
     }
 )
 
+val ChoiceScarf = Item(
+    id = ItemId("choice-scarf"),
+    name = "Choice Scarf",
+    statModification = StatModification { context ->
+        StatModifiers(
+            mapOf(
+                StatKey.SPEED to StatModifier.Percent(150)
+            )
+        )
+    },
+    afterMoveEffect = MoveEffect { battle ->
+        val user = battle[userId]
+        val move = user[moveId]
+
+        battle.updateMons(user.choiceMove(move.id))
+    }
+)
+
 val Leftovers = Item(
     id = ItemId("leftovers"),
+    name = "Leftovers",
     endOfTurnEffect = { pokemon ->
         // healing is calculated of maxHp
         val healing = (pokemon.effectiveStats.hp.value / 8).coerceAtLeast(1)
@@ -109,6 +132,7 @@ val Leftovers = Item(
 
 val BlackSludge = Item(
     id = ItemId("black-sludge"),
+    name = "Black Sludge",
     endOfTurnEffect = { pokemon ->
         when {
             pokemon.elements.values.contains(Element.POISON) -> {

@@ -52,12 +52,12 @@ fun StatModifier.stage(): Int =
     }
 
 fun StatModifier.isNegativeStage() = when (this) {
-    is StatModifier.Percent -> error("Percent StatModifier cannot be negative!")
+    is StatModifier.Percent -> false
     is StatModifier.Stage -> value < 0
 }
 
 fun StatModifier.isPositiveStage() = when (this) {
-    is StatModifier.Percent -> error("Percent StatModifier cannot be negative!")
+    is StatModifier.Percent -> false
     is StatModifier.Stage -> value > 0
 }
 

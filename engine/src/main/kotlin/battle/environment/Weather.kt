@@ -53,7 +53,7 @@ sealed interface Weather {
             get() = StatModification.NoModification
     }
 
-    data class Sandstorm(override val expiresOnTurn: Int) : Weather {
+    data class Sandstorm(override val expiresOnTurn: Int?) : Weather {
         override val endOfTurnEffect: EndOfTurnEffect
             get() = SandstormEndOfTurnEffect
 

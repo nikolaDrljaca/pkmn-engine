@@ -64,8 +64,6 @@ object ApplyDamage : MoveEffect {
     }
 }
 
-// TODO: introduce Environment, allows light screen to apply modifiers
-
 object ApplyNormalDamage : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
         val user = battle[userId]

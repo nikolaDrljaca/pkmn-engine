@@ -1,9 +1,9 @@
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.BattleState
 import com.drbrosdev.battle.Team
-import com.drbrosdev.battle.move.registry.Growl
-import com.drbrosdev.battle.move.registry.Leer
-import com.drbrosdev.battle.move.registry.Scratch
+import com.drbrosdev.battle.move.registry.MoveIndex.Growl
+import com.drbrosdev.battle.move.registry.MoveIndex.Leer
+import com.drbrosdev.battle.move.registry.MoveIndex.Scratch
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction

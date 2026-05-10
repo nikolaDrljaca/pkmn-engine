@@ -15,7 +15,9 @@ data class Team(
         }
     }
 
-    operator fun get(key: PokemonId) = requireNotNull(members[key])
+    operator fun get(key: PokemonId) = requireNotNull(members[key]) {
+        "$key is not a part of the $id team (${members.values.map { it.id }})"
+    }
 
     companion object {
         const val MEMBER_LIMIT = 6

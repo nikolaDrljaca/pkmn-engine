@@ -6,6 +6,7 @@ import com.drbrosdev.battle.environment.SwitchOutEffect
 import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.environment.exitNarrativeMessage
 import com.drbrosdev.battle.pokemon.MajorStatus
+import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.exitNarrativeMessage
 import com.drbrosdev.battle.pokemon.hasFainted
@@ -21,13 +22,16 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
 
     override fun apply(battle: Battle): Battle = when (context.action) {
         // move execution
-        is TurnAction.MoveSelected -> with(context.toMoveContext()) {
+        is TurnAction.MoveSelected -> with(context.toMoveContext(battle)) {
             val user = battle[userId]
+            val target = battle[targetId]
             val move = user[moveId]
-            LOG.info { "${user.name} used ${move.name}!" }
+            LOG.fine { "${user.name} used ${move.name}!" }
             val applicableEffects = buildList {
                 add(user.item.preMoveEffect)
                 add(move.effect)
+                // NOTE: support for abilities like Rough Skin and Iron Barbs
+                addAll(target.ability.moveEffects)
             }
 
             battle
@@ -45,7 +49,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
         is TurnAction.Switch -> {
             val incoming = battle[context.action.incoming]
             val outgoing = battle[context.user]
-            LOG.info { "${context.user.id} is switching with ${incoming.id}" }
+            LOG.fine { "${outgoing.id} is switching with ${incoming.id}" }
             // TODO: group these so they can be applied for moves like U-Turn
             // switch out effects are applied to outgoing
             val afterOutEffects = with(SwitchOutEffect) { apply(outgoing) }
@@ -54,32 +58,17 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
             val afterInEffects = with(SwitchInEffect(environment)) { apply(incoming) }
 
             battle
-                .narrative("${context.user.id} is switching with ${incoming.id}")
+                .narrative("${outgoing.name} is switching with ${incoming.name}.")
                 .updateMons(afterOutEffects, afterInEffects)
-                .switch(context.user, context.action.incoming)
+                .switch(outgoing.id, context.action.incoming)
         }
     }
 
 }
 
-class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
-    override fun apply(battle: Battle): Battle = when (context.action) {
-        // start of turn effects do not apply when switching
-        is TurnAction.Switch -> battle
-
-        is TurnAction.MoveSelected -> {
-            battle
-                // resolve pokemon volatile and self-healing status
-                .let { resolveUserStatus(context.user, it) }
-                // resolve environment effect which can expire
-                .let { resolveEnvironmentUnits(context.user, it) }
-                // resolve weather
-                .let { resolveWeather(it) }
-        }
-    }
-
-    private fun resolveWeather(battle: Battle): Battle {
-        // indicates permanent weather
+class ResolveStartOfTurnWeather: TurnStep {
+    override fun apply(battle: Battle): Battle {
+        // resolve weather
         val expiresOnTurn = battle.weather.expiresOnTurn ?: return battle
         return when {
             battle.turnCount > expiresOnTurn -> battle
@@ -87,6 +76,23 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
                 .copy(weather = Weather.None)
 
             else -> battle
+        }
+    }
+}
+
+
+class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
+    override fun apply(battle: Battle): Battle = when (context.action) {
+        // start of turn effects do not apply when switching
+        is TurnAction.Switch -> battle
+
+        is TurnAction.MoveSelected -> {
+            val pokemon = battle[context.user]
+            battle
+                // resolve pokemon volatile and self-healing status
+                .let { resolveUserStatus(pokemon.id, it) }
+                // resolve environment effect which can expire
+                .let { resolveEnvironmentUnits(pokemon.id, it) }
         }
     }
 
@@ -99,7 +105,7 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
             .filter { battle.turnCount < it.expiresOnTurn!! }
             .toSet()
         return battle.updateEnvironment(
-            target = context.user,
+            target = pokemonId,
             *updatedEnv.toTypedArray()
         )
     }

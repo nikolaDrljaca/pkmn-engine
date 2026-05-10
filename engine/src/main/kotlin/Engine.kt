@@ -13,6 +13,8 @@ import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.resolveTurn
 import com.drbrosdev.parser.Command
 import com.drbrosdev.parser.TextCommandParser
+import com.drbrosdev.sample.SampleTeam1
+import com.drbrosdev.sample.SampleTeam2
 import java.util.UUID
 
 
@@ -29,8 +31,15 @@ class BattleEngine {
     private fun resolveCommand(command: Command): String = when (command) {
         is Command.CreateBattle -> {
             // TODO: @drljacan battleId generator
-            val battleId = UUID.randomUUID().toString().take(8)
-                .let { BattleId(it) }
+            val battleId = RandomGen.nextInt(from = 100, until = 200)
+                .let { BattleId(it.toString()) }
+            val battle = Battle(
+                team1 = SampleTeam1,
+                team2 =  SampleTeam2,
+                active1 = SampleTeam1.members.values.first().id,
+                active2 = SampleTeam2.members.values.first().id
+            )
+            sessions[battleId] = battle
             // using teamId resolve to team
             /*
             val battle = Battle(
@@ -62,7 +71,7 @@ class BattleEngine {
                 is BattleState.Concluded -> sessions.remove(battleId)
             }
             afterTurn.turnLog
-                .joinToString { it }
+                .joinToString(separator = "\n") { it }
         }
 
         is Command.ShowActive -> {

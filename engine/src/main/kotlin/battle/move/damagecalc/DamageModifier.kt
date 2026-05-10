@@ -3,6 +3,7 @@ package com.drbrosdev.battle.move.damagecalc
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.environment.Weather
+import com.drbrosdev.battle.item.Item
 import com.drbrosdev.battle.move.MoveContext
 import com.drbrosdev.battle.move.isPhysical
 import com.drbrosdev.battle.move.isSpecialMove

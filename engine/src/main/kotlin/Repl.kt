@@ -3,7 +3,6 @@ package com.drbrosdev
 
 fun main() {
     val engine = BattleEngine()
-    val reader = System.`in`.bufferedReader()
 
     println("Pokemon Battle Engine")
     println("Type 'exit' to quit")
@@ -11,12 +10,17 @@ fun main() {
 
     while (true) {
         print("> ")
-        val input = reader.readLine() ?: break
+        val input = readlnOrNull() ?: break
         if (input.trim() == "exit") break
         if (input.isBlank()) continue
 
-        val result = engine.execute(input)
-        println(result)
+        try {
+            val result = engine.execute(input)
+            println(result)
+        } catch (e: Throwable) {
+            println("An unexpected error occurred: $e.localizedMessage")
+            println(e.stackTrace.contentToString())
+        }
     }
 
     println("Goodbye!")

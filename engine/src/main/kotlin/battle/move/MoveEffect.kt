@@ -116,6 +116,33 @@ class ApplyStatModification(private val statModification: StatModification) : Mo
     }
 }
 
+class ApplySelfStatModification(private val statModification: StatModification) : MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle = with(battle[userId]) {
+        val statMods = buildList {
+            addAll(statModifications)
+            add(statModification)
+        }
+        LOG.fine { "$userId lowers stats of $userId with $moveId" }
+        battle.updateMons(copy(statModifications = statMods))
+    }
+}
+
+class ApplyChanceStatModification(
+    private val percentage: Percentage,
+    private val statModification: StatModification
+) : MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle = with(battle[targetId]) {
+        // percentage roll
+        if (RandomGen.nextInt(1, 101) > percentage.value) return battle
+        val statMods = buildList {
+            addAll(statModifications)
+            add(statModification)
+        }
+        LOG.fine { "$userId lowers stats of $targetId with $moveId" }
+        battle.updateMons(copy(statModifications = statMods))
+    }
+}
+
 class ApplyAccuracyChange(private val stage: StatModifier.Stage) : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
         val target = battle[targetId]

@@ -45,9 +45,7 @@ val StealthRockEnvUnit = EnvironmentUnit(
         val damage = percentDamage.coerceAtLeast(1)
         val newHp = (pokemon.inBattleHp.value - damage).coerceAtLeast(0)
         LOG.fine { "Stealth Rock deals $damage($effectiveness) to ${pokemon.id}." }
-        pokemon.copy(
-            inBattleHp = Stat(newHp)
-        )
+        pokemon.copy(inBattleHp = Stat(newHp))
     }
 )
 
