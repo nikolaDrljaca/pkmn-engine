@@ -88,8 +88,7 @@ val IronBarbs = object : Ability {
         val newHp = (user.inBattleHp.value - damage).coerceAtLeast(0)
         val updatedUser = user.copy(inBattleHp = Stat(newHp))
         when {
-            // BUG: this ability only applies to physical *contact* moves
-            move.isPhysical() -> battle
+            move.contact -> battle
                 .updateMons(updatedUser)
                 .narrative("${user.name} is hurt by thorns for $damage!")
             else -> battle

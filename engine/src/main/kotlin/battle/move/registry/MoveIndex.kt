@@ -36,6 +36,7 @@ object MoveIndex {
         element = Element.BUG
         power = 70
         powerPoints = 32
+        contact = true
         percentAccuracy(100)
         physical()
         effects(
@@ -61,6 +62,7 @@ object MoveIndex {
         element = Element.DARK
         power = 65
         powerPoints = 32
+        contact = true
         percentAccuracy(100)
         physical()
         effects(
@@ -81,6 +83,7 @@ object MoveIndex {
         element = Element.GRASS
         power = 120
         powerPoints = 16
+        contact = true
         percentAccuracy(85)
         physical()
         effects(ApplyDamage)
@@ -92,6 +95,7 @@ object MoveIndex {
         element = Element.STEEL
         power = 80
         powerPoints = 32
+        contact = true
         percentAccuracy(100)
         physical()
         effects(ApplyDamage)
@@ -103,6 +107,7 @@ object MoveIndex {
         element = Element.DARK
         power = 80
         powerPoints = 24
+        contact = true
         percentAccuracy(100)
         physical()
         effects(
@@ -153,6 +158,7 @@ object MoveIndex {
         element = Element.GRASS
         power = 80
         powerPoints = 32
+        contact = true
         percentAccuracy(100)
         special()
         effects(ApplyDamage)
@@ -237,23 +243,13 @@ object MoveIndex {
         )
     }
 
-    val Tackle = buildMove {
-        id = "tackle"
-        name = "Tackle"
-        element = Element.NORMAL
-        power = 40
-        powerPoints = 35
-        percentAccuracy(95)
-        type = MoveType.PHYSICAL
-        effects(ApplyDamage)
-    }
-
     val Scratch = buildMove {
         id = "scratch"
         name = "Scratch"
         element = Element.NORMAL
         power = 40
         powerPoints = 35
+        contact = true
         percentAccuracy(100)
         type = MoveType.PHYSICAL
         effects(ApplyDamage)

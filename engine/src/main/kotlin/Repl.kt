@@ -18,8 +18,8 @@ fun main() {
             val result = engine.execute(input)
             println(result)
         } catch (e: Throwable) {
-            println("An unexpected error occurred: $e.localizedMessage")
-            println(e.stackTrace.contentToString())
+            println("An unexpected error occurred: ${e.localizedMessage}")
+            println(e.stackTrace.joinToString(separator = "\n") { it.toString() })
         }
     }
 

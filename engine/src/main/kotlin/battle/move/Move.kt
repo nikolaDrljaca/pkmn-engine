@@ -12,6 +12,7 @@ data class Move(
     val power: Int, // NOTE: Status moves have no power
     val powerPoints: Int,
     val accuracy: MoveAccuracy,
+    val contact: Boolean,
     val type: MoveType, // physical, status, special
 
     val priority: MovePriority = MovePriority(),
@@ -99,6 +100,7 @@ class MoveBuilder {
     var effect: MoveEffect = MoveEffect.NoEffect
     var status: MoveStatus = MoveStatus.NORMAL
     var priority: Int = 0
+    var contact: Boolean = false
     private var critApplication: CritApplication = CritApplication.Normal(MoveCritStage())
 
     fun percentAccuracy(value: Int) {
@@ -144,6 +146,7 @@ class MoveBuilder {
         effect = effect,
         status = status,
         priority = MovePriority(priority),
+        contact = contact,
         critApplication = critApplication
     )
 }
