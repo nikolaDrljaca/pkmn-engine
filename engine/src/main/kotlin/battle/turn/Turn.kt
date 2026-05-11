@@ -4,7 +4,6 @@ import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.TeamId
 import com.drbrosdev.battle.move.MoveContext
 import com.drbrosdev.battle.move.MoveId
-import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
 
 data class Turn(

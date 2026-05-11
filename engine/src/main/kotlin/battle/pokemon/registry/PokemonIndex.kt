@@ -7,7 +7,7 @@ import com.drbrosdev.battle.move.registry.MoveIndex
 import com.drbrosdev.battle.pokemon.*
 
 object PokemonIndex {
-    val Tyranitar = buildPokemon {
+    fun getTyranitar() = buildPokemon {
         pokemonId("tyranitar")
         elements(Element.ROCK, Element.DARK)
         name = "Tyranitar"
@@ -29,7 +29,8 @@ object PokemonIndex {
             specialAttack = 44
             speed = 172
         }
-        addMoves( // user input
+        addMoves(
+            // user input
             MoveIndex.Crunch,
             MoveIndex.Flamethrower,
             MoveIndex.ThunderWave,
@@ -37,7 +38,7 @@ object PokemonIndex {
         )
     }
 
-    val Alakazam = buildPokemon {
+    fun getAlakazam() = buildPokemon {
         pokemonId("alakazam")
         name = "Alakazam"
         elements(Element.PSYCHIC)
@@ -66,7 +67,7 @@ object PokemonIndex {
         )
     }
 
-    val Latios = buildPokemon {
+    fun getLatios() = buildPokemon {
         pokemonId("latios")
         name = "Latios"
         elements(Element.DRAGON, Element.PSYCHIC)
@@ -98,7 +99,7 @@ object PokemonIndex {
         )
     }
 
-    val Ferrothorn = buildPokemon {
+    fun getFerrothorn() = buildPokemon {
         pokemonId("ferrothorn")
         name = "Ferrothorn"
         elements(Element.GRASS, Element.STEEL)
@@ -130,7 +131,7 @@ object PokemonIndex {
         )
     }
 
-    val LandorusTherian = buildPokemon {
+    fun getLandorusTherian() = buildPokemon {
         pokemonId("landorus-therian")
         name = "Landorus-Therian"
         elements(Element.GROUND, Element.FLYING)

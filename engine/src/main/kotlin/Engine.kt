@@ -1,21 +1,19 @@
 package com.drbrosdev
 
-import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.BattleId
-import com.drbrosdev.battle.BattleState
-import com.drbrosdev.battle.TeamId
+import com.drbrosdev.battle.*
+import com.drbrosdev.battle.move.MoveId
 import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.presentation.TextBattlePresenter
 import com.drbrosdev.battle.presentation.TextMovePresenter
 import com.drbrosdev.battle.presentation.TextPokemonPresenter
 import com.drbrosdev.battle.presentation.TextTeamPresenter
 import com.drbrosdev.battle.turn.Turn
+import com.drbrosdev.battle.turn.TurnAction
 import com.drbrosdev.battle.turn.resolveTurn
 import com.drbrosdev.parser.Command
 import com.drbrosdev.parser.TextCommandParser
-import com.drbrosdev.sample.SampleTeam1
-import com.drbrosdev.sample.SampleTeam2
-import java.util.UUID
+import com.drbrosdev.parser.TurnSelection
+import com.drbrosdev.sample.SampleTeams
 
 
 class BattleEngine {
@@ -33,11 +31,13 @@ class BattleEngine {
             // TODO: @drljacan battleId generator
             val battleId = RandomGen.nextInt(from = 100, until = 200)
                 .let { BattleId(it.toString()) }
+            val team1 = SampleTeams.getSampleTeam1()
+            val team2 = SampleTeams.getSampleTeam2()
             val battle = Battle(
-                team1 = SampleTeam1,
-                team2 =  SampleTeam2,
-                active1 = SampleTeam1.members.values.first().id,
-                active2 = SampleTeam2.members.values.first().id
+                team1 = team1,
+                team2 =  team2,
+                active1 = team1.members.values.first().id,
+                active2 = team2.members.values.first().id
             )
             sessions[battleId] = battle
             // using teamId resolve to team
@@ -57,14 +57,24 @@ class BattleEngine {
         is Command.ResolveTurn -> {
             val battleId = BattleId(command.battleId)
             val battle = sessions.getValue(battleId)
-            val turn = Turn(
-                selection1 = command.action1.let { (teamId, action) ->
-                    battle[teamId].id to action
-                },
-                selection2 = command.action2.let { (teamId, action) ->
-                    battle[teamId].id to action
+
+            // determine the actual pokemonId based of the slug prefix!
+            val mapper : (Pair<TeamId, TurnSelection>) -> Pair<PokemonId, TurnAction> = { (teamId, selection) ->
+                val activeMon = battle[teamId].id
+                when (selection) {
+                    is TurnSelection.MoveSelected -> activeMon to TurnAction.MoveSelected(MoveId(selection.move))
+                    is TurnSelection.Switch -> {
+                        val resolved = battle.team(teamId).findMember(selection.incoming)
+                        activeMon to TurnAction.Switch(resolved.id)
+                    }
                 }
+            }
+
+            val turn = Turn(
+                selection1 = command.action1.let { mapper(it) },
+                selection2 = command.action2.let { mapper(it) }
             )
+
             val afterTurn = battle.resolveTurn(turn)
             when (afterTurn.state) {
                 BattleState.InProgress -> sessions[battleId] = afterTurn
@@ -88,9 +98,10 @@ class BattleEngine {
         }
 
         is Command.ShowMove -> {
-            val (battleId, _) = command.session
+            val (battleId, teamId) = command.session
             val battle = sessions.getValue(BattleId(battleId))
-            val pokemon = battle[PokemonId(command.pokemonId)]
+            val resolved = battle.team(TeamId(teamId)).findMember(command.pokemonId)
+            val pokemon = battle[resolved.id]
             TextMovePresenter.present(pokemon)
         }
 

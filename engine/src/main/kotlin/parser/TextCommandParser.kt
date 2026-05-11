@@ -2,10 +2,6 @@ package com.drbrosdev.parser
 
 import com.drbrosdev.battle.BattleSession
 import com.drbrosdev.battle.TeamId
-import com.drbrosdev.battle.move.MoveId
-import com.drbrosdev.battle.pokemon.PokemonId
-import com.drbrosdev.battle.turn.TurnAction
-import java.util.StringTokenizer
 
 object TextCommandParser : CommandParser {
     override fun parse(command: String): Command {
@@ -73,7 +69,7 @@ object TextCommandParser : CommandParser {
         }
     }
 
-    private fun parseTurnCommand(input: String): Pair<TeamId, TurnAction> {
+    private fun parseTurnCommand(input: String): Pair<TeamId, TurnSelection> {
         val tokens = input.split(" ")
         // team-1 move flamethrower
         // OR
@@ -81,8 +77,8 @@ object TextCommandParser : CommandParser {
         require(tokens.size == 3)
         val teamId = TeamId.Companion(tokens[0])
         return teamId to when (tokens[1]) {
-            "move" -> TurnAction.MoveSelected(MoveId(tokens[2]))
-            "switch" -> TurnAction.Switch(PokemonId(tokens[2]))
+            "move" -> TurnSelection.MoveSelected(tokens[2])
+            "switch" -> TurnSelection.Switch(tokens[2])
             else -> error("Unknown turn command: ${tokens[1]}")
         }
     }

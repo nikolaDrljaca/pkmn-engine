@@ -60,7 +60,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
             battle
                 .narrative("${outgoing.name} is switching with ${incoming.name}.")
                 .updateMons(afterOutEffects, afterInEffects)
-                .switch(outgoing.id, context.action.incoming)
+                .switch(outgoing.id, incoming.id)
         }
     }
 

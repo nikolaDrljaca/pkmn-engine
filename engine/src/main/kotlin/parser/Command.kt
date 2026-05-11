@@ -2,7 +2,6 @@ package com.drbrosdev.parser
 
 import com.drbrosdev.battle.BattleSession
 import com.drbrosdev.battle.TeamId
-import com.drbrosdev.battle.turn.TurnAction
 
 sealed interface Command {
 
@@ -15,8 +14,8 @@ sealed interface Command {
     // $ turn battle-1 team-1 move flamethrower ; team-2 switch garchomp
     data class ResolveTurn(
         val battleId: String,
-        val action1: Pair<TeamId, TurnAction>,
-        val action2: Pair<TeamId, TurnAction>,
+        val action1: Pair<TeamId, TurnSelection>,
+        val action2: Pair<TeamId, TurnSelection>,
     ) : Command
 
     // $ {battleId} {teamId} show team

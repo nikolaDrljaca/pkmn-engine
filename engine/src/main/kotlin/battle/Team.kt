@@ -24,6 +24,9 @@ data class Team(
     }
 }
 
+fun Team.findMember(id: String): Pokemon = members.values
+    .first { it.id.id.split("-")[0] == id }
+
 fun Team.hasMember(pokemon: Pokemon) = members.containsKey(pokemon.id)
 
 fun Team.hasMember(id: PokemonId) = members.containsKey(id)

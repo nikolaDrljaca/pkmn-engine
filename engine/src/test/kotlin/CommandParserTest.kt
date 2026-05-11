@@ -1,6 +1,7 @@
 import com.drbrosdev.battle.turn.TurnAction
 import com.drbrosdev.parser.Command
 import com.drbrosdev.parser.TextCommandParser
+import com.drbrosdev.parser.TurnSelection
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -31,16 +32,16 @@ class CommandParserTest {
         assertEquals(resolveTurn.battleId, "battle-1")
 
         assertEquals(resolveTurn.action1.first.id, "team-1")
-        assert(resolveTurn.action1.second is TurnAction.MoveSelected)
+        assert(resolveTurn.action1.second is TurnSelection.MoveSelected)
         assertEquals(
-            (resolveTurn.action1.second as TurnAction.MoveSelected).move.id,
+            (resolveTurn.action1.second as TurnSelection.MoveSelected).move,
             "flamethrower"
         )
 
         assertEquals(resolveTurn.action2.first.id, "team-2")
-        assert(resolveTurn.action2.second is TurnAction.Switch)
+        assert(resolveTurn.action2.second is TurnSelection.Switch)
         assertEquals(
-            (resolveTurn.action2.second as TurnAction.Switch).incoming.id,
+            (resolveTurn.action2.second as TurnSelection.Switch).incoming,
             "mudkip"
         )
     }
