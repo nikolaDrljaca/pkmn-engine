@@ -27,21 +27,25 @@ fun Battle.resolveTurn(turn: Turn): Battle {
 
     // 3 construct TurnStep pipeline
     // This way battles can end in a draw, which is legal
-    val steps = sequenceOf(
-        ResolveStartOfTurnWeather(),
+    val steps = buildList {
+        if (turnCount == 1) {
+            add(SwitchInTurnStep(get(first.user).id))
+            add(SwitchInTurnStep(get(second.user).id))
+        }
+        add(ResolveStartOfTurnWeather())
         // first pokemon action
-        ApplyStartOfTurnEffects(first),
-        ExecuteActionStep(first),
+        add(ApplyStartOfTurnEffects(first))
+        add(ExecuteActionStep(first))
         // second pokemon action
-        ApplyStartOfTurnEffects(second),
-        ExecuteActionStep(second),
+        add(ApplyStartOfTurnEffects(second))
+        add(ExecuteActionStep(second))
         // end of turn effects in order
-        ApplyEndOfTurnEffects(first),
-        ApplyEndOfTurnEffects(second),
+        add(ApplyEndOfTurnEffects(first))
+        add(ApplyEndOfTurnEffects(second))
         // check for conclusion - can be a draw here
-        CheckConclusion,
-        HandleTurnCounter
-    )
+        add(CheckConclusion)
+        add(HandleTurnCounter)
+    }
     // 4 clear logs and execute pipeline
     return copy(turnLog = listOf("Turn $turnCount started."))
         .resolveTurnSteps(steps)

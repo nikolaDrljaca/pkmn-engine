@@ -77,6 +77,10 @@ data class Pokemon(
             }
         }
     )
+
+    fun modifyStats(modification: StatModification) = copy(
+        statModifications = statModifications + modification
+    )
 }
 
 fun Pokemon.hasFainted() = inBattleHp.value == 0

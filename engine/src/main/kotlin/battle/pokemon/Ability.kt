@@ -1,17 +1,20 @@
 package com.drbrosdev.battle.pokemon
 
+import com.drbrosdev.battle.environment.SwitchInEffect
+import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.move.MoveEffect
 import com.drbrosdev.battle.move.MovePrecondition
 import com.drbrosdev.battle.move.MovePreconditionResult
-import com.drbrosdev.battle.move.isPhysical
-import com.drbrosdev.battle.pokemon.stats.Stat
-import com.drbrosdev.battle.pokemon.stats.StatModification
-import com.drbrosdev.battle.pokemon.stats.StatModifiers
+import com.drbrosdev.battle.pokemon.stats.*
 import com.drbrosdev.battle.turn.TurnActionOrderRule
-import com.drbrosdev.battle.turn.TurnStep
 import com.drbrosdev.battle.turn.TurnValidator
+import java.util.logging.Logger
+
+private val LOG = Logger.getLogger(Ability::class.qualifiedName)
 
 interface Ability {
+    val switchInEffects: List<SwitchInEffect> get() = emptyList()
+
     val turnValidators: List<TurnValidator> get() = emptyList()
 
     val orderingRules: List<TurnActionOrderRule> get() = emptyList()
@@ -20,8 +23,6 @@ interface Ability {
     val movePrecondition: List<MovePrecondition> get() = emptyList()
 
     val moveEffects: List<MoveEffect> get() = emptyList()
-
-    val turnSteps: List<TurnStep> get() = emptyList()
 
     val statModifications: List<StatModification> get() = emptyList()
 }
@@ -53,15 +54,12 @@ val Scrappy = object : Ability {
 }
 
 val SandStream = object : Ability {
-    // BUG: this is a switch-in effect, and they should apply to the first turn
-    /*
-    override val moveEffects: List<MoveEffect>
-        get() = listOf( MoveEffect { battle ->
+    override val switchInEffects: List<SwitchInEffect>
+        get() = listOf(SwitchInEffect { _, battle ->
             battle
                 .copy(weather = Weather.Sandstorm(null))
                 .narrative(message = "A sandstorm kicked up!")
         })
-     */
 }
 
 val Levitate = object : Ability {
@@ -75,6 +73,7 @@ val Levitate = object : Ability {
                     narrativeMessage = "It does not affect ${target.name}!"
                 )
             }
+
             else -> MovePreconditionResult(MovePrecondition.Result.PASS)
         }
     })
@@ -91,13 +90,33 @@ val IronBarbs = object : Ability {
             move.contact -> battle
                 .updateMons(updatedUser)
                 .narrative("${user.name} is hurt by thorns for $damage!")
+
             else -> battle
         }
     })
 }
 
 val Intimidate = object : Ability {
-
+    override val switchInEffects: List<SwitchInEffect>
+        get() = listOf(SwitchInEffect { pokemon, battle ->
+            val opponent = when {
+                battle.active1 == pokemon.id -> battle[battle.active2]
+                else -> battle[battle.active1]
+            }
+            val immunities = listOf(ClearBody, HyperCutter, WhiteSmoke)
+            when {
+                opponent.ability in immunities -> battle
+                else -> {
+                    val modification = StatModification { _ ->
+                        StatModifiers(mapOf(StatKey.ATTACK to StatModifier.negativeStage(1)))
+                    }
+                    val updated = opponent.modifyStats(modification)
+                    battle
+                        .narrative("${pokemon.name}'s Intimidate cuts ${opponent.name}'s attack!")
+                        .updateMons(updated)
+                }
+            }
+        })
 }
 
 val SandVeil = object : Ability { /*Effectively does nothing*/ }
@@ -109,4 +128,7 @@ val Overcoat = object : Ability { /*Effectively does nothing*/ }
 val SnowCloak = object : Ability { /*Effectively does nothing*/ }
 val ShellArmor = object : Ability { /*Effectively does nothing*/ }
 val StrongJaw = object : Ability { /* TODO: Effectively does nothing*/ }
+val ClearBody = object : Ability { /* TODO: Effectively does nothing*/ }
+val HyperCutter = object : Ability { /* TODO: Effectively does nothing*/ }
+val WhiteSmoke = object : Ability { /* TODO: Effectively does nothing*/ }
 val BattleArmor = object : Ability { /*Effectively does nothing*/ }

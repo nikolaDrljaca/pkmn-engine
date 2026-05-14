@@ -1,15 +1,12 @@
 package com.drbrosdev.battle.turn
 
-import com.drbrosdev.battle.*
-import com.drbrosdev.battle.environment.SwitchInEffect
-import com.drbrosdev.battle.environment.SwitchOutEffect
+import com.drbrosdev.battle.Battle
+import com.drbrosdev.battle.BattleOutcome
+import com.drbrosdev.battle.BattleState
+import com.drbrosdev.battle.allFainted
 import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.environment.exitNarrativeMessage
-import com.drbrosdev.battle.pokemon.MajorStatus
-import com.drbrosdev.battle.pokemon.Pokemon
-import com.drbrosdev.battle.pokemon.PokemonId
-import com.drbrosdev.battle.pokemon.exitNarrativeMessage
-import com.drbrosdev.battle.pokemon.hasFainted
+import com.drbrosdev.battle.pokemon.*
 import java.util.logging.Logger
 
 private val LOG = Logger.getLogger(TurnStep::class.qualifiedName)
@@ -26,6 +23,10 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
             val user = battle[userId]
             val target = battle[targetId]
             val move = user[moveId]
+            if (user.hasFainted()) {
+                return battle
+                    .narrative("${user.name} has fainted.")
+            }
             LOG.fine { "${user.name} used ${move.name}!" }
             val applicableEffects = buildList {
                 add(user.item.preMoveEffect)
@@ -51,22 +52,49 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
             val outgoing = battle[context.user]
             LOG.fine { "${outgoing.id} is switching with ${incoming.id}" }
             // TODO: group these so they can be applied for moves like U-Turn
-            // switch out effects are applied to outgoing
-            val afterOutEffects = with(SwitchOutEffect) { apply(outgoing) }
-            // switch in effects are applied to incoming
-            val environment = battle.environment(incoming.id)
-            val afterInEffects = with(SwitchInEffect(environment)) { apply(incoming) }
-
-            battle
-                .narrative("${outgoing.name} is switching with ${incoming.name}.")
-                .updateMons(afterOutEffects, afterInEffects)
+            return battle.narrative("${outgoing.name} is switching with ${incoming.name}.")
+                .let {
+                    listOf(SwitchInTurnStep(incoming.id), SwitchOutTurnStep(outgoing.id))
+                        .fold(it) { current, step -> step.apply(current) }
+                }
                 .switch(outgoing.id, incoming.id)
         }
     }
 
 }
 
-class ResolveStartOfTurnWeather: TurnStep {
+class SwitchInTurnStep(private val incomingId: PokemonId) : TurnStep {
+    override fun apply(battle: Battle): Battle {
+        // pokemon that is switching in
+        // suffers environment effects
+        val incoming = battle[incomingId]
+        val afterEnvEffects = battle.environment(incoming.id)
+            .map { it.effect }
+            .fold(incoming) { pokemon, effect -> effect.apply(pokemon) }
+        val updatedBattle = battle.updateMons(afterEnvEffects)
+        // applies its switch-in effects if any
+        return afterEnvEffects.ability
+            .switchInEffects
+            .fold(updatedBattle) { current, effect -> effect.apply(afterEnvEffects, current) }
+    }
+}
+
+class SwitchOutTurnStep(private val outgoingId: PokemonId) : TurnStep {
+    override fun apply(battle: Battle): Battle {
+        val outgoing = battle[outgoingId]
+        val updated = outgoing.copy(
+            // clear volatile status
+            volatileStatus = emptySet(),
+            // enable all moves
+            moves = outgoing.moves.map { it.enable() },
+            // clear all stat modifications (coming from moves etc.)
+            statModifications = emptyList()
+        )
+        return battle.updateMons(updated)
+    }
+}
+
+class ResolveStartOfTurnWeather : TurnStep {
     override fun apply(battle: Battle): Battle {
         // resolve weather
         val expiresOnTurn = battle.weather.expiresOnTurn ?: return battle
@@ -79,7 +107,6 @@ class ResolveStartOfTurnWeather: TurnStep {
         }
     }
 }
-
 
 class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
     override fun apply(battle: Battle): Battle = when (context.action) {
@@ -214,7 +241,7 @@ Execute-all pipeline.
 All steps run unconditionally.
 Implementations decide to return a new state of the battle
  */
-fun Battle.resolveTurnSteps(steps: Sequence<TurnStep>): Battle {
+fun Battle.resolveTurnSteps(steps: List<TurnStep>): Battle {
     return steps.fold(this) { currentBattle, step ->
         when (currentBattle.state) {
             is BattleState.Concluded -> {
