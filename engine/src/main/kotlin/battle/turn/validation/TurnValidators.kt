@@ -1,24 +1,45 @@
-package com.drbrosdev.battle.turn
+package com.drbrosdev.battle.turn.validation
 
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.abilities
 import com.drbrosdev.battle.move.MoveStatus
 import com.drbrosdev.battle.move.isStatusMove
-import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.VolatileStatus
+import com.drbrosdev.battle.pokemon.hasFainted
+import com.drbrosdev.battle.turn.Turn
+import com.drbrosdev.battle.turn.TurnAction
 import java.util.logging.Logger
 
 private val LOG = Logger.getLogger(TurnValidator::class.java.simpleName)
 
-fun interface TurnValidator {
-    fun Turn.validate(battle: Battle): TurnValidity
+// detects either active pokemon has fainted,
+// only valid actions are switches
+val ActivePokemonFaintedValidator = TurnValidator { battle ->
+    val verify: (Pair<PokemonId, TurnAction>) -> TurnValidity = { (pokemonId, action) ->
+        when (action) {
+            is TurnAction.MoveSelected -> when {
+                battle[pokemonId].hasFainted() -> TurnValidity.Invalid(TurnInvalidReason.ActivePokemonFainted)
+                else -> TurnValidity.Valid
+            }
+
+            is TurnAction.Switch -> TurnValidity.Valid
+        }
+    }
+    assertValidity(verify(selection1), verify(selection2))
 }
 
-val SameSwitchTarget = TurnValidator { battle ->
-    // TODO: Impl
-    // if switching, pokemon cannot switch into itself
-    TurnValidity.Valid
+val SameSwitchTargetValidator = TurnValidator { _ ->
+    val verify: (Pair<PokemonId, TurnAction>) -> TurnValidity = { (pokemonId, action) ->
+        when (action) {
+            is TurnAction.MoveSelected -> TurnValidity.Valid
+            is TurnAction.Switch -> when {
+                pokemonId == action.incoming -> TurnValidity.Invalid(TurnInvalidReason.SameSwitchTarget)
+                else -> TurnValidity.Valid
+            }
+        }
+    }
+    assertValidity(verify(selection1), verify(selection2))
 }
 
 val PowerPointsTurnValidator = TurnValidator { battle ->
@@ -29,7 +50,7 @@ val PowerPointsTurnValidator = TurnValidator { battle ->
                 val move = battle[pokemonId][action.move]
                 when {
                     move.powerPoints > 0 -> TurnValidity.Valid
-                    else -> TurnValidity.Invalid(TurnValidity.InvalidReason.NoPowerPoints)
+                    else -> TurnValidity.Invalid(TurnInvalidReason.NoPowerPoints)
                 }
             }
 
@@ -49,7 +70,7 @@ val MoveDisabledTurnValidator = TurnValidator { battle ->
             is TurnAction.MoveSelected -> {
                 val move = battle[pokemonId][action.move]
                 when {
-                    move.status == MoveStatus.DISABLED -> TurnValidity.Invalid(TurnValidity.InvalidReason.MoveDisabled)
+                    move.status == MoveStatus.DISABLED -> TurnValidity.Invalid(TurnInvalidReason.MoveDisabled)
                     else -> TurnValidity.Valid
                 }
             }
@@ -81,7 +102,7 @@ val TauntTurnValidator = TurnValidator { battle ->
                         val move = pokemon[action.move]
                         when {
                             move.isStatusMove() ->
-                                TurnValidity.Invalid(TurnValidity.InvalidReason.PokemonTaunted)
+                                TurnValidity.Invalid(TurnInvalidReason.PokemonTaunted)
 
                             else -> TurnValidity.Valid
                         }
@@ -116,7 +137,8 @@ private fun assertValidity(a1Valid: TurnValidity, a2Valid: TurnValidity): TurnVa
 }
 
 private val StandardTurnValidators = sequenceOf(
-    SameSwitchTarget,
+    ActivePokemonFaintedValidator,
+    SameSwitchTargetValidator,
     PowerPointsTurnValidator,
     MoveDisabledTurnValidator,
     TauntTurnValidator,

@@ -4,10 +4,11 @@ import com.drbrosdev.battle.move.MoveStatus
 import com.drbrosdev.battle.move.buildMove
 import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.buildPokemon
-import com.drbrosdev.battle.turn.MoveDisabledTurnValidator
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
-import com.drbrosdev.battle.turn.TurnValidity
+import com.drbrosdev.battle.turn.validation.MoveDisabledTurnValidator
+import com.drbrosdev.battle.turn.validation.TurnInvalidReason
+import com.drbrosdev.battle.turn.validation.TurnValidity
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -39,7 +40,7 @@ class MoveDisabledTurnValidatorTest {
 
         val result = with(MoveDisabledTurnValidator) { turn.validate(battle) }
         assertEquals(
-            TurnValidity.Invalid(TurnValidity.InvalidReason.MoveDisabled),
+            TurnValidity.Invalid(TurnInvalidReason.MoveDisabled),
             result
         )
     }
@@ -66,7 +67,7 @@ class MoveDisabledTurnValidatorTest {
         )
         val result = with(MoveDisabledTurnValidator) { turn.validate(battle) }
         assertEquals(
-            TurnValidity.Invalid(TurnValidity.InvalidReason.MoveDisabled),
+            TurnValidity.Invalid(TurnInvalidReason.MoveDisabled),
             result
         )
     }
@@ -93,7 +94,7 @@ class MoveDisabledTurnValidatorTest {
         )
         val result = with(MoveDisabledTurnValidator) { turn.validate(battle) }
         assertEquals(
-            TurnValidity.Invalid(TurnValidity.InvalidReason.MoveDisabled),
+            TurnValidity.Invalid(TurnInvalidReason.MoveDisabled),
             result
         )
     }

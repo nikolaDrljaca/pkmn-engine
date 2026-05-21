@@ -55,6 +55,7 @@ val SpikesEnvUnit = EnvironmentUnit(
     name = "Spikes",
     effect = { pokemon ->
         // TODO: implement
+        // NOTE: mons with levitate ability are not affected
         pokemon
     }
 )

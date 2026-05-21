@@ -1,14 +1,14 @@
 import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.BattleState
 import com.drbrosdev.battle.Team
 import com.drbrosdev.battle.move.buildMove
 import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.pokemon.VolatileStatus
 import com.drbrosdev.battle.pokemon.buildPokemon
-import com.drbrosdev.battle.turn.TauntTurnValidator
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
-import com.drbrosdev.battle.turn.TurnValidity
+import com.drbrosdev.battle.turn.validation.TauntTurnValidator
+import com.drbrosdev.battle.turn.validation.TurnInvalidReason
+import com.drbrosdev.battle.turn.validation.TurnValidity
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 
@@ -46,7 +46,7 @@ class TauntTurnValidatorTest {
         )
         val result = with(TauntTurnValidator) { turn.validate(battle) }
         assertEquals(
-            TurnValidity.Invalid(TurnValidity.InvalidReason.PokemonTaunted),
+            TurnValidity.Invalid(TurnInvalidReason.PokemonTaunted),
             result
         )
     }
@@ -74,7 +74,7 @@ class TauntTurnValidatorTest {
         )
         val result = with(TauntTurnValidator) { turn.validate(battle) }
         assertEquals(
-            TurnValidity.Invalid(TurnValidity.InvalidReason.PokemonTaunted),
+            TurnValidity.Invalid(TurnInvalidReason.PokemonTaunted),
             result
         )
     }
@@ -103,7 +103,7 @@ class TauntTurnValidatorTest {
         )
         val result = with(TauntTurnValidator) { turn.validate(battle) }
         assertEquals(
-            TurnValidity.Invalid(TurnValidity.InvalidReason.PokemonTaunted),
+            TurnValidity.Invalid(TurnInvalidReason.PokemonTaunted),
             result
         )
     }

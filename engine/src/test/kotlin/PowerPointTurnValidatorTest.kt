@@ -1,17 +1,14 @@
 import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.BattleState
 import com.drbrosdev.battle.Team
-import com.drbrosdev.battle.move.*
-import com.drbrosdev.battle.pokemon.*
-import com.drbrosdev.battle.pokemon.stats.BaseStats
-import com.drbrosdev.battle.pokemon.stats.EffortValues
-import com.drbrosdev.battle.pokemon.stats.IndividualValues
-import com.drbrosdev.battle.turn.PowerPointsTurnValidator
+import com.drbrosdev.battle.move.buildMove
+import com.drbrosdev.battle.pokemon.PokemonId
+import com.drbrosdev.battle.pokemon.buildPokemon
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
-import com.drbrosdev.battle.turn.TurnValidity
+import com.drbrosdev.battle.turn.validation.PowerPointsTurnValidator
+import com.drbrosdev.battle.turn.validation.TurnInvalidReason
+import com.drbrosdev.battle.turn.validation.TurnValidity
 import org.junit.jupiter.api.Test
-import java.util.*
 import kotlin.test.assertEquals
 
 
@@ -115,7 +112,7 @@ class PowerPointTurnValidatorTest {
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(
-            TurnValidity.Invalid(TurnValidity.InvalidReason.NoPowerPoints),
+            TurnValidity.Invalid(TurnInvalidReason.NoPowerPoints),
             result
         )
     }
@@ -142,7 +139,7 @@ class PowerPointTurnValidatorTest {
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(
-            TurnValidity.Invalid(TurnValidity.InvalidReason.NoPowerPoints),
+            TurnValidity.Invalid(TurnInvalidReason.NoPowerPoints),
             result
         )
     }
@@ -169,7 +166,7 @@ class PowerPointTurnValidatorTest {
         )
         val result = with(PowerPointsTurnValidator) { turn.validate(battle) }
         assertEquals(
-            TurnValidity.Invalid(TurnValidity.InvalidReason.NoPowerPoints),
+            TurnValidity.Invalid(TurnInvalidReason.NoPowerPoints),
             result
         )
     }

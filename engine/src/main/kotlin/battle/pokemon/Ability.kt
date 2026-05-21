@@ -7,7 +7,7 @@ import com.drbrosdev.battle.move.MovePrecondition
 import com.drbrosdev.battle.move.MovePreconditionResult
 import com.drbrosdev.battle.pokemon.stats.*
 import com.drbrosdev.battle.turn.TurnActionOrderRule
-import com.drbrosdev.battle.turn.TurnValidator
+import com.drbrosdev.battle.turn.validation.TurnValidator
 import java.util.logging.Logger
 
 private val LOG = Logger.getLogger(Ability::class.qualifiedName)
@@ -66,8 +66,11 @@ val Levitate = object : Ability {
     override val movePrecondition: List<MovePrecondition> = listOf(MovePrecondition { battle ->
         val move = battle[userId][moveId]
         val target = battle[targetId]
-        when (move.element) {
-            Element.GROUND -> {
+        when {
+            // NOTE: Spikes apply regardless of levitate
+            move.id.id == "spikes" -> MovePreconditionResult(MovePrecondition.Result.PASS)
+
+            move.element == Element.GROUND -> {
                 MovePreconditionResult(
                     result = MovePrecondition.Result.IMMUNE,
                     narrativeMessage = "It does not affect ${target.name}!"

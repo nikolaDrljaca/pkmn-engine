@@ -34,17 +34,3 @@ fun ActionContext.toMoveContext(battle: Battle): MoveContext = when (action) {
     else ->  error("Cannot create MoveContext when action is ${action.javaClass.simpleName}!")
 }
 
-sealed interface TurnValidity {
-    data object Valid : TurnValidity
-
-    data class Invalid(val reason: InvalidReason) : TurnValidity
-
-    /*
-    Error messages can be introduced here
-     */
-    sealed interface InvalidReason {
-        data object NoPowerPoints : InvalidReason
-        data object MoveDisabled : InvalidReason
-        data object PokemonTaunted : InvalidReason
-    }
-}
