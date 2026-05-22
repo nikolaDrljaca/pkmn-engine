@@ -1,9 +1,18 @@
 package com.drbrosdev.parser.command
 
 import com.drbrosdev.battle.BattleSession
+import com.drbrosdev.battle.Team
 import com.drbrosdev.battle.TeamId
 
 sealed interface Command {
+
+    /*
+     $ team create
+     {teamContent}
+    * */
+    data class CreateTeam(
+        val team: Team
+    ): Command
 
     // $ create team-id team-id
     data class CreateBattle(
@@ -11,7 +20,7 @@ sealed interface Command {
         val team2: TeamId
     ) : Command
 
-    // $ turn battle-1 team-1 move flamethrower ; team-2 switch garchomp
+    // $ turn {battleId} {teamId-1} move {moveId} ; {teamId-2} switch {pokemonId}
     data class ResolveTurn(
         val battleId: String,
         val action1: Pair<TeamId, TurnSelection>,

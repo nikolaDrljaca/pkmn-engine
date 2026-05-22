@@ -7,6 +7,36 @@ import kotlin.test.assertEquals
 class CommandParserTest {
 
     @Test
+    fun `test parse create team command`() {
+        val command = """
+            team create
+            Ferrothorn @ Leftovers
+            Ability: Iron Barbs
+            EVs: 252 HP / 8 Atk / 124 Def / 124 SpD
+            IVs: 0 Atk
+            Impish Nature
+            - Growl
+            - Flamethrower
+            - Leer
+            - Stealth Rock
+            
+            Tyranitar @ Black Sludge
+            Ability: Sand Stream
+            EVs: 252 HP / 252 Atk / 4 Def
+            Adamant Nature
+            - Earthquake
+            - Crunch
+            - Leer
+            - Stealth Rock
+        """.trimIndent()
+        val parsed = TextCommandParser.parse(command)
+        assert(parsed !is Command.Unknown) {
+            "Command parsed as UNKNOWN"
+        }
+        assert(parsed is Command.CreateTeam)
+    }
+
+    @Test
     fun `test parse create battle command`() {
         val command = "create team-1 team-2"
         val parsed = TextCommandParser.parse(command)

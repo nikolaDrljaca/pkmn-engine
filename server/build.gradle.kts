@@ -8,7 +8,7 @@ group = "com.drbrosdev"
 version = "0.0.1"
 
 application {
-    mainClass = "io.ktor.server.netty.EngineMain"
+    mainClass = "io.ktor.server.cio.EngineMain"
 }
 
 kotlin {
@@ -25,7 +25,7 @@ dependencies {
     implementation(libs.h2)
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.cors)
-    implementation(libs.ktor.server.netty)
+    implementation(libs.ktor.server.cio)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
     testImplementation(libs.ktor.server.test.host)

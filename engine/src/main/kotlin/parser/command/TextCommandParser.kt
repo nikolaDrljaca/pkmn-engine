@@ -2,6 +2,7 @@ package com.drbrosdev.parser.command
 
 import com.drbrosdev.battle.BattleSession
 import com.drbrosdev.battle.TeamId
+import com.drbrosdev.parser.team.TextTeamParser
 
 object TextCommandParser : CommandParser {
     override fun parse(command: String): Command {
@@ -13,11 +14,18 @@ object TextCommandParser : CommandParser {
         val firstToken = tokens.first()
 
         return when {
+            firstToken == "team" -> parseTeamAction(command)
             firstToken == "create" -> parseAction(command)
             firstToken == "turn" -> parseAction(command)
             tokens.contains("show") -> parseShowCommand(command)
             else -> Command.Unknown(command)
         }
+    }
+
+    private fun parseTeamAction(input: String): Command {
+        val teamContent = input.removePrefix("team create")
+        val team = TextTeamParser.parse(teamContent)
+        return Command.CreateTeam(team)
     }
 
     private fun parseShowCommand(input: String): Command {

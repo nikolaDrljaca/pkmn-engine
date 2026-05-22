@@ -16,40 +16,38 @@ import com.drbrosdev.parser.command.TurnSelection
 
 
 class BattleEngine {
+
+    private val teams = mutableMapOf<TeamId, Team>()
+
     private val sessions = mutableMapOf<BattleId, Battle>()
 
-    private val commandParser = TextCommandParser
-
     fun execute(command: String): String {
-        val parsed = commandParser.parse(command)
+        val parsed = TextCommandParser.parse(command)
         return resolveCommand(parsed)
     }
 
     private fun resolveCommand(command: Command): String = when (command) {
+        is Command.CreateTeam -> {
+            val teamId = TeamId()
+            teams[teamId] = command.team
+            teamId.id
+        }
+
         is Command.CreateBattle -> {
-            // TODO: @drljacan battleId generator
-            val battleId = RandomGen.nextInt(from = 100, until = 200)
-                .let { BattleId(it.toString()) }
-            val team1 = Team(emptyMap())
-            val team2 = Team(emptyMap())
+            val battleId = BattleId("battle-${RandomGen.nextInt(from = 100, until = 200)}")
+            val team1 = requireNotNull(teams[command.team1]) {
+                "Team ${command.team1} does not exist!"
+            }
+            val team2 = requireNotNull(teams[command.team2]) {
+                "Team ${command.team2} does not exist!"
+            }
             val battle = Battle(
                 team1 = team1,
-                team2 =  team2,
+                team2 = team2,
                 active1 = team1.members.values.first().id,
                 active2 = team2.members.values.first().id
             )
             sessions[battleId] = battle
-            // using teamId resolve to team
-            /*
-            val battle = Battle(
-                team1 = TODO(),
-                team2 = TODO(),
-                active1 = TODO(),
-                active2 = TODO()
-            )
-            // manage in sessions
-            sessions[battleId] = battle
-             */
             battleId.id
         }
 
@@ -58,7 +56,7 @@ class BattleEngine {
             val battle = sessions.getValue(battleId)
 
             // determine the actual pokemonId based of the slug prefix!
-            val mapper : (Pair<TeamId, TurnSelection>) -> Pair<PokemonId, TurnAction> = { (teamId, selection) ->
+            val mapper: (Pair<TeamId, TurnSelection>) -> Pair<PokemonId, TurnAction> = { (teamId, selection) ->
                 val activeMon = battle[teamId].id
                 when (selection) {
                     is TurnSelection.MoveSelected -> activeMon to TurnAction.MoveSelected(MoveId(selection.move))
