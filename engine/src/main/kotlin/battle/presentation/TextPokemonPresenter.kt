@@ -49,7 +49,7 @@ object TextPokemonPresenter {
     }
 
     private fun StringBuilder.appendAbility(pokemon: Pokemon) {
-
+        appendLine(" Ability: ${pokemon.ability.name}")
     }
 
     private fun StringBuilder.appendHeader(pokemon: Pokemon) {
