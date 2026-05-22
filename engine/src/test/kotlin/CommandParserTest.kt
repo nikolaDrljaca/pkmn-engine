@@ -1,7 +1,6 @@
-import com.drbrosdev.battle.turn.TurnAction
-import com.drbrosdev.parser.Command
-import com.drbrosdev.parser.TextCommandParser
-import com.drbrosdev.parser.TurnSelection
+import com.drbrosdev.parser.command.Command
+import com.drbrosdev.parser.command.TextCommandParser
+import com.drbrosdev.parser.command.TurnSelection
 import org.junit.jupiter.api.Test
 import kotlin.test.assertEquals
 

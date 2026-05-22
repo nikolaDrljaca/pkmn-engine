@@ -22,9 +22,11 @@ data class Pokemon(
     // from input
     val ability: Ability,
 
-    // stats
+    // stats, static
     val baseStats: BaseStats,
+    // from input
     val effortValues: EffortValues,
+    // from input
     val individualValues: IndividualValues,
 
     // in battle stats
@@ -41,6 +43,7 @@ data class Pokemon(
 
     // from input
     val moves: List<Move> = emptyList(),
+    // from input
     val item: Item = Item.NoItem
 ) {
     init {
@@ -176,8 +179,16 @@ class PokemonBuilder {
         this.effortValues = built
     }
 
+    fun effortValue(value: Int, key: StatKey) {
+        this.effortValues = EffortValues(this.effortValues.stats + (key to Stat(value)))
+    }
+
     fun individualValues(block: IndividualValuesBuilder.() -> Unit) {
         this.individualValues = IndividualValuesBuilder().apply(block).build()
+    }
+
+    fun individualValue(value: Int, key: StatKey) {
+        this.individualValues = IndividualValues(this.individualValues.stats + (key to Stat(value)))
     }
 
     fun baseStats(block: BaseStatsBuilder.() -> Unit) {
@@ -199,6 +210,13 @@ class PokemonBuilder {
 
     fun addStatus(volatileStatus: VolatileStatus) {
         this.volatileStatus.add(volatileStatus)
+    }
+
+    fun staticConfig(pokemon: Pokemon) {
+        id = pokemon.id
+        elements = pokemon.elements
+        name = pokemon.name
+        baseStats = pokemon.baseStats
     }
 
     fun build() = Pokemon(

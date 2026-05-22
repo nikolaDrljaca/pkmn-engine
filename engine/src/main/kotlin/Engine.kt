@@ -10,10 +10,9 @@ import com.drbrosdev.battle.presentation.TextTeamPresenter
 import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
 import com.drbrosdev.battle.turn.resolveTurn
-import com.drbrosdev.parser.Command
-import com.drbrosdev.parser.TextCommandParser
-import com.drbrosdev.parser.TurnSelection
-import com.drbrosdev.sample.SampleTeams
+import com.drbrosdev.parser.command.Command
+import com.drbrosdev.parser.command.TextCommandParser
+import com.drbrosdev.parser.command.TurnSelection
 
 
 class BattleEngine {
@@ -31,8 +30,8 @@ class BattleEngine {
             // TODO: @drljacan battleId generator
             val battleId = RandomGen.nextInt(from = 100, until = 200)
                 .let { BattleId(it.toString()) }
-            val team1 = SampleTeams.getSampleTeam1()
-            val team2 = SampleTeams.getSampleTeam2()
+            val team1 = Team(emptyMap())
+            val team2 = Team(emptyMap())
             val battle = Battle(
                 team1 = team1,
                 team2 =  team2,

@@ -111,8 +111,8 @@ class TauntTurnValidatorTest {
     @Test
     fun `switches are valid`() {
         val turn = Turn(
-            selection1 = buildPokemon { }.id to TurnAction.Switch(buildPokemon { }.id),
-            selection2 = buildPokemon { }.id to TurnAction.Switch(buildPokemon { }.id)
+            selection1 = buildPokemon { id = active1 }.id to TurnAction.Switch(buildPokemon {  }.id),
+            selection2 = buildPokemon { id = active2 }.id to TurnAction.Switch(buildPokemon {  }.id)
         )
         val result = with(TauntTurnValidator) { turn.validate(battle) }
         assertEquals(
@@ -124,8 +124,8 @@ class TauntTurnValidatorTest {
     @Test
     fun `normal status mons are valid`() {
         val turn = Turn(
-            selection1 = buildPokemon { }.id to TurnAction.MoveSelected(buildMove { }.id),
-            selection2 = buildPokemon { }.id to TurnAction.Switch(buildPokemon { }.id)
+            selection1 = active1 to TurnAction.MoveSelected(buildMove { }.id),
+            selection2 = active2 to TurnAction.Switch(buildPokemon { }.id)
         )
         val result = with(TauntTurnValidator) { turn.validate(battle) }
         assertEquals(

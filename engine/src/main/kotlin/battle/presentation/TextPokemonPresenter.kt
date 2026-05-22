@@ -29,6 +29,7 @@ object TextPokemonPresenter {
         appendHeader(pokemon)
         appendHpBar(pokemon)
         appendStatus(pokemon)
+        appendAbility(pokemon)
         if (censor.not()) {
             appendItem(pokemon)
         }
@@ -45,6 +46,10 @@ object TextPokemonPresenter {
         appendHeader(pokemon)
         appendHpBar(pokemon)
         appendStatus(pokemon)
+    }
+
+    private fun StringBuilder.appendAbility(pokemon: Pokemon) {
+
     }
 
     private fun StringBuilder.appendHeader(pokemon: Pokemon) {

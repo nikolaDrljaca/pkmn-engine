@@ -19,7 +19,7 @@ import com.drbrosdev.battle.pokemon.stats.StatModifiers
 
 object MoveIndex {
 
-    val HiddenPowerIce = buildMove {
+    private val HiddenPowerIce = buildMove {
         id = "hidden-power-ice"
         name = "Hidden Power"
         element = Element.ICE
@@ -30,7 +30,7 @@ object MoveIndex {
         effects(ApplyDamage)
     }
 
-    val UTurn = buildMove {
+    private val UTurn = buildMove {
         id = "u-turn"
         name = "U-Turn"
         element = Element.BUG
@@ -45,7 +45,7 @@ object MoveIndex {
         )
     }
 
-    val Earthquake = buildMove {
+    private val Earthquake = buildMove {
         id = "earthquake"
         name = "Earthquake"
         element = Element.GROUND
@@ -56,7 +56,7 @@ object MoveIndex {
         effects(ApplyDamage)
     }
 
-    val KnockOff = buildMove {
+    private val KnockOff = buildMove {
         id = "knock-off"
         name = "Knock Off"
         element = Element.DARK
@@ -77,7 +77,7 @@ object MoveIndex {
         )
     }
 
-    val PowerWhip = buildMove {
+    private val PowerWhip = buildMove {
         id = "power-whip"
         name = "Power Whip"
         element = Element.GRASS
@@ -89,7 +89,7 @@ object MoveIndex {
         effects(ApplyDamage)
     }
 
-    val GyroBall = buildMove {
+    private val GyroBall = buildMove {
         id = "gyro-ball"
         name = "Gyro Ball"
         element = Element.STEEL
@@ -101,7 +101,7 @@ object MoveIndex {
         effects(ApplyDamage)
     }
 
-    val Crunch = buildMove {
+    private val Crunch = buildMove {
         id = "crunch"
         name = "Crunch"
         element = Element.DARK
@@ -125,7 +125,7 @@ object MoveIndex {
         )
     }
 
-    val ThunderWave = buildMove {
+    private val ThunderWave = buildMove {
         id = "thunder-wave"
         name = "Thunder Wave"
         element = Element.ELECTRIC
@@ -136,7 +136,7 @@ object MoveIndex {
         effects(ApplyStatusCondition(Percentage(100), MajorStatus.Paralyzed))
     }
 
-    val Psychic = buildMove {
+    private val Psychic = buildMove {
         id = "psychic"
         name = "Psychic"
         element = Element.PSYCHIC
@@ -152,7 +152,7 @@ object MoveIndex {
         )
     }
 
-    val GrassKnot = buildMove {
+    private val GrassKnot = buildMove {
         id = "grass-knot"
         name = "Grass Knot"
         element = Element.GRASS
@@ -164,7 +164,7 @@ object MoveIndex {
         effects(ApplyDamage)
     }
 
-    val ShadowBall = buildMove {
+    private val ShadowBall = buildMove {
         id = "shadow-ball"
         name = "Shadow Ball"
         element = Element.GHOST
@@ -180,7 +180,7 @@ object MoveIndex {
         )
     }
 
-    val DracoMeteor = buildMove {
+    private val DracoMeteor = buildMove {
         id = "draco-meteor"
         name = "Draco Meteor"
         element = Element.DRAGON
@@ -196,7 +196,7 @@ object MoveIndex {
         )
     }
 
-    val Surf = buildMove {
+    private val Surf = buildMove {
         id = "surf"
         name = "Surf"
         element = Element.WATER
@@ -207,9 +207,9 @@ object MoveIndex {
         effects(ApplyDamage)
     }
 
-    val DragonPulse = buildMove {
+    private val DragonPulse = buildMove {
         id = "dragon-pulse"
-        name = "Dragon Pulses"
+        name = "Dragon Pulse"
         element = Element.DRAGON
         power = 90
         powerPoints = 24
@@ -218,7 +218,7 @@ object MoveIndex {
         effects(ApplyDamage)
     }
 
-    val Spikes = buildMove {
+    private val Spikes = buildMove {
         id = "spikes"
         name = "Spikes"
         element = Element.GROUND
@@ -229,7 +229,7 @@ object MoveIndex {
         effects(ApplyEnvironmentUnit(SpikesEnvUnit))
     }
 
-    val Flamethrower = buildMove {
+    private val Flamethrower = buildMove {
         id = "flamethrower"
         name = "Flamethrower"
         element = Element.FIRE
@@ -281,7 +281,7 @@ object MoveIndex {
         )
     }
 
-    val Pursuit = buildMove {
+    private val Pursuit = buildMove {
         id = "pursuit"
         name = "Pursuit"
         element = Element.DARK
@@ -292,7 +292,7 @@ object MoveIndex {
         effects(ApplyDamage)
     }
 
-    val SonicBoom = buildMove {
+    private val SonicBoom = buildMove {
         id = "sonic-boom"
         name = "Sonic Boom"
         element = Element.NORMAL
@@ -303,7 +303,7 @@ object MoveIndex {
         effects(ApplyDirectDamage(20))
     }
 
-    val SandAttack = buildMove {
+    private val SandAttack = buildMove {
         id = "sand-attack"
         name = "Sand Attack"
         element = Element.GROUND
@@ -314,7 +314,7 @@ object MoveIndex {
         effects(ApplyAccuracyChange(StatModifier.negativeStage(1)))
     }
 
-    val ConfuseRay = buildMove {
+    private val ConfuseRay = buildMove {
         id = "confuse-ray"
         name = "Confuse Ray"
         element = Element.GHOST
@@ -330,7 +330,7 @@ object MoveIndex {
         )
     }
 
-    val StealthRock = buildMove {
+    private val StealthRock = buildMove {
         id = "stealth-rock"
         name = "Stealth Rock"
         element = Element.ROCK
@@ -341,7 +341,7 @@ object MoveIndex {
         effects(ApplyEnvironmentUnit(StealthRockEnvUnit))
     }
 
-    val Reflect = buildMove {
+    private val Reflect = buildMove {
         id = "reflect"
         name = "Reflect"
         element = Element.PSYCHIC
@@ -365,7 +365,7 @@ object MoveIndex {
         })
     }
 
-    val LightScreen = buildMove {
+    private val LightScreen = buildMove {
         id = "light-screen"
         name = "Light Screen"
         element = Element.PSYCHIC
@@ -389,7 +389,7 @@ object MoveIndex {
         })
     }
 
-    val Sandstorm = buildMove {
+    private val Sandstorm = buildMove {
         id = "sandstorm"
         name = "Sandstorm"
         element = Element.GROUND
@@ -402,4 +402,33 @@ object MoveIndex {
         })
     }
 
+    val lookup = mapOf(
+        HiddenPowerIce.name to HiddenPowerIce,
+        UTurn.name to UTurn,
+        Earthquake.name to Earthquake,
+        KnockOff.name to KnockOff,
+        PowerWhip.name to PowerWhip,
+        GyroBall.name to GyroBall,
+        Crunch.name to Crunch,
+        ThunderWave.name to ThunderWave,
+        Psychic.name to Psychic,
+        GrassKnot.name to GrassKnot,
+        ShadowBall.name to ShadowBall,
+        DracoMeteor.name to DracoMeteor,
+        Surf.name to Surf,
+        DragonPulse.name to DragonPulse,
+        Spikes.name to Spikes,
+        Flamethrower.name to Flamethrower,
+        Scratch.name to Scratch,
+        Leer.name to Leer,
+        Growl.name to Growl,
+        Pursuit.name to Pursuit,
+        SonicBoom.name to SonicBoom,
+        SandAttack.name to SandAttack,
+        ConfuseRay.name to ConfuseRay,
+        StealthRock.name to StealthRock,
+        Reflect.name to Reflect,
+        LightScreen.name to LightScreen,
+        Sandstorm.name to Sandstorm,
+    )
 }

@@ -1,4 +1,4 @@
-package com.drbrosdev.parser
+package com.drbrosdev.parser.command
 
 
 fun interface CommandParser {

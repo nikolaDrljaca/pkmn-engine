@@ -13,6 +13,8 @@ import java.util.logging.Logger
 private val LOG = Logger.getLogger(Ability::class.qualifiedName)
 
 interface Ability {
+    val name: String
+
     val switchInEffects: List<SwitchInEffect> get() = emptyList()
 
     val turnValidators: List<TurnValidator> get() = emptyList()
@@ -28,10 +30,13 @@ interface Ability {
 }
 
 val Prankster = object : Ability {
+    override val name: String = "Prankster"
 
 }
 
 val Overgrow = object : Ability {
+    override val name: String
+        get() = "Overgrow"
     override val statModifications: List<StatModification>
         get() = listOf(StatModification { context ->
             val (pokemon, _) = context
@@ -39,21 +44,28 @@ val Overgrow = object : Ability {
         })
 }
 
-val RunAway = object : Ability { /*Effectively does nothing*/ }
+val RunAway = object : Ability {
+    override val name: String = "Run Away"
+}
 val Pressure = object : Ability {
+    override val name: String = "Pressure"
     /* Effectively does nothing */
 }
 
 // Prevents Confusion
-val OwnTempo = object : Ability {}
+val OwnTempo = object : Ability {
+    override val name: String = "Own Tempo"
+}
 
 val Scrappy = object : Ability {
+    override val name: String = "Scrappy"
     override val movePrecondition: List<MovePrecondition> = listOf(MovePrecondition {
         MovePreconditionResult(MovePrecondition.Result.PASS)
     })
 }
 
 val SandStream = object : Ability {
+    override val name: String = "Sand Stream"
     override val switchInEffects: List<SwitchInEffect>
         get() = listOf(SwitchInEffect { _, battle ->
             battle
@@ -63,6 +75,7 @@ val SandStream = object : Ability {
 }
 
 val Levitate = object : Ability {
+    override val name: String = "Levitate"
     override val movePrecondition: List<MovePrecondition> = listOf(MovePrecondition { battle ->
         val move = battle[userId][moveId]
         val target = battle[targetId]
@@ -83,6 +96,7 @@ val Levitate = object : Ability {
 }
 
 val IronBarbs = object : Ability {
+    override val name: String = "Iron Barbs"
     override val moveEffects: List<MoveEffect> = listOf(MoveEffect { battle ->
         val user = battle[userId]
         val move = battle[userId][moveId]
@@ -100,6 +114,8 @@ val IronBarbs = object : Ability {
 }
 
 val Intimidate = object : Ability {
+    override val name: String = "Intimidate"
+
     override val switchInEffects: List<SwitchInEffect>
         get() = listOf(SwitchInEffect { pokemon, battle ->
             val opponent = when {
@@ -122,16 +138,42 @@ val Intimidate = object : Ability {
         })
 }
 
-val SandVeil = object : Ability { /*Effectively does nothing*/ }
-val SandRush = object : Ability { /*Effectively does nothing*/ }
-val SandForce = object : Ability { /*Effectively does nothing*/ }
-val MagicGuard = object : Ability { /*Effectively does nothing*/ }
-val IceBody = object : Ability { /*Effectively does nothing*/ }
-val Overcoat = object : Ability { /*Effectively does nothing*/ }
-val SnowCloak = object : Ability { /*Effectively does nothing*/ }
-val ShellArmor = object : Ability { /*Effectively does nothing*/ }
-val StrongJaw = object : Ability { /* TODO: Effectively does nothing*/ }
-val ClearBody = object : Ability { /* TODO: Effectively does nothing*/ }
-val HyperCutter = object : Ability { /* TODO: Effectively does nothing*/ }
-val WhiteSmoke = object : Ability { /* TODO: Effectively does nothing*/ }
-val BattleArmor = object : Ability { /*Effectively does nothing*/ }
+val SandVeil = object : Ability { /*Effectively does nothing*/
+    override val name: String = "Sand Veil"
+}
+val SandRush = object : Ability { /*Effectively does nothing*/
+    override val name: String = "Sand Rush"
+}
+val SandForce = object : Ability { /*Effectively does nothing*/
+    override val name: String = "Sand Force"
+}
+val MagicGuard = object : Ability { /*Effectively does nothing*/
+    override val name: String = "Magic Guard"
+}
+val IceBody = object : Ability { /*Effectively does nothing*/
+    override val name: String = "Ice Body"
+}
+val Overcoat = object : Ability { /*Effectively does nothing*/
+    override val name: String = "Overcoat"
+}
+val SnowCloak = object : Ability { /*Effectively does nothing*/
+    override val name: String = "Snow Cloak"
+}
+val ShellArmor = object : Ability { /*Effectively does nothing*/
+    override val name: String = "Shell Armor"
+}
+val StrongJaw = object : Ability { /* Effectively does nothing*/
+    override val name: String = "Strong Jaw"
+}
+val ClearBody = object : Ability { /* Effectively does nothing*/
+    override val name: String = "Clear Body"
+}
+val HyperCutter = object : Ability { /* Effectively does nothing*/
+    override val name: String = "Hyper Cutter"
+}
+val WhiteSmoke = object : Ability { /* Effectively does nothing*/
+    override val name: String = "White Smoke"
+}
+val BattleArmor = object : Ability { /*Effectively does nothing*/
+    override val name: String = "Battle Armor"
+}

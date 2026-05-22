@@ -1,4 +1,4 @@
-package com.drbrosdev.parser
+package com.drbrosdev.parser.command
 
 import com.drbrosdev.battle.BattleSession
 import com.drbrosdev.battle.TeamId

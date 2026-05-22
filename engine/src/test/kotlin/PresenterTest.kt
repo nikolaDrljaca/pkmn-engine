@@ -1,8 +1,7 @@
 import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.Team
 import com.drbrosdev.battle.environment.Weather
-import com.drbrosdev.battle.item.BlackSludge
-import com.drbrosdev.battle.item.Leftovers
+import com.drbrosdev.battle.item.ItemIndex
 import com.drbrosdev.battle.move.registry.MoveIndex.Growl
 import com.drbrosdev.battle.move.registry.MoveIndex.Leer
 import com.drbrosdev.battle.move.registry.MoveIndex.Scratch
@@ -23,7 +22,7 @@ class PresenterTest {
         name = "Chimchar"
         nature = Quirky
         ability = RunAway
-        item = Leftovers
+        item = ItemIndex.lookup["Leftovers"]!!
         baseStats {
             baseHp = 44
             attack = 58
@@ -46,7 +45,7 @@ class PresenterTest {
         name = "Charmander"
         nature = Quirky
         ability = Pressure
-        item = BlackSludge
+        item = ItemIndex.lookup["Black Sludge"]!!
         baseStats {
             baseHp = 39
             attack = 52
