@@ -6,5 +6,5 @@ dependencyResolutionManagement {
     }
 }
 
-include("engine")
-include("server")
+include(":engine")
+include(":server")
