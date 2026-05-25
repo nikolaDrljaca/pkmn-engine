@@ -28,9 +28,13 @@ dependencies {
     implementation(libs.ktor.server.default.headers)
     implementation(libs.ktor.server.cors)
     implementation(libs.ktor.server.cio)
+    implementation(libs.ktor.server.websockets)
     implementation(libs.ktor.server.status.pages)
     implementation(libs.logback.classic)
     implementation(libs.ktor.server.config.yaml)
+    implementation(libs.arrow.core)
+    implementation(libs.arrow.fx.coroutines)
+
     testImplementation(libs.ktor.server.test.host)
     testImplementation(libs.kotlin.test.junit)
 }

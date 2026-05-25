@@ -28,9 +28,8 @@ class BattleEngine {
 
     private fun resolveCommand(command: Command): String = when (command) {
         is Command.CreateTeam -> {
-            val teamId = TeamId()
-            teams[teamId] = command.team
-            teamId.id
+            teams[command.team.id] = command.team
+            command.team.id.id
         }
 
         is Command.CreateBattle -> {
