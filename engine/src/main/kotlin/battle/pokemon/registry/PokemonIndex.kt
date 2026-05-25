@@ -78,6 +78,7 @@ object PokemonIndex {
         Tyranitar.name to Tyranitar,
         Latios.name to Latios,
         Ferrothorn.name to Ferrothorn,
+        Alakazam.name to Alakazam,
         LandorusTherian.name to LandorusTherian,
     )
 }
