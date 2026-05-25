@@ -76,8 +76,11 @@ class BattleEngine {
                 BattleState.InProgress -> sessions[battleId] = afterTurn
                 is BattleState.Concluded -> sessions.remove(battleId)
             }
-            afterTurn.turnLog
-                .joinToString(separator = "\n") { it }
+            buildString {
+                appendLine("----------------")
+                appendLine(afterTurn.turnLog.joinToString(separator = "\n") { it })
+                appendLine("----------------")
+            }
         }
 
         is Command.ShowActive -> {

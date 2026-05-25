@@ -110,6 +110,8 @@ value class PokemonId private constructor(val id: String) {
 
     override fun toString(): String = id
 
+    fun baseId(): String = id.split("-").dropLast(1).joinToString(separator = "-") { it }
+
     companion object {
         operator fun invoke(id: String): PokemonId {
             val slug = UUID.randomUUID()

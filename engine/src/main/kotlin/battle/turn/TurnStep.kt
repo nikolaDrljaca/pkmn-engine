@@ -53,14 +53,22 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
             LOG.fine { "${outgoing.id} is switching with ${incoming.id}" }
             // TODO: group these so they can be applied for moves like U-Turn
             return battle.narrative("${outgoing.name} is switching with ${incoming.name}.")
-                .let {
-                    listOf(SwitchInTurnStep(incoming.id), SwitchOutTurnStep(outgoing.id))
-                        .fold(it) { current, step -> step.apply(current) }
-                }
+                .let { SwitchOutTurnStep(outgoing.id).apply(it) }
                 .switch(outgoing.id, incoming.id)
         }
     }
 
+}
+
+class ExecuteSwitchEffects(private val context: ActionContext): TurnStep {
+    override fun apply(battle: Battle): Battle = when (context.action) {
+        // do nothing
+        is TurnAction.MoveSelected -> battle
+        is TurnAction.Switch -> battle.let {
+            val incoming = it[context.action.incoming]
+            SwitchInTurnStep(incoming.id).apply(it)
+        }
+    }
 }
 
 class SwitchInTurnStep(private val incomingId: PokemonId) : TurnStep {
@@ -247,6 +255,7 @@ fun Battle.resolveTurnSteps(steps: List<TurnStep>): Battle {
             is BattleState.Concluded -> {
                 LOG.info { "Battle has concluded at turn $turnCount with outcome ${currentBattle.state.outcome}" }
                 currentBattle
+                    .narrative("Battle has concluded at turn $turnCount with winning team ${currentBattle.state.outcome}")
             }
 
             else -> step.apply(currentBattle)

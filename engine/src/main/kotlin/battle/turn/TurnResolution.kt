@@ -59,6 +59,9 @@ fun Battle.resolveTurn(turn: Turn): Battle {
             // second pokemon action
             add(ApplyStartOfTurnEffects(second))
             add(ExecuteActionStep(second))
+            // Switch In Effects if they are applicable
+            add(ExecuteSwitchEffects(first))
+            add(ExecuteSwitchEffects(second))
             // end of turn effects in order
             add(ApplyEndOfTurnEffects(first))
             add(ApplyEndOfTurnEffects(second))
