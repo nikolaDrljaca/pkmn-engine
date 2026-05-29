@@ -5,6 +5,7 @@ import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.move.MoveEffect
 import com.drbrosdev.battle.move.MovePrecondition
 import com.drbrosdev.battle.move.MovePreconditionResult
+import com.drbrosdev.battle.move.MoveType
 import com.drbrosdev.battle.pokemon.stats.*
 import com.drbrosdev.battle.turn.TurnActionOrderRule
 import com.drbrosdev.battle.turn.validation.TurnValidator
@@ -136,6 +137,70 @@ val Intimidate = object : Ability {
                 }
             }
         })
+}
+
+val Justified = object : Ability {
+    override val name: String = "Justified"
+    override val moveEffects: List<MoveEffect> = listOf(MoveEffect { battle ->
+        val user = battle[userId]
+        val move = user[moveId]
+        val isDarkMove = move.element == Element.DARK
+        when {
+            isDarkMove -> {
+                val statModification = StatModification {
+                    StatModifiers(mapOf(StatKey.ATTACK to StatModifier.positiveStage(1)))
+                }
+                val updatedUser = user.copy(
+                    statModifications = statModifications + statModification
+                )
+                battle
+                    .narrative("${user.name}'s attack is raised!")
+                    .updateMons(updatedUser)
+            }
+            else -> battle
+        }
+    })
+}
+
+val RoughSkin = object : Ability {
+    override val name: String = "Rough Skin"
+    override val moveEffects: List<MoveEffect> = listOf(MoveEffect { battle ->
+        val user = battle[userId]
+        val move = battle[userId][moveId]
+        val damage = (user.effectiveStats.hp.value / 16).coerceAtLeast(1)
+        val newHp = (user.inBattleHp.value - damage).coerceAtLeast(0)
+        val updatedUser = user.copy(inBattleHp = Stat(newHp))
+        when {
+            move.contact -> battle
+                .updateMons(updatedUser)
+                .narrative("${user.name} is hurt by rough skin for $damage!")
+
+            else -> battle
+        }
+    })
+}
+
+val Sturdy = object : Ability {
+    override val name: String = "Sturdy"
+}
+
+val PoisonHeal = object : Ability {
+    override val name: String = "Poison Heal"
+    override val moveEffects: List<MoveEffect> = listOf(MoveEffect { battle ->
+        val user = battle[userId]
+        val isPoisoned = user.majorStatus is MajorStatus.Poisoned || user.majorStatus is MajorStatus.BadlyPoisoned
+        when {
+            isPoisoned -> {
+                val hpToRestore = (user.effectiveStats.hp.value / 8).coerceAtLeast(1)
+                val newHp = (user.inBattleHp.value + hpToRestore).coerceAtMost(user.effectiveStats.hp.value)
+                val updatedUser = user.copy(inBattleHp =  Stat(newHp))
+                battle
+                    .updateMons(updatedUser)
+                    .narrative("${user.name} restores $hpToRestore via Poison Heal!")
+            }
+            else -> battle
+        }
+    })
 }
 
 val SandVeil = object : Ability { /*Effectively does nothing*/

@@ -4,6 +4,7 @@ import com.drbrosdev.battle.move.MoveEffect
 import com.drbrosdev.battle.move.damagecalc.DamageMultiplier
 import com.drbrosdev.battle.pokemon.Effectiveness
 import com.drbrosdev.battle.pokemon.Element
+import com.drbrosdev.battle.pokemon.MajorStatus
 import com.drbrosdev.battle.pokemon.effectiveness
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatKey
@@ -135,7 +136,26 @@ object ItemIndex {
         }
     )
 
+    private val ToxicOrb = Item(
+        id = ItemId("toxic-orb"),
+        name = "Toxic Orb",
+        endOfTurnEffect = { pokemon ->
+            val isPoisoned = pokemon.majorStatus is MajorStatus.Poisoned || pokemon.majorStatus is MajorStatus.BadlyPoisoned
+            when {
+                isPoisoned -> EndOfTurnEffectResult(pokemon)
+                else -> {
+                    val updated = pokemon.copy(majorStatus = MajorStatus.Poisoned)
+                    EndOfTurnEffectResult(
+                        pokemon = updated,
+                        narrativeMessage = "${pokemon.name} is poisoned by Toxic Orb!"
+                    )
+                }
+            }
+        }
+    )
+
     val lookup = mapOf(
+        ToxicOrb.name to ToxicOrb,
         Leftovers.name to Leftovers,
         BlackSludge.name to BlackSludge,
         ExpertBelt.name to ExpertBelt,

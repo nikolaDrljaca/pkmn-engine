@@ -6,13 +6,16 @@ import com.drbrosdev.battle.pokemon.HyperCutter
 import com.drbrosdev.battle.pokemon.IceBody
 import com.drbrosdev.battle.pokemon.Intimidate
 import com.drbrosdev.battle.pokemon.IronBarbs
+import com.drbrosdev.battle.pokemon.Justified
 import com.drbrosdev.battle.pokemon.Levitate
 import com.drbrosdev.battle.pokemon.MagicGuard
 import com.drbrosdev.battle.pokemon.Overcoat
 import com.drbrosdev.battle.pokemon.Overgrow
 import com.drbrosdev.battle.pokemon.OwnTempo
+import com.drbrosdev.battle.pokemon.PoisonHeal
 import com.drbrosdev.battle.pokemon.Prankster
 import com.drbrosdev.battle.pokemon.Pressure
+import com.drbrosdev.battle.pokemon.RoughSkin
 import com.drbrosdev.battle.pokemon.RunAway
 import com.drbrosdev.battle.pokemon.SandForce
 import com.drbrosdev.battle.pokemon.SandRush
@@ -22,10 +25,15 @@ import com.drbrosdev.battle.pokemon.Scrappy
 import com.drbrosdev.battle.pokemon.ShellArmor
 import com.drbrosdev.battle.pokemon.SnowCloak
 import com.drbrosdev.battle.pokemon.StrongJaw
+import com.drbrosdev.battle.pokemon.Sturdy
 import com.drbrosdev.battle.pokemon.WhiteSmoke
 
 object AbilityIndex {
     val lookup = mapOf(
+        Sturdy.name to Sturdy,
+        Justified.name to Justified,
+        RoughSkin.name to RoughSkin,
+        PoisonHeal.name to PoisonHeal,
         Overgrow.name to Overgrow,
         Prankster.name to Prankster,
         RunAway.name to RunAway,

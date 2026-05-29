@@ -74,7 +74,81 @@ object PokemonIndex {
         }
     }
 
+    private val Breloom = buildPokemon {
+        pokemonId("breloom")
+        name = "Breloom"
+        elements(Element.GRASS, Element.FIGHTING)
+        baseStats {
+            baseHp = 60
+            attack = 130
+            defence = 80
+            specialAttack = 60
+            specialDefence = 60
+            speed = 70
+        }
+    }
+
+    private val Garchomp = buildPokemon {
+        pokemonId("garchomp")
+        name = "Garchomp"
+        elements(Element.DRAGON, Element.GROUND)
+        baseStats {
+            baseHp = 108
+            attack = 130
+            defence = 95
+            specialAttack = 80
+            specialDefence = 85
+            speed = 102
+        }
+    }
+
+    private val Azelf = buildPokemon {
+        pokemonId("azelf")
+        name = "Azelf"
+        elements(Element.PSYCHIC)
+        baseStats {
+            baseHp = 75
+            attack = 125
+            defence = 70
+            specialAttack = 125
+            specialDefence = 70
+            speed = 115
+        }
+    }
+
+    private val Terrakion = buildPokemon {
+        pokemonId("terrakion")
+        name = "Terrakion"
+        elements(Element.ROCK, Element.FIGHTING)
+        baseStats {
+            baseHp = 91
+            attack = 129
+            defence = 90
+            specialAttack = 72
+            specialDefence = 90
+            specialAttack = 108
+        }
+    }
+
+    private val Salamance = buildPokemon {
+        pokemonId("salamence")
+        name = "Salamence"
+        elements(Element.DRAGON, Element.FLYING)
+        baseStats {
+            baseHp = 95
+            attack = 135
+            defence = 80
+            specialAttack = 110
+            specialDefence = 80
+            speed = 100
+        }
+    }
+
     val lookup = mapOf(
+        Terrakion.name to Terrakion,
+        Azelf.name to Azelf,
+        Garchomp.name to Garchomp,
+        Breloom.name to Breloom,
         Tyranitar.name to Tyranitar,
         Latios.name to Latios,
         Ferrothorn.name to Ferrothorn,

@@ -2,11 +2,13 @@ package com.drbrosdev.battle.move.damagecalc
 
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
+import com.drbrosdev.battle.item.Item
 import com.drbrosdev.battle.move.CritApplication
 import com.drbrosdev.battle.move.MoveContext
 import com.drbrosdev.battle.move.MoveCritStage
 import com.drbrosdev.battle.move.MoveEffect
 import com.drbrosdev.battle.pokemon.*
+import com.drbrosdev.battle.pokemon.registry.AbilityIndex
 import com.drbrosdev.battle.pokemon.stats.Stat
 import java.util.logging.Logger
 
@@ -91,25 +93,39 @@ object ApplyNormalDamage : MoveEffect {
         }
 
         // base times all multipliers
-        val finalDamage = multipliers
+        val calculatedDamage = multipliers
             .mapNotNull { with(it) { compute(battle) } }
             .fold(baseDamage) { damage, multiplier ->
                 damage.times(multiplier.value).div(100)
             }
             .coerceAtLeast(1)
 
-        val updatedTarget = target.copy(
-            inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
-        )
+        val canSurviveOhko = target.item.id.value == "focus-sash"
+                || target.ability == AbilityIndex.lookup["Sturdy"]
+        val isOhko = target.effectiveStats.hp == target.inBattleHp && calculatedDamage >= target.effectiveStats.hp.value
+
+        val updatedTarget = when {
+            // in cases where target can survive one-hit-knockouts
+            // item is consumed after triggered
+            canSurviveOhko && isOhko -> {
+                target.copy(inBattleHp = Stat(1))
+                    // consume focus sash if triggered
+                    .let { if (it.item.id.value == "focus-sash") it.copy(item = Item.NoItem) else it }
+            }
+            // normal damage application
+            else -> target.copy(
+                inBattleHp = Stat((target.inBattleHp.value - calculatedDamage).coerceAtLeast(0))
+            )
+        }
 
         // handle logging
         // get effectiveness for narrative logging
         val effectiveness = effectiveness(move.element, target.elements)
-        LOG.fine { "$userId dealt $finalDamage($effectiveness) damage to $targetId with $moveId by formula" }
+        LOG.fine { "$userId dealt $calculatedDamage($effectiveness) damage to $targetId with $moveId by formula" }
         val narrativeLog = buildString {
             if (effectiveness.narrativeMessage.isNotBlank())
                 appendLine(effectiveness.narrativeMessage)
-            appendLine("The opposing ${target.name} lost $finalDamage health.")
+            appendLine("The opposing ${target.name} lost $calculatedDamage health.")
         }
 
         return battle
@@ -141,23 +157,37 @@ object ApplyCriticalDamage : MoveEffect {
             // TODO Add item and ability support
         }
         // base times all multipliers
-        val finalDamage = multipliers
+        val calculatedDamage = multipliers
             .mapNotNull { with(it) { compute(battle) } }
             .fold(baseDamage) { damage, multiplier ->
                 damage.times(multiplier.value).div(100)
             }
             .coerceAtLeast(1)
 
-        val updatedTarget = target.copy(
-            inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
-        )
+        val canSurviveOhko = target.item.id.value == "focus-sash"
+                || target.ability == AbilityIndex.lookup["Sturdy"]
+        val isOhko = target.effectiveStats.hp == target.inBattleHp && calculatedDamage >= target.effectiveStats.hp.value
+
+        val updatedTarget = when {
+            // in cases where target can survive one-hit-knockouts
+            // item is consumed after triggered
+            canSurviveOhko && isOhko -> {
+                target.copy(inBattleHp = Stat(1))
+                    // consume focus sash if triggered
+                    .let { if (it.item.id.value == "focus-sash") it.copy(item = Item.NoItem) else it }
+            }
+            // normal damage application
+            else -> target.copy(
+                inBattleHp = Stat((target.inBattleHp.value - calculatedDamage).coerceAtLeast(0))
+            )
+        }
 
         // handle logging
         // get effectiveness for narrative logging
-        LOG.fine { "$userId dealt $finalDamage damage to $targetId with $moveId by crit" }
+        LOG.fine { "$userId dealt $calculatedDamage damage to $targetId with $moveId by crit" }
         val narrativeLog = buildString {
             appendLine("It's a critical hit!")
-            appendLine("The opposing ${target.name} lost $finalDamage health.")
+            appendLine("The opposing ${target.name} lost $calculatedDamage health.")
         }
 
         return battle
