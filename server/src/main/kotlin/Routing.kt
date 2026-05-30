@@ -64,6 +64,9 @@ fun Application.configureRouting() {
         get("/") {
             call.respondText("PKMN Battle Engine Service")
         }
+        get("/health") {
+            call.respond(HttpStatusCode.OK)
+        }
 
         // create team with PKMN showdown text paste
         battleRoutes(logger = log, engine = engine)
