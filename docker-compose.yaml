@@ -1,0 +1,22 @@
+# PROD docker compose script
+
+services:
+  pkmn-engine:
+    image: pkmn-engine:2026.05
+    build: .
+    container_name: pkmn-engine
+    ports:
+      - "5001:5001"
+    # hardening
+    security_opt:
+      - "no-new-privileges=true"
+    restart: on-failure:5
+    cpus: '0.5'
+    mem_limit: 512m
+
+    # health
+    healthcheck:
+      test: ["CMD", "curl", "-f", "http://localhost:5001/health"]
+      interval: 30s
+      timeout: 10s
+      retries: 3
