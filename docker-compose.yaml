@@ -14,9 +14,10 @@ services:
     cpus: '0.5'
     mem_limit: 512m
     labels:
-      - caddy_0.handle_path.rate_limit.rate_limit.zone.global.key={remote_host}
-      - caddy_0.handle_path.rate_limit.rate_limit.zone.global.events=100
-      - caddy_0.handle_path.rate_limit.rate_limit.zone.global.window=1m
+      - "caddy.rate_limit.zone=app1"
+      - "caddy.rate_limit.key={remote_host}"
+      - "caddy.rate_limit.events=100"
+      - "caddy.rate_limit.window=1m"
 
     # health
     healthcheck:
