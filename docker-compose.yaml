@@ -13,11 +13,6 @@ services:
     restart: on-failure:5
     cpus: '0.5'
     mem_limit: 512m
-    labels:
-      - "caddy.rate_limit.zone=app1"
-      - "caddy.rate_limit.key={remote_host}"
-      - "caddy.rate_limit.events=100"
-      - "caddy.rate_limit.window=1m"
 
     # health
     healthcheck:
