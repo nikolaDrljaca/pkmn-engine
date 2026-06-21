@@ -13,6 +13,10 @@ services:
     restart: on-failure:5
     cpus: '0.5'
     mem_limit: 512m
+    labels:
+      - caddy.route.rate_limit.rate_limit.zone.global.key={remote_host}
+      - caddy.route.rate_limit.rate_limit.zone.global.events=100
+      - caddy.route.rate_limit.zone.global.window=1m
 
     # health
     healthcheck:
