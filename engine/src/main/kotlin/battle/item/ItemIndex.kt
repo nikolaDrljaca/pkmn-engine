@@ -13,19 +13,17 @@ import com.drbrosdev.battle.pokemon.stats.StatModifier
 import com.drbrosdev.battle.pokemon.stats.StatModifiers
 import com.drbrosdev.battle.turn.EndOfTurnEffectResult
 import jdk.incubator.vector.VectorOperators.LOG
+import java.nio.file.Files.move
 
 object ItemIndex {
 
     private val ExpertBelt = Item(
         id = ItemId("expert-belt"),
         name = "Expert Belt",
-        damageMultiplier = { battle ->
-            val user = battle[userId]
-            val move = battle[userId][moveId]
-            val target = battle[targetId]
+        damageMultiplier = { context ->
             when {
-                user.item.id.value != "expert-belt" -> null
-                effectiveness(move.element, target.elements) != Effectiveness.SUPER -> null
+                context.user.item.id.value != "expert-belt" -> DamageMultiplier.Neutral
+                effectiveness(context.move.element, context.target.elements) != Effectiveness.SUPER -> DamageMultiplier.Neutral
                 else -> DamageMultiplier(120)
             }
         }
@@ -34,10 +32,10 @@ object ItemIndex {
     private val LifeOrb = Item(
         id = ItemId("life-orb"),
         name = "Life Orb",
-        damageMultiplier = { battle ->
-            when (battle[userId].item.id.value) {
+        damageMultiplier = { context ->
+            when (context.user.item.id.value) {
                 "life-orb" -> DamageMultiplier(130)
-                else -> null
+                else -> DamageMultiplier.Neutral
             }
         },
         afterMoveEffect = { battle ->
@@ -140,7 +138,8 @@ object ItemIndex {
         id = ItemId("toxic-orb"),
         name = "Toxic Orb",
         endOfTurnEffect = { pokemon ->
-            val isPoisoned = pokemon.majorStatus is MajorStatus.Poisoned || pokemon.majorStatus is MajorStatus.BadlyPoisoned
+            val isPoisoned =
+                pokemon.majorStatus is MajorStatus.Poisoned || pokemon.majorStatus is MajorStatus.BadlyPoisoned
             when {
                 isPoisoned -> EndOfTurnEffectResult(pokemon)
                 else -> {
