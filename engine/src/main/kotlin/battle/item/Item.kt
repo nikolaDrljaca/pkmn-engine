@@ -11,8 +11,6 @@ import com.drbrosdev.battle.turn.EndOfTurnEffect
 import com.drbrosdev.battle.turn.EndOfTurnEffectResult
 import java.util.logging.Logger
 
-private val LOG = Logger.getLogger(Item::class.qualifiedName)
-
 data class Item(
     val id: ItemId,
     val name: String,
@@ -28,7 +26,7 @@ data class Item(
      */
     val afterMoveEffect: MoveEffect = MoveEffect.NoEffect,
     // support for items like Life Orb, Black Glasses etc
-    val damageMultiplier: DamageModifier = DamageModifier { null },
+    val damageMultiplier: DamageModifier = DamageModifier { DamageMultiplier.Neutral },
     val statModification: StatModification = StatModification { StatModifiers() }
 ) {
     companion object {

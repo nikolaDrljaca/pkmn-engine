@@ -1,127 +1,138 @@
 package com.drbrosdev.battle.move.damagecalc
 
 import com.drbrosdev.RandomGen
-import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.environment.Weather
-import com.drbrosdev.battle.item.Item
-import com.drbrosdev.battle.move.MoveContext
 import com.drbrosdev.battle.move.isPhysical
 import com.drbrosdev.battle.move.isSpecialMove
 import com.drbrosdev.battle.pokemon.*
-import java.util.logging.Logger
 
-
-private val LOG = Logger.getLogger(DamageModifier::class.qualifiedName)
-
-@JvmInline
-value class DamageMultiplier(val value: Int) // hundreds-scaled
 
 fun interface DamageModifier {
     /**
-     * Computes a hundreds-scaled damage multiplier or returns null
-     * if no multiplier should be applied.
+     * Computes a hundreds-scaled damage multiplier
      */
-    fun MoveContext.compute(battle: Battle): DamageMultiplier?
+    fun compute(context: DamageEffectContext): DamageMultiplier
+}
+
+// hundreds-scaled
+@JvmInline
+value class DamageMultiplier(val value: Int) {
+    companion object {
+        val Neutral = DamageMultiplier(100)
+    }
 }
 
 // always applies
-val StabModifier = DamageModifier { battle ->
-    val user = battle[userId]
-    val move = user[moveId]
-    when {
-        user.elements.hasAnyOf(move.element) -> DamageMultiplier(150)
-        else -> null
-    }
-}
-
-val TypeEffectivenessModifier = DamageModifier { battle ->
-    val move = battle[userId][moveId]
-    val target = battle[targetId]
-    when (val effectiveness = effectiveness(move.element, target.elements)) {
-        Effectiveness.NEUTRAL -> null
-        else -> DamageMultiplier(effectiveness.multiplier)
-    }
-}
-
-val WeatherModifier = DamageModifier { battle ->
-    val move = battle[userId][moveId]
-    when (battle.weather) {
-        is Weather.HarshSun -> when (move.element) {
-            Element.FIRE -> DamageMultiplier(150)
-            Element.WATER -> DamageMultiplier(50)
-            else -> null
+object StabModifier : DamageModifier {
+    override fun compute(context: DamageEffectContext): DamageMultiplier = with(context) {
+        when {
+            user.elements.hasAnyOf(move.element) -> DamageMultiplier(150)
+            else -> DamageMultiplier.Neutral
         }
+    }
+}
 
-        is Weather.Rain -> when (move.element) {
-            Element.WATER -> DamageMultiplier(150)
-            Element.FIRE -> DamageMultiplier(50)
-            else -> null
+object ItemModifier : DamageModifier {
+    override fun compute(context: DamageEffectContext): DamageMultiplier = with(context) {
+        when {
+            // if critical do nothing
+            critical -> DamageMultiplier.Neutral
+            // delegate to implementation on item
+            else -> with(user.item.damageMultiplier) { compute(context) }
         }
-
-        else -> null
     }
 }
 
-val RandomModifier = DamageModifier { _ ->
-    DamageMultiplier(RandomGen.nextInt(85, 101))
-}
-
-val CriticalHitModifier = DamageModifier {
-    DamageMultiplier(200)
-}
-
-val BurnModifier = DamageModifier { battle ->
-    val user = battle[userId]
-    val move = user[moveId]
-    when {
-        move.isPhysical() && user.isBurned() -> DamageMultiplier(50)
-        else -> null
+object AbilityModifier : DamageModifier {
+    // TODO
+    // delegate to implementation on ability
+    override fun compute(context: DamageEffectContext): DamageMultiplier {
+        // consider crit
+        return DamageMultiplier.Neutral
     }
 }
 
-val ReflectModifier = DamageModifier { battle ->
-    val move = battle[userId][moveId]
-    val hasReflect = battle.environment(targetId)
-        .map { it.id }
-        .contains("reflect")
-    when {
-        move.isPhysical().not() -> null
-        hasReflect.not() -> null
-        else -> DamageMultiplier(50)
+object TypeEffectivenessModifier : DamageModifier {
+    override fun compute(context: DamageEffectContext): DamageMultiplier = with(context) {
+        when (val effectiveness = effectiveness(move.element, target.elements)) {
+            Effectiveness.NEUTRAL -> DamageMultiplier.Neutral
+            else -> DamageMultiplier(effectiveness.multiplier)
+        }
     }
 }
 
-val LightScreenModifier = DamageModifier { battle ->
-    val move = battle[userId][moveId]
-    val hasLightScreen = battle.environment(targetId)
-        .map { it.id }
-        .contains("light-screen")
-    when {
-        move.isSpecialMove().not() -> null
-        hasLightScreen.not() -> null
-        else -> DamageMultiplier(50)
+object WeatherModifier : DamageModifier {
+    override fun compute(context: DamageEffectContext): DamageMultiplier = with(context) {
+        when (battle.weather) {
+            is Weather.HarshSun -> when (move.element) {
+                Element.FIRE -> DamageMultiplier(150)
+                Element.WATER -> DamageMultiplier(50)
+                else -> DamageMultiplier.Neutral
+            }
+
+            is Weather.Rain -> when (move.element) {
+                Element.WATER -> DamageMultiplier(150)
+                Element.FIRE -> DamageMultiplier(50)
+                else -> DamageMultiplier.Neutral
+            }
+
+            else -> DamageMultiplier.Neutral
+        }
     }
 }
 
-// abilities
-val FlashFireModifier = DamageModifier { battle ->
-    val user = battle[userId]
-    val move = battle[userId][moveId]
-    // TODO: implement, move to ability subsystem
-//    if (user.ability !is FlashFire) return@DamageModifier null
-//    if (move.element != Element.FIRE) return@DamageModifier null
-//    if (!(user.ability as FlashFire).isActive) return@DamageModifier null
-//    DamageMultiplier(150)
-    null
+object RandomModifier : DamageModifier {
+    override fun compute(context: DamageEffectContext): DamageMultiplier {
+        return DamageMultiplier(RandomGen.nextInt(85, 101))
+    }
 }
 
-val TintedLensModifier = DamageModifier { battle ->
-    val user = battle[userId]
-    val move = battle[userId][moveId]
-    val target = battle[targetId]
-    // TODO: implement, move to ability subsystem
-//    if (user.ability !is TintedLens) return@DamageModifier null
-//    if (effectiveness(move.element, target.elements) != Effectiveness.NOT_VERY) return@DamageModifier null
-//    DamageMultiplier(200)
-    null
+object CriticalHitModifier : DamageModifier {
+    override fun compute(context: DamageEffectContext): DamageMultiplier {
+        return when {
+            context.critical -> DamageMultiplier(200)
+            else -> DamageMultiplier(100)
+        }
+    }
+}
+
+object BurnModifier : DamageModifier {
+    override fun compute(context: DamageEffectContext): DamageMultiplier = with(context) {
+        when {
+            move.isPhysical() && user.isBurned() -> DamageMultiplier(50)
+            else -> DamageMultiplier.Neutral
+        }
+    }
+}
+
+object ReflectModifier : DamageModifier {
+    override fun compute(context: DamageEffectContext): DamageMultiplier = with(context) {
+        val targetId = target.id
+        val hasReflect = battle.environment(targetId)
+            .map { it.id }
+            .contains("reflect")
+        return when {
+            // if critical hit, do nothing
+            critical -> DamageMultiplier.Neutral
+            move.isPhysical().not() -> DamageMultiplier.Neutral
+            hasReflect.not() -> DamageMultiplier.Neutral
+            else -> DamageMultiplier(50)
+        }
+    }
+}
+
+object LightScreenModifier : DamageModifier {
+    override fun compute(context: DamageEffectContext): DamageMultiplier = with(context) {
+        val targetId = target.id
+        val hasLightScreen = battle.environment(targetId)
+            .map { it.id }
+            .contains("light-screen")
+        return when {
+            // if critical hit, do nothing
+            critical -> DamageMultiplier.Neutral
+            move.isSpecialMove().not() -> DamageMultiplier.Neutral
+            hasLightScreen.not() -> DamageMultiplier.Neutral
+            else -> DamageMultiplier(50)
+        }
+    }
 }
