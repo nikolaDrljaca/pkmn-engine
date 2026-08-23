@@ -119,6 +119,9 @@ value class PokemonId private constructor(val id: String) {
                 .take(4)
             return PokemonId("$id-$slug")
         }
+
+        // NOTE: only used in tests
+        fun of(value: String) = PokemonId(value)
     }
 }
 

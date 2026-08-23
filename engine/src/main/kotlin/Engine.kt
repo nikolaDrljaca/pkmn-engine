@@ -14,7 +14,6 @@ import com.drbrosdev.parser.command.Command
 import com.drbrosdev.parser.command.TextCommandParser
 import com.drbrosdev.parser.command.TurnSelection
 
-
 class BattleEngine {
 
     private val teams = mutableMapOf<TeamId, Team>()
@@ -23,10 +22,11 @@ class BattleEngine {
 
     fun execute(command: String): String {
         val parsed = TextCommandParser.parse(command)
-        return resolveCommand(parsed)
+        return handleCommand(parsed)
     }
 
-    private fun resolveCommand(command: Command): String = when (command) {
+    // command handlers
+    private fun handleCommand(command: Command): String = when (command) {
         is Command.CreateTeam -> {
             teams[command.team.id] = command.team
             command.team.id.id
@@ -55,21 +55,26 @@ class BattleEngine {
             val battle = sessions.getValue(battleId)
 
             // determine the actual pokemonId based of the slug prefix!
-            val mapper: (Pair<TeamId, TurnSelection>) -> Pair<PokemonId, TurnAction> = { (teamId, selection) ->
-                val activeMon = battle[teamId].id
+            val handleTurnSelection: (Pair<TeamId, TurnSelection>) -> Result<TurnAction> = { (teamId, selection) ->
+                val activeMon = battle[teamId]
                 when (selection) {
-                    is TurnSelection.MoveSelected -> activeMon to TurnAction.MoveSelected(MoveId(selection.move))
+                    is TurnSelection.MoveSelected -> {
+                        val move = activeMon[MoveId(selection.move)]
+                        TurnAction(move, activeMon)
+                    }
                     is TurnSelection.Switch -> {
                         val resolved = battle.team(teamId).findMember(selection.incoming)
-                        activeMon to TurnAction.Switch(resolved.id)
+                        TurnAction(resolved, activeMon)
                     }
                 }
             }
 
-            val turn = Turn(
-                selection1 = command.action1.let { mapper(it) },
-                selection2 = command.action2.let { mapper(it) }
-            )
+            val actions = listOf(command.action1, command.action2)
+                .map { handleTurnSelection(it) }
+                .filter { it.isSuccess }
+                .map { it.getOrThrow() }
+
+            val turn = Turn(actions)
 
             val afterTurn = battle.resolveTurn(turn)
             when (afterTurn.state) {

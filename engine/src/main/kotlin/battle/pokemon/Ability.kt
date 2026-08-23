@@ -5,10 +5,8 @@ import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.move.MoveEffect
 import com.drbrosdev.battle.move.MovePrecondition
 import com.drbrosdev.battle.move.MovePreconditionResult
-import com.drbrosdev.battle.move.MoveType
 import com.drbrosdev.battle.pokemon.stats.*
-import com.drbrosdev.battle.turn.TurnActionOrderRule
-import com.drbrosdev.battle.turn.validation.TurnValidator
+import com.drbrosdev.battle.turn.TurnAction
 import java.util.logging.Logger
 
 private val LOG = Logger.getLogger(Ability::class.qualifiedName)
@@ -18,9 +16,7 @@ interface Ability {
 
     val switchInEffects: List<SwitchInEffect> get() = emptyList()
 
-    val turnValidators: List<TurnValidator> get() = emptyList()
-
-    val orderingRules: List<TurnActionOrderRule> get() = emptyList()
+    val orderingRules: List<Comparator<TurnAction>> get() = emptyList()
 
     // support for things like Scrappy ability
     val movePrecondition: List<MovePrecondition> get() = emptyList()

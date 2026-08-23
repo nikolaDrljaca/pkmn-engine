@@ -9,9 +9,7 @@ import com.drbrosdev.battle.turn.Turn
 import com.drbrosdev.battle.turn.TurnAction
 import com.drbrosdev.battle.turn.resolveTurn
 import org.junit.jupiter.api.Test
-import org.junit.jupiter.api.extension.ExtendWith
 
-@ExtendWith(LoggingExtension::class)
 class BattleTest {
 
     val chimchar = buildPokemon {
@@ -68,29 +66,33 @@ class BattleTest {
     @Test
     fun `first single turn test`() {
         val turn = Turn(
-            selection1 = chimchar.id to TurnAction.MoveSelected(Scratch.id),
-            selection2 = charmander.id to TurnAction.MoveSelected(Growl.id)
+            listOf(
+                TurnAction.MoveSelected.of(Scratch, chimchar),
+                TurnAction.MoveSelected.of(Growl, charmander)
+            )
         )
-        val updatedBattle = battle.resolveTurn(turn)
-        println(updatedBattle)
+        battle.resolveTurn(turn)
     }
 
     @Test
     fun `run battle test`() {
         val turn = Turn(
-            selection1 = chimchar.id to TurnAction.MoveSelected(chimchar.moves.first().id),
-            selection2 = charmander.id to TurnAction.MoveSelected(charmander.moves.first().id)
+            listOf(
+                TurnAction.MoveSelected.of(chimchar.moves.first(), chimchar),
+                TurnAction.MoveSelected.of(charmander.moves.first(), charmander)
+            )
         )
         var updatedBattle = battle.resolveTurn(turn)
         while (updatedBattle.state is BattleState.InProgress) {
             updatedBattle = updatedBattle.resolveTurn(
                 Turn(
-                    selection1 = chimchar.id to TurnAction.MoveSelected(chimchar.moves.random().id),
-                    selection2 = charmander.id to TurnAction.MoveSelected(charmander.moves.random().id)
+                    listOf(
+                        TurnAction.MoveSelected.of(chimchar.moves.random(), chimchar),
+                        TurnAction.MoveSelected.of(charmander.moves.random(), charmander)
+                    )
                 )
             )
+            println(updatedBattle.turnLog.joinToString(separator = "\n") { it })
         }
-        println(updatedBattle)
     }
-
 }

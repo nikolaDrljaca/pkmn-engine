@@ -1,5 +1,6 @@
 package com.drbrosdev.parser.command
 
+import com.drbrosdev.battle.BattleId
 import com.drbrosdev.battle.BattleSession
 import com.drbrosdev.battle.Team
 import com.drbrosdev.battle.TeamId
