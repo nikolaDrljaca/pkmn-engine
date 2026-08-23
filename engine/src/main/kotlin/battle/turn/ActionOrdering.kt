@@ -6,12 +6,61 @@ import com.drbrosdev.battle.abilities
 import com.drbrosdev.battle.move.Move
 import com.drbrosdev.battle.pokemon.computeInBattleStats
 
+/**
+ Given that a [Turn] is a list of actions, a chain of [Comparator]s is used
+ to sort actions into an ordered list where the first one in that list is the
+ first one to execute.
+
+ For now returns a hardcoded first to second pair, but later on can return a turn
+ with all the actions (for 2v2 support).
+  */
+fun Battle.resolveActionOrder(
+    turn: Turn,
+): Pair<ActionContext, ActionContext> {
+    val battle = this
+    // pass this into QuickClaw and SpeedTie to get a stable sort
+    val coinFlip = RandomGen.nextBoolean()
+    val roll = RandomGen.nextBoolean()
+    val rules = buildList {
+        add(PursuitRuleComparator)
+        // TODO: abilities might need environment support
+        addAll(abilities().flatMap { it.orderingRules })
+        add(SwitchRuleComparator)
+        add(MovePriorityRuleComparator)
+        add(QuickClawRuleComparator(coinFlip, roll))
+        add(TrickRoomRuleComparator(battle))
+        add(SpeedRuleComparator(battle))
+        add(SpeedTieRuleComparator(coinFlip))
+    }
+    // build comparator chain
+    val comparator = rules.reduce { acc, comparator -> acc.then(comparator) }
+    // sort actions
+    val ordered = turn.actions.sortedWith(comparator)
+
+    // NOTE: to introduce 2v2, return
+    // simple, for now ordered[0] is first and ordered[1] is second
+    val selection1 = ordered[0]
+    val selection2 = ordered[1]
+    val first = ActionContext(
+        user = battle.team(selection1.activePokemon.id).id,
+        target = battle.team(selection2.activePokemon.id).id,
+        action = selection1
+    )
+
+    val second = ActionContext(
+        user = battle.team(selection2.activePokemon.id).id,
+        target = battle.team(selection1.activePokemon.id).id,
+        action = selection2
+    )
+    return first to second
+}
+
 object SwitchRuleComparator : Comparator<TurnAction> {
     // 0 - can't decide, go to next
     // +/-1 - decided, use me as comparator
     override fun compare(
-        o1: TurnAction?,
-        o2: TurnAction?
+        o1: TurnAction,
+        o2: TurnAction
     ): Int {
         val isSwitch1 = o1 is TurnAction.Switch
         val isSwitch2 = o2 is TurnAction.Switch
@@ -29,8 +78,8 @@ object SwitchRuleComparator : Comparator<TurnAction> {
 
 object PursuitRuleComparator : Comparator<TurnAction> {
     override fun compare(
-        o1: TurnAction?,
-        o2: TurnAction?
+        o1: TurnAction,
+        o2: TurnAction
     ): Int {
         val pursuit1 = o1 is TurnAction.MoveSelected
                 && o1.move.id.id == "pursuit"
@@ -51,8 +100,8 @@ object PursuitRuleComparator : Comparator<TurnAction> {
 
 object MovePriorityRuleComparator : Comparator<TurnAction> {
     override fun compare(
-        o1: TurnAction?,
-        o2: TurnAction?
+        o1: TurnAction,
+        o2: TurnAction
     ): Int {
         if (o1 is TurnAction.Switch && o2 is TurnAction.Switch) {
             return 0
@@ -131,50 +180,6 @@ class SpeedTieRuleComparator(val coinToss: Boolean) : Comparator<TurnAction> {
         coinToss -> -1
         else -> 1
     }
-
 }
 
-/*
-Chain of Responsibility pattern.
-Each ActionOrderRule decides to either handle (return) or pass along.
-The first Resolved result ends the chain.
- */
-fun Battle.resolveActionOrder(
-    turn: Turn,
-): Pair<ActionContext, ActionContext> {
-    val battle = this
-    // pass this into QuickClaw and SpeedTie to get a stable sort
-    val coinFlip = RandomGen.nextBoolean()
-    val roll = RandomGen.nextBoolean()
-    val rules = buildList {
-        add(PursuitRuleComparator)
-        // TODO add ability support
-        // they might need environment support
-        addAll(abilities().flatMap { it.orderingRules })
-        add(SwitchRuleComparator)
-        add(MovePriorityRuleComparator)
-        add(QuickClawRuleComparator(coinFlip, roll))
-        add(TrickRoomRuleComparator(battle))
-        add(SpeedRuleComparator(battle))
-        add(SpeedTieRuleComparator(coinFlip))
-    }
-    val comparator = rules.reduce { acc, comparator -> acc.then(comparator) }
-    val ordered = turn.actions.sortedWith(comparator)
-    // TODO how to use ActionContext now?
-    // simple, for now ordered[0] is first and ordered[2] is second
-    val selection1 = ordered[0]
-    val selection2 = ordered[1]
-    val first = ActionContext(
-        user = battle.team(selection1.activePokemon.id).id,
-        target = battle.team(selection2.activePokemon.id).id,
-        action = selection1
-    )
-
-    val second = ActionContext(
-        user = battle.team(selection2.activePokemon.id).id,
-        target = battle.team(selection1.activePokemon.id).id,
-        action = selection2
-    )
-    return first to second
-}
 

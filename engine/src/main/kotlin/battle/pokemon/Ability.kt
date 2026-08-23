@@ -7,7 +7,6 @@ import com.drbrosdev.battle.move.MovePrecondition
 import com.drbrosdev.battle.move.MovePreconditionResult
 import com.drbrosdev.battle.pokemon.stats.*
 import com.drbrosdev.battle.turn.TurnAction
-import com.drbrosdev.battle.turn.validation.TurnValidator
 import java.util.logging.Logger
 
 private val LOG = Logger.getLogger(Ability::class.qualifiedName)
@@ -16,8 +15,6 @@ interface Ability {
     val name: String
 
     val switchInEffects: List<SwitchInEffect> get() = emptyList()
-
-    val turnValidators: List<TurnValidator> get() = emptyList()
 
     val orderingRules: List<Comparator<TurnAction>> get() = emptyList()
 

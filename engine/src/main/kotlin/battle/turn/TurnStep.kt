@@ -27,7 +27,6 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
                 return battle
                     .narrative("${user.name} has fainted.")
             }
-            LOG.fine { "${user.name} used ${move.name}!" }
             val applicableEffects = buildList {
                 add(user.item.preMoveEffect)
                 add(move.effect)
@@ -48,16 +47,14 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
 
         // switch action, applies switch out and switch in effects
         is TurnAction.Switch -> {
-            val incoming = battle[context.action.incoming]
-            val outgoing = battle[context.user]
-            LOG.fine { "${outgoing.id} is switching with ${incoming.id}" }
+            val incoming = battle[context.action.incomingPokemon.id]
+            val outgoing = battle[context.action.activePokemon.id]
             // TODO: group these so they can be applied for moves like U-Turn
             return battle.narrative("${outgoing.name} is switching with ${incoming.name}.")
                 .let { SwitchOutTurnStep(outgoing.id).apply(it) }
                 .switch(outgoing.id, incoming.id)
         }
     }
-
 }
 
 class ExecuteSwitchEffects(private val context: ActionContext): TurnStep {
@@ -65,7 +62,7 @@ class ExecuteSwitchEffects(private val context: ActionContext): TurnStep {
         // do nothing
         is TurnAction.MoveSelected -> battle
         is TurnAction.Switch -> battle.let {
-            val incoming = it[context.action.incoming]
+            val incoming = it[context.action.incomingPokemon.id]
             SwitchInTurnStep(incoming.id).apply(it)
         }
     }
