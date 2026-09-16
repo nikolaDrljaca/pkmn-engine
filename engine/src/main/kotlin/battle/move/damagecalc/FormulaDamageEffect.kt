@@ -19,10 +19,10 @@ Dynamic DamageMultiplier application
 // decides and delegates to either
 // FormulaDamage, CriticalDamage
 object ApplyDamage : MoveEffect {
-    private val statSelection = DefaultStatSelector()
-    private val statResolution = DefaultStatResolution()
-    private val damageComputation = DefaultDamageCalculator()
-    private val damageApplication = DefaultDamageApplication()
+    private val statSelection: StatSelector = DefaultStatSelector()
+    private val statResolution: StatResolution = DefaultStatResolution()
+    private val damageComputation: DamageCalculator = DefaultDamageCalculator()
+    private val damageApplication: DamageApplication = DefaultDamageApplication()
 
     override fun MoveContext.apply(battle: Battle): Battle {
         // scaffold damage calculation context

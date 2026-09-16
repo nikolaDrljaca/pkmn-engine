@@ -1,15 +1,10 @@
 package com.drbrosdev
 
-import io.ktor.server.plugins.MissingRequestParameterException
-import io.ktor.server.routing.Routing
-import io.ktor.server.websocket.DefaultWebSocketServerSession
-import io.ktor.server.websocket.webSocket
-import io.ktor.util.logging.Logger
-import io.ktor.websocket.CloseReason
-import io.ktor.websocket.Frame
-import io.ktor.websocket.close
-import io.ktor.websocket.readText
-import io.ktor.websocket.send
+import io.ktor.server.routing.*
+import io.ktor.server.util.*
+import io.ktor.server.websocket.*
+import io.ktor.util.logging.*
+import io.ktor.websocket.*
 import java.util.concurrent.ConcurrentHashMap
 import kotlin.coroutines.cancellation.CancellationException
 
@@ -46,8 +41,8 @@ fun Routing.gameWebsocket(
     val battleSessions = ConcurrentHashMap<String, BattleSession>()
 
     webSocket(path = "/battle/{battleId}/{teamId}") {
-        val battleId = call.parameters["battleId"] ?: throw MissingRequestParameterException("battleId")
-        val teamId = call.parameters["teamId"] ?: throw MissingRequestParameterException("teamId")
+        val battleId: String by call.parameters
+        val teamId: String by call.parameters
 
         val currentSession = battleSessions.getOrPut(battleId) {
             BattleSession(battleId, ConcurrentHashMap())
