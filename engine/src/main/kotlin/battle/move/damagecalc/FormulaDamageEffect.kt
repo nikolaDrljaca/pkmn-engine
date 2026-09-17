@@ -10,7 +10,6 @@ import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.Stat
 import java.util.logging.Logger
 
-private val LOG = Logger.getLogger(ApplyDamage::class.qualifiedName)
 
 /*
 Dynamic stat resolution
@@ -123,7 +122,6 @@ object ApplyConfusionStatusDamage : MoveEffect {
         val updatedTarget = target.copy(
             inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
         )
-        LOG.fine { "$userId hurt itself in confusion for $finalDamage" }
         val narrativeLog = buildString {
             appendLine("It hurt itself in confusion!")
             appendLine("${user.name} dealt $finalDamage to itself.")

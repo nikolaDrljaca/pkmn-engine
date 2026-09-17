@@ -9,6 +9,10 @@ data class StatSelection(val attacker: StatKey, val defender: StatKey) {
     }
 }
 
+/*
+TODO: Maybe this can only depend on the selected Move?
+It might not need the entire battle state?
+ */
 fun interface StatSelector {
     fun select(context: DamageEffectContext): StatSelection?
 }
@@ -19,8 +23,8 @@ class DefaultStatSelector(
         NormalStatSelection
     )
 ) : StatSelector {
-    override fun select(context: DamageEffectContext): StatSelection? {
-        val selection = strategies.firstNotNullOfOrNull { it.select(context) }
+    override fun select(context: DamageEffectContext): StatSelection {
+        val selection = strategies.firstNotNullOfOrNull { strategy -> strategy.select(context) }
         return requireNotNull(selection) {
             "DefaultStatSelector must resolve a stat selection!"
         }

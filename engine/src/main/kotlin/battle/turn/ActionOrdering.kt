@@ -65,6 +65,7 @@ object SwitchRuleComparator : Comparator<TurnAction> {
         val isSwitch1 = o1 is TurnAction.Switch
         val isSwitch2 = o2 is TurnAction.Switch
         return when {
+            // NOTE: both are switching, speed comparator will decide
             isSwitch1 && isSwitch2 -> 0
 
             isSwitch1 -> -1
