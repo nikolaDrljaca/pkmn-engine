@@ -5,6 +5,7 @@ import com.drbrosdev.battle.Battle
 import com.drbrosdev.battle.environment.EnvironmentUnit
 import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.environment.enterNarrativeMessage
+import com.drbrosdev.battle.environment.hazard.EntryHazard
 import com.drbrosdev.battle.move.damagecalc.ApplyConfusionStatusDamage
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.Stat
@@ -250,8 +251,11 @@ class ApplyVolatileStatusCondition(
     }
 }
 
-class ApplyEnvironmentUnit(private val unit: EnvironmentUnit) : MoveEffect {
+class ApplyEntryHazard(private val entryHazard: EntryHazard): MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
-        return battle.updateEnvironment(targetId, unit)
+        val targetTeam = battle.team(targetId)
+        val updatedEnvironment = battle.environment
+            .withEntryHazard(targetTeam.id, entryHazard)
+        return battle.copy(environment = updatedEnvironment)
     }
 }

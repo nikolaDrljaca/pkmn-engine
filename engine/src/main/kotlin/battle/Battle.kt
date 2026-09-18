@@ -1,5 +1,6 @@
 package com.drbrosdev.battle
 
+import com.drbrosdev.battle.environment.BattleEnvironment
 import com.drbrosdev.battle.environment.EnvironmentUnit
 import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.pokemon.Pokemon
@@ -17,6 +18,7 @@ data class Battle(
     // BUG: CARE that only Spikes and ToxicSpikes can be applied twice
     // Probably this should be its own model!
     val environmentUnits: Map<TeamId, Set<EnvironmentUnit>> = emptyMap(),
+    val environment: BattleEnvironment = BattleEnvironment(),
 
     // state information
     val state: BattleState = BattleState.InProgress,
@@ -55,6 +57,12 @@ data class Battle(
             else -> error("Pokemon ${pokemon.id} is not in the current Battle!")
         }
         return units.orEmpty()
+    }
+
+    fun entryHazards(pokemon: PokemonId) = when {
+        team1.hasMember(pokemon) -> environment.entryHazards(team1.id)
+        team2.hasMember(pokemon) -> environment.entryHazards(team2.id)
+        else -> error("Pokemon ${pokemon.id} is not in the current Battle!")
     }
 
     fun updateMons(vararg pokemon: Pokemon): Battle {

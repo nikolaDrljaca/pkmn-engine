@@ -24,3 +24,8 @@ fun interface EnvironmentEffect {
         val NoEffect = EnvironmentEffect { it }
     }
 }
+
+// TODO  light screen, reflect, tailwind
+interface TemporaryEffect {
+
+}

@@ -71,10 +71,9 @@ class ExecuteSwitchEffects(private val context: ActionContext): TurnStep {
 class SwitchInTurnStep(private val incomingId: PokemonId) : TurnStep {
     override fun apply(battle: Battle): Battle {
         // pokemon that is switching in
-        // suffers environment effects
+        // suffers entry hazards
         val incoming = battle[incomingId]
-        val afterEnvEffects = battle.environment(incoming.id)
-            .map { it.effect }
+        val afterEnvEffects = battle.entryHazards(incoming.id)
             .fold(incoming) { pokemon, effect -> effect.apply(pokemon) }
         val updatedBattle = battle.updateMons(afterEnvEffects)
         // applies its switch-in effects if any
