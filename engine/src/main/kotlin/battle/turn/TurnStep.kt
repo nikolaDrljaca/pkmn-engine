@@ -57,7 +57,7 @@ class ExecuteActionStep(private val context: ActionContext) : TurnStep {
     }
 }
 
-class ExecuteSwitchEffects(private val context: ActionContext): TurnStep {
+class ExecuteSwitchEffects(private val context: ActionContext) : TurnStep {
     override fun apply(battle: Battle): Battle = when (context.action) {
         // do nothing
         is TurnAction.MoveSelected -> battle
@@ -122,23 +122,21 @@ class ApplyStartOfTurnEffects(private val context: ActionContext) : TurnStep {
             battle
                 // resolve pokemon volatile and self-healing status
                 .let { resolveUserStatus(pokemon.id, it) }
-                // resolve environment effect which can expire
-                .let { resolveEnvironmentUnits(pokemon.id, it) }
+                // resolve temporary effects (eg tailwind)
+                .let { resolveTemporaryEffects(pokemon.id, it) }
         }
     }
 
-    private fun resolveEnvironmentUnits(
+    private fun resolveTemporaryEffects(
         pokemonId: PokemonId,
         battle: Battle
     ): Battle {
-        val updatedEnv = battle.environment(pokemonId)
-            .filter { it.expiresOnTurn != null }
-            .filter { battle.turnCount < it.expiresOnTurn!! }
+        val targetTeam = battle.team(pokemonId)
+        val updatedTemporaryEffects = battle.temporaryEffects(pokemonId)
+            .filter { battle.turnCount < it.expiresOnTurn }
             .toSet()
-        return battle.updateEnvironment(
-            target = pokemonId,
-            *updatedEnv.toTypedArray()
-        )
+        val env = battle.environment.withTemporaryEffects(targetTeam.id, updatedTemporaryEffects)
+        return battle.copy(environment = env)
     }
 
     private fun resolveUserStatus(userId: PokemonId, battle: Battle): Battle {

@@ -1,6 +1,7 @@
 package com.drbrosdev.battle.pokemon
 
 import com.drbrosdev.battle.Battle
+import com.drbrosdev.battle.environment.TemporaryEffect
 import com.drbrosdev.battle.item.Item
 import com.drbrosdev.battle.move.Move
 import com.drbrosdev.battle.move.MoveId
@@ -92,10 +93,14 @@ fun Pokemon.isConfused() = volatileStatus.any { it is VolatileStatus.Confusion }
 fun Pokemon.isInfatuated() = volatileStatus.any { it is VolatileStatus.Infatuation }
 
 // NOTE: General purpose
-fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
-    allStatModifications
+fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats {
+    val temporaryEffectStatModifications = battle.temporaryEffects(id)
+        .filterIsInstance<TemporaryEffect.Tailwind>()
+        .map { it.statModification }
+    return (allStatModifications + temporaryEffectStatModifications)
         .map { it.compute(StatModificationContext(this, battle)) }
         .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
+}
 
 @JvmInline
 value class PokemonId private constructor(val id: String) {

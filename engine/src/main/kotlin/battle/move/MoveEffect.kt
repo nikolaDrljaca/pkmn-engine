@@ -2,7 +2,7 @@ package com.drbrosdev.battle.move
 
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.environment.EnvironmentUnit
+import com.drbrosdev.battle.environment.TemporaryEffect
 import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.environment.enterNarrativeMessage
 import com.drbrosdev.battle.environment.hazard.EntryHazard
@@ -236,7 +236,7 @@ class ApplyVolatileStatusCondition(
         val volatileStatus = volatileStatusFactory(battle.turnCount)
         // OwnTempo support
         if (targetMon.ability == OwnTempo && volatileStatus is VolatileStatus.Confusion) return battle
-        // TODO: Add other abilities which prevent volatile status changes
+        // TODO: @drljacan Add other abilities which prevent volatile status changes
         // a mon cannot receive a volatile status it already has
         if (targetMon.volatileStatus.any { it::class == volatileStatus::class }) return battle
         // probability check
@@ -257,5 +257,17 @@ class ApplyEntryHazard(private val entryHazard: EntryHazard): MoveEffect {
         val updatedEnvironment = battle.environment
             .withEntryHazard(targetTeam.id, entryHazard)
         return battle.copy(environment = updatedEnvironment)
+    }
+}
+
+class ApplyTemporaryEffect(
+    private val factory: (currentTurn: Int, user: Pokemon) -> TemporaryEffect
+): MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle {
+        val effect = factory(battle.turnCount, battle[userId])
+        val targetTeam = battle.team(targetId)
+        val updated = battle.environment
+            .withTemporaryEffect(targetTeam.id, effect)
+        return battle.copy(environment = updated)
     }
 }

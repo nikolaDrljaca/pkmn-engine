@@ -15,10 +15,8 @@ object TextBattlePresenter {
         appendLine(DIVIDER)
         with(TextPokemonPresenter) {
             appendBasicInfo(pokemon1)
-            appendEnvironment(pokemon1, battle)
             appendLine(DIVIDER)
             appendBasicInfo(pokemon2)
-            appendEnvironment(pokemon1, battle)
         }
         appendLine(DIVIDER)
     }
@@ -28,9 +26,4 @@ object TextBattlePresenter {
         appendLine(" Weather: ${battle.weather.name}")
     }
 
-    private fun StringBuilder.appendEnvironment(pokemon: Pokemon, battle: Battle) {
-        val env = battle.environment(pokemon.id)
-        if (env.isEmpty()) return
-        appendLine(" Environment: ${env.joinToString { it.name }}")
-    }
 }

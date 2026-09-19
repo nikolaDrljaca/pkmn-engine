@@ -1,7 +1,6 @@
 package com.drbrosdev.battle
 
 import com.drbrosdev.battle.environment.BattleEnvironment
-import com.drbrosdev.battle.environment.EnvironmentUnit
 import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.pokemon.Pokemon
 import com.drbrosdev.battle.pokemon.PokemonId
@@ -15,9 +14,6 @@ data class Battle(
     val active2: PokemonId,
 
     val weather: Weather = Weather.None,
-    // BUG: CARE that only Spikes and ToxicSpikes can be applied twice
-    // Probably this should be its own model!
-    val environmentUnits: Map<TeamId, Set<EnvironmentUnit>> = emptyMap(),
     val environment: BattleEnvironment = BattleEnvironment(),
 
     // state information
@@ -50,18 +46,15 @@ data class Battle(
         else -> error("Team $pokemonId is not in the current Battle!")
     }
 
-    fun environment(pokemon: PokemonId): Set<EnvironmentUnit> {
-        val units = when {
-            team1.hasMember(pokemon) -> environmentUnits[team1.id]
-            team2.hasMember(pokemon) -> environmentUnits[team2.id]
-            else -> error("Pokemon ${pokemon.id} is not in the current Battle!")
-        }
-        return units.orEmpty()
-    }
-
     fun entryHazards(pokemon: PokemonId) = when {
         team1.hasMember(pokemon) -> environment.entryHazards(team1.id)
         team2.hasMember(pokemon) -> environment.entryHazards(team2.id)
+        else -> error("Pokemon ${pokemon.id} is not in the current Battle!")
+    }
+
+    fun temporaryEffects(pokemon: PokemonId) = when {
+        team1.hasMember(pokemon) -> environment.temporaryEffects(team1.id)
+        team2.hasMember(pokemon) -> environment.temporaryEffects(team2.id)
         else -> error("Pokemon ${pokemon.id} is not in the current Battle!")
     }
 
@@ -73,19 +66,6 @@ data class Battle(
                 else -> error("Pokemon ${mon.id} is not in the current Battle!")
             }
         }
-    }
-
-    fun updateEnvironment(target: PokemonId, vararg unit: EnvironmentUnit): Battle {
-        val teamId = when {
-            team1.hasMember(target) -> team1.id
-            team2.hasMember(target) -> team2.id
-            else -> error("Pokemon $target is not in the current Battle!")
-        }
-        val updatedUnits = environmentUnits[teamId].orEmpty() + unit
-        return copy(
-            environmentUnits = environmentUnits + (teamId to updatedUnits),
-            turnLog = turnLog + unit.map { it.enterNarrativeMessage }
-        )
     }
 
     fun switch(user: PokemonId, target: PokemonId): Battle {

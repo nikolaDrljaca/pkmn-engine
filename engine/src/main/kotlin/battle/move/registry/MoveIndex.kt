@@ -1,7 +1,7 @@
 package com.drbrosdev.battle.move.registry
 
 import com.drbrosdev.RandomGen
-import com.drbrosdev.battle.environment.EnvironmentUnit
+import com.drbrosdev.battle.environment.TemporaryEffect
 import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.environment.hazard.Layers
 import com.drbrosdev.battle.environment.hazard.SpikesHazard
@@ -399,20 +399,19 @@ object MoveIndex {
         powerPoints = 32
         percentAccuracy(100)
         status()
-        effects({ battle ->
-            val user = battle[userId]
-            val lowerBound = 5
-            val upperBound = when {
-                user.item.id.value == "light-clay" -> 9
-                else -> 6
-            }
-            val roll = RandomGen.nextInt(lowerBound, upperBound)
-            val unit = EnvironmentUnit(
-                id = "reflect",
-                expiresOnTurn = battle.turnCount + roll
+        effects(
+            ApplyTemporaryEffect(
+                factory = { currentTurn, user ->
+                    val upperBound = when {
+                        // TODO: @drljacan magic string
+                        user.item.id.value == "light-clay" -> 9
+                        else -> 5
+                    }
+                    val roll = RandomGen.nextInt(5, upperBound)
+                    TemporaryEffect.Reflect(expiresOnTurn = currentTurn + roll)
+                }
             )
-            battle.updateEnvironment(userId, unit)
-        })
+        )
     }
 
     private val LightScreen = buildMove {
@@ -423,20 +422,28 @@ object MoveIndex {
         powerPoints = 32
         percentAccuracy(100)
         status()
-        effects({ battle ->
-            val user = battle[userId]
-            val lowerBound = 5
+        effects(ApplyTemporaryEffect(factory = { currentTurn, user ->
             val upperBound = when {
+                // TODO: @drljacan magic string
                 user.item.id.value == "light-clay" -> 9
-                else -> 6
+                else -> 5
             }
-            val roll = RandomGen.nextInt(lowerBound, upperBound)
-            val unit = EnvironmentUnit(
-                id = "light-screen",
-                expiresOnTurn = battle.turnCount + roll
-            )
-            battle.updateEnvironment(userId, unit)
-        })
+            val roll = RandomGen.nextInt(5, upperBound)
+            TemporaryEffect.LightScreen(expiresOnTurn = currentTurn + roll)
+        }))
+    }
+
+    private val Tailwind = buildMove {
+        id = "tailwind"
+        name = "Tailwind"
+        element = Element.FLYING
+        power = 0
+        powerPoints = 24
+        percentAccuracy(100)
+        status()
+        effects(ApplyTemporaryEffect(factory = { currentTurn, _ ->
+            TemporaryEffect.Tailwind.create(currentTurn)
+        }))
     }
 
     private val Sandstorm = buildMove {
@@ -480,5 +487,6 @@ object MoveIndex {
         Reflect.name to Reflect,
         LightScreen.name to LightScreen,
         Sandstorm.name to Sandstorm,
+        Tailwind.name to Tailwind
     )
 }
