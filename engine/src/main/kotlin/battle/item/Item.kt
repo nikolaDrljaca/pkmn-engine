@@ -3,13 +3,8 @@ package com.drbrosdev.battle.item
 import com.drbrosdev.battle.move.damagecalc.DamageModifier
 import com.drbrosdev.battle.move.damagecalc.DamageMultiplier
 import com.drbrosdev.battle.move.MoveEffect
-import com.drbrosdev.battle.pokemon.Effectiveness
-import com.drbrosdev.battle.pokemon.Element
-import com.drbrosdev.battle.pokemon.effectiveness
 import com.drbrosdev.battle.pokemon.stats.*
 import com.drbrosdev.battle.turn.EndOfTurnEffect
-import com.drbrosdev.battle.turn.EndOfTurnEffectResult
-import java.util.logging.Logger
 
 data class Item(
     val id: ItemId,
@@ -33,7 +28,4 @@ data class Item(
         val NoItem = Item(ItemId("no-item"), name = "")
     }
 }
-
-@JvmInline
-value class ItemId(val value: String)
 

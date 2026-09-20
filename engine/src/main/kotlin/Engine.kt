@@ -2,7 +2,6 @@ package com.drbrosdev
 
 import com.drbrosdev.battle.*
 import com.drbrosdev.battle.move.MoveId
-import com.drbrosdev.battle.pokemon.PokemonId
 import com.drbrosdev.battle.presentation.TextBattlePresenter
 import com.drbrosdev.battle.presentation.TextMovePresenter
 import com.drbrosdev.battle.presentation.TextPokemonPresenter

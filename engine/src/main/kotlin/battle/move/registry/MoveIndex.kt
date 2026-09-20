@@ -197,6 +197,19 @@ object MoveIndex {
         )
     }
 
+    private val SwordsDance = buildMove {
+        id = "swords-dance"
+        name = "Swords Dance"
+        element = Element.NORMAL
+        power = 0
+        powerPoints = 32
+        alwaysHit()
+        status()
+        effects(ApplySelfStatModification {
+            StatModifiers(mapOf(StatKey.ATTACK to StatModifier.positiveStage(2)))
+        })
+    }
+
     private val Surf = buildMove {
         id = "surf"
         name = "Surf"
@@ -487,6 +500,7 @@ object MoveIndex {
         Reflect.name to Reflect,
         LightScreen.name to LightScreen,
         Sandstorm.name to Sandstorm,
-        Tailwind.name to Tailwind
+        Tailwind.name to Tailwind,
+        SwordsDance.name to SwordsDance
     )
 }
