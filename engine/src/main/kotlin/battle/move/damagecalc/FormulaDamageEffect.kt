@@ -10,7 +10,6 @@ import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.Stat
 import java.util.logging.Logger
 
-private val LOG = Logger.getLogger(ApplyDamage::class.qualifiedName)
 
 /*
 Dynamic stat resolution
@@ -19,10 +18,10 @@ Dynamic DamageMultiplier application
 // decides and delegates to either
 // FormulaDamage, CriticalDamage
 object ApplyDamage : MoveEffect {
-    private val statSelection = DefaultStatSelector()
-    private val statResolution = DefaultStatResolution()
-    private val damageComputation = DefaultDamageCalculator()
-    private val damageApplication = DefaultDamageApplication()
+    private val statSelection: StatSelector = DefaultStatSelector()
+    private val statResolution: StatResolution = DefaultStatResolution()
+    private val damageComputation: DamageCalculator = DefaultDamageCalculator()
+    private val damageApplication: DamageApplication = DefaultDamageApplication()
 
     override fun MoveContext.apply(battle: Battle): Battle {
         // scaffold damage calculation context
@@ -123,7 +122,6 @@ object ApplyConfusionStatusDamage : MoveEffect {
         val updatedTarget = target.copy(
             inBattleHp = Stat((target.inBattleHp.value - finalDamage).coerceAtLeast(0))
         )
-        LOG.fine { "$userId hurt itself in confusion for $finalDamage" }
         val narrativeLog = buildString {
             appendLine("It hurt itself in confusion!")
             appendLine("${user.name} dealt $finalDamage to itself.")

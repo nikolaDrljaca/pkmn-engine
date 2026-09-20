@@ -1,16 +1,11 @@
-import com.drbrosdev.battle.environment.StealthRockEnvUnit
-import com.drbrosdev.battle.pokemon.Element
-import com.drbrosdev.battle.pokemon.Elements
-import com.drbrosdev.battle.pokemon.Level
-import com.drbrosdev.battle.pokemon.Quirky
-import com.drbrosdev.battle.pokemon.RunAway
-import com.drbrosdev.battle.pokemon.buildPokemon
+import com.drbrosdev.battle.environment.hazard.StealthRockHazard
+import com.drbrosdev.battle.pokemon.*
 import org.junit.jupiter.api.Test
 import org.junit.jupiter.api.extension.ExtendWith
 import kotlin.test.assertNotEquals
 
 @ExtendWith(LoggingExtension::class)
-class EnvironmentUnitTest {
+class EntryHazardTest {
     val gliscor = buildPokemon {
         pokemonId("gliscor")
         name = "Gliscor"
@@ -35,14 +30,14 @@ class EnvironmentUnitTest {
 
     @Test
     fun `test stealth rock effect damage`() {
-        val afterEffect = with(StealthRockEnvUnit.effect) { apply(gliscor) }
+        val afterEffect = with(StealthRockHazard) { apply(gliscor) }
         assertNotEquals(gliscor.inBattleHp.value, afterEffect.inBattleHp.value)
     }
 
     @Test
     fun `test stealth rock effect damage 4x effectiveness`() {
         val mon = gliscor.copy(elements = Elements(setOf(Element.FIRE, Element.FLYING)))
-        val afterEffect = with(StealthRockEnvUnit.effect) { apply(mon) }
+        val afterEffect = with(StealthRockHazard) { apply(mon) }
         assertNotEquals(gliscor.inBattleHp.value, afterEffect.inBattleHp.value)
     }
 

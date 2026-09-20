@@ -61,29 +61,8 @@ fun StatModifier.isPositiveStage() = when (this) {
     is StatModifier.Stage -> value > 0
 }
 
-fun Stat.modify(modifier: StatModifier): Stat = when (modifier) {
-    is StatModifier.Percent -> {
-        Stat((value * modifier.modifier / 100.0).toInt())
-    }
-
-    is StatModifier.Stage -> {
-        val multiplier = when {
-            modifier.value == 0 -> 1.0
-
-            modifier.value > 0 -> (2 + modifier.value) / 2.0
-
-            else -> 2.0 / (2 - modifier.value)
-        }
-        Stat((value * multiplier).toInt())
-    }
-}
-
 // modifiers applied by nature and held items
 data class StatModifiers(val modifiers: Map<StatKey, StatModifier> = emptyMap())
-
-fun StatModifiers.onlyPercent() = StatModifiers(
-    modifiers = modifiers.filter { (statKey, modifier) -> modifier is StatModifier.Percent }
-)
 
 data class StatModificationContext(
     // pokemon whose stats are being modified

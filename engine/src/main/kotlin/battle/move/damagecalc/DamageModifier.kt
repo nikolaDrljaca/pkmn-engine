@@ -1,10 +1,13 @@
 package com.drbrosdev.battle.move.damagecalc
 
 import com.drbrosdev.RandomGen
+import com.drbrosdev.battle.environment.TemporaryEffect
 import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.move.isPhysical
 import com.drbrosdev.battle.move.isSpecialMove
+import com.drbrosdev.battle.move.isStatusMove
 import com.drbrosdev.battle.pokemon.*
+import jdk.jfr.DataAmount
 
 
 fun interface DamageModifier {
@@ -107,16 +110,14 @@ object BurnModifier : DamageModifier {
 
 object ReflectModifier : DamageModifier {
     override fun compute(context: DamageEffectContext): DamageMultiplier = with(context) {
-        val targetId = target.id
-        val hasReflect = battle.environment(targetId)
-            .map { it.id }
-            .contains("reflect")
+        val hasReflect = battle.temporaryEffects(target.id)
+            .filterIsInstance<TemporaryEffect.Reflect>()
+            .firstOrNull() != null
         return when {
             // if critical hit, do nothing
             critical -> DamageMultiplier.Neutral
-            move.isPhysical().not() -> DamageMultiplier.Neutral
-            hasReflect.not() -> DamageMultiplier.Neutral
-            else -> DamageMultiplier(50)
+            (move.isPhysical() and hasReflect) -> DamageMultiplier(50)
+            else -> DamageMultiplier.Neutral
         }
     }
 }
@@ -124,15 +125,14 @@ object ReflectModifier : DamageModifier {
 object LightScreenModifier : DamageModifier {
     override fun compute(context: DamageEffectContext): DamageMultiplier = with(context) {
         val targetId = target.id
-        val hasLightScreen = battle.environment(targetId)
-            .map { it.id }
-            .contains("light-screen")
+        val hasLightScreen = battle.temporaryEffects(targetId)
+            .filterIsInstance<TemporaryEffect.LightScreen>()
+            .firstOrNull() != null
         return when {
             // if critical hit, do nothing
             critical -> DamageMultiplier.Neutral
-            move.isSpecialMove().not() -> DamageMultiplier.Neutral
-            hasLightScreen.not() -> DamageMultiplier.Neutral
-            else -> DamageMultiplier(50)
+            (move.isSpecialMove() and hasLightScreen) -> DamageMultiplier(50)
+            else -> DamageMultiplier.Neutral
         }
     }
 }

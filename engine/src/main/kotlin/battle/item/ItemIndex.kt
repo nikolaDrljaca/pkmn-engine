@@ -12,8 +12,6 @@ import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModifier
 import com.drbrosdev.battle.pokemon.stats.StatModifiers
 import com.drbrosdev.battle.turn.EndOfTurnEffectResult
-import jdk.incubator.vector.VectorOperators.LOG
-import java.nio.file.Files.move
 
 object ItemIndex {
 

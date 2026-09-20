@@ -1,19 +1,16 @@
 package com.drbrosdev.battle.move.damagecalc
 
-import com.drbrosdev.battle.pokemon.stats.Stat
-
 fun interface DamageCalculator {
     fun calculate(
         context: DamageEffectContext,
-        stats: Pair<Stat, Stat>
+        stats: ResolvedStats,
     ): Int
 }
 
 class DefaultDamageCalculator : DamageCalculator {
-
     override fun calculate(
         context: DamageEffectContext,
-        stats: Pair<Stat, Stat>
+        stats: ResolvedStats,
     ): Int {
         val (attackStat, defenceStat) = stats
         val baseDamage = with(context) {

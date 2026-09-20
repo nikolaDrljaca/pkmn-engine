@@ -154,5 +154,6 @@ object PokemonIndex {
         Ferrothorn.name to Ferrothorn,
         Alakazam.name to Alakazam,
         LandorusTherian.name to LandorusTherian,
+        Salamance.name to Salamance
     )
 }

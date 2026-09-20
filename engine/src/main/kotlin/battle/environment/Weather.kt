@@ -29,34 +29,28 @@ sealed interface Weather {
             get() = StatModification.NoModification
     }
 
-    data class HarshSun(override val expiresOnTurn: Int?) : Weather {
-        override val endOfTurnEffect: EndOfTurnEffect
-            get() = EndOfTurnEffect.NoEffect
+    data class HarshSun(
+        override val expiresOnTurn: Int?,
+        override val endOfTurnEffect: EndOfTurnEffect = EndOfTurnEffect.NoEffect,
+        override val statModification: StatModification = StatModification.NoModification
+    ) : Weather
 
-        override val statModification: StatModification
-            get() = StatModification.NoModification
-    }
+    data class Rain(
+        override val expiresOnTurn: Int,
+        override val endOfTurnEffect: EndOfTurnEffect = EndOfTurnEffect.NoEffect,
+        override val statModification: StatModification = StatModification.NoModification
+    ) : Weather
 
-    data class Rain(override val expiresOnTurn: Int) : Weather {
-        override val endOfTurnEffect: EndOfTurnEffect
-            get() = EndOfTurnEffect.NoEffect
+    data class Hail(
+        override val expiresOnTurn: Int,
+        override val endOfTurnEffect: EndOfTurnEffect = HailEndOfTurnEffect,
+        override val statModification: StatModification = StatModification.NoModification
+    ) : Weather
 
-        override val statModification: StatModification
-            get() = StatModification.NoModification
-    }
-
-    data class Hail(override val expiresOnTurn: Int) : Weather {
-        override val endOfTurnEffect: EndOfTurnEffect
-            get() = HailEndOfTurnEffect
-
-        override val statModification: StatModification
-            get() = StatModification.NoModification
-    }
-
-    data class Sandstorm(override val expiresOnTurn: Int?) : Weather {
-        override val endOfTurnEffect: EndOfTurnEffect
-            get() = SandstormEndOfTurnEffect
-
+    data class Sandstorm(
+        override val expiresOnTurn: Int?,
+        override val endOfTurnEffect: EndOfTurnEffect = SandstormEndOfTurnEffect,
+    ) : Weather {
         override val statModification: StatModification
             get() = { context ->
                 when {

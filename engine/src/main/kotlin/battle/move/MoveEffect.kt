@@ -2,16 +2,16 @@ package com.drbrosdev.battle.move
 
 import com.drbrosdev.RandomGen
 import com.drbrosdev.battle.Battle
-import com.drbrosdev.battle.environment.EnvironmentUnit
+import com.drbrosdev.battle.environment.TemporaryEffect
 import com.drbrosdev.battle.environment.Weather
 import com.drbrosdev.battle.environment.enterNarrativeMessage
+import com.drbrosdev.battle.environment.hazard.EntryHazard
 import com.drbrosdev.battle.move.damagecalc.ApplyConfusionStatusDamage
 import com.drbrosdev.battle.pokemon.*
 import com.drbrosdev.battle.pokemon.stats.Stat
 import com.drbrosdev.battle.pokemon.stats.StatModification
 import com.drbrosdev.battle.pokemon.stats.StatModifier
 import com.drbrosdev.battle.pokemon.stats.increaseStageBy
-import java.util.logging.Logger
 
 /*
 Pipeline Design pattern
@@ -19,8 +19,6 @@ Execute-all pipeline.
 All steps run unconditionally.
 Implementations decide to return a new state of the battle
 */
-
-private val LOG = Logger.getLogger(MoveEffect::class.qualifiedName)
 
 fun interface MoveEffect {
     fun MoveContext.apply(battle: Battle): Battle
@@ -100,29 +98,38 @@ class ApplyDirectDamage(private val directDamage: Int) : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
         val targetMon = battle[targetId]
         val targetHp = (targetMon.inBattleHp.value - directDamage).coerceAtLeast(0)
-        LOG.fine { "$userId dealt $directDamage damage to $targetId with $moveId by direct" }
         return battle.updateMons(targetMon.copy(inBattleHp = Stat(targetHp)))
     }
 }
 
+/**
+ * Support for moves like "Leer", "Growl" and additional support for
+ * moves like "Crunch".
+ *
+ * Applies [statModification] to the [MoveContext.targetId].
+ */
 class ApplyStatModification(private val statModification: StatModification) : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle = with(battle[targetId]) {
         val statMods = buildList {
             addAll(statModifications)
             add(statModification)
         }
-        LOG.fine { "$userId lowers stats of $targetId with $moveId" }
         battle.updateMons(copy(statModifications = statMods))
     }
 }
 
+/**
+ * Support for moves like "Leer", "Growl" and additional support for
+ * moves like "Crunch".
+ *
+ * Applies [statModification] to the [MoveContext.userId].
+ */
 class ApplySelfStatModification(private val statModification: StatModification) : MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle = with(battle[userId]) {
         val statMods = buildList {
             addAll(statModifications)
             add(statModification)
         }
-        LOG.fine { "$userId lowers stats of $userId with $moveId" }
         battle.updateMons(copy(statModifications = statMods))
     }
 }
@@ -138,7 +145,6 @@ class ApplyChanceStatModification(
             addAll(statModifications)
             add(statModification)
         }
-        LOG.fine { "$userId lowers stats of $targetId with $moveId" }
         battle.updateMons(copy(statModifications = statMods))
     }
 }
@@ -212,6 +218,7 @@ class ApplyWeather(
     override fun MoveContext.apply(battle: Battle): Battle {
         val user = battle[userId]
         val itemId = user.item.id.value
+        // TODO: @drljacan magic strings!
         val shouldExtend = when {
             itemId == "damp-rock" && moveId.id == "rain" -> true
             itemId == "smooth-rock" && moveId.id == "sandstorm" -> true
@@ -235,7 +242,7 @@ class ApplyVolatileStatusCondition(
         val volatileStatus = volatileStatusFactory(battle.turnCount)
         // OwnTempo support
         if (targetMon.ability == OwnTempo && volatileStatus is VolatileStatus.Confusion) return battle
-        // TODO: Add other abilities which prevent volatile status changes
+        // TODO: @drljacan Add other abilities which prevent volatile status changes
         // a mon cannot receive a volatile status it already has
         if (targetMon.volatileStatus.any { it::class == volatileStatus::class }) return battle
         // probability check
@@ -250,8 +257,23 @@ class ApplyVolatileStatusCondition(
     }
 }
 
-class ApplyEnvironmentUnit(private val unit: EnvironmentUnit) : MoveEffect {
+class ApplyEntryHazard(private val entryHazard: EntryHazard): MoveEffect {
     override fun MoveContext.apply(battle: Battle): Battle {
-        return battle.updateEnvironment(targetId, unit)
+        val targetTeam = battle.team(targetId)
+        val updatedEnvironment = battle.environment
+            .withEntryHazard(targetTeam.id, entryHazard)
+        return battle.copy(environment = updatedEnvironment)
+    }
+}
+
+class ApplyTemporaryEffect(
+    private val factory: (currentTurn: Int, user: Pokemon) -> TemporaryEffect
+): MoveEffect {
+    override fun MoveContext.apply(battle: Battle): Battle {
+        val effect = factory(battle.turnCount, battle[userId])
+        val targetTeam = battle.team(targetId)
+        val updated = battle.environment
+            .withTemporaryEffect(targetTeam.id, effect)
+        return battle.copy(environment = updated)
     }
 }

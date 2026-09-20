@@ -1,11 +1,11 @@
 package com.drbrosdev.battle.pokemon
 
 import com.drbrosdev.battle.Battle
+import com.drbrosdev.battle.environment.TemporaryEffect
 import com.drbrosdev.battle.item.Item
 import com.drbrosdev.battle.move.Move
 import com.drbrosdev.battle.move.MoveId
 import com.drbrosdev.battle.pokemon.stats.*
-import java.util.*
 
 data class Pokemon(
     // from static config - used w/ lookup
@@ -29,7 +29,6 @@ data class Pokemon(
     // from input
     val individualValues: IndividualValues,
 
-    // in battle stats
     val effectiveStats: EffectiveStats = EffectiveStats.from(
         baseStats = baseStats,
         effortValues = effortValues,
@@ -92,161 +91,11 @@ fun Pokemon.isConfused() = volatileStatus.any { it is VolatileStatus.Confusion }
 fun Pokemon.isInfatuated() = volatileStatus.any { it is VolatileStatus.Infatuation }
 
 // NOTE: General purpose
-fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats =
-    allStatModifications
+fun Pokemon.computeInBattleStats(battle: Battle): EffectiveStats {
+    val temporaryEffectStatModifications = battle.temporaryEffects(id)
+        .filterIsInstance<TemporaryEffect.Tailwind>()
+        .map { it.statModification }
+    return (allStatModifications + temporaryEffectStatModifications)
         .map { it.compute(StatModificationContext(this, battle)) }
         .fold(effectiveStats) { stats, mod -> stats.resolve(mod) }
-
-@JvmInline
-value class PokemonId private constructor(val id: String) {
-    init {
-        require(id.isNotBlank()) {
-            "Pokemon $id has no ownership!"
-        }
-        require(id.contains("-")) {
-            "Pokemon $id does not contain a discriminator!"
-        }
-    }
-
-    override fun toString(): String = id
-
-    fun baseId(): String = id.split("-").dropLast(1).joinToString(separator = "-") { it }
-
-    companion object {
-        operator fun invoke(id: String): PokemonId {
-            val slug = UUID.randomUUID()
-                .toString()
-                .take(4)
-            return PokemonId("$id-$slug")
-        }
-
-        // NOTE: only used in tests
-        fun of(value: String) = PokemonId(value)
-    }
 }
-
-@JvmInline
-value class Happiness(val value: Int = BASE_VALUE) {
-    init {
-        require(value in RANGE)
-    }
-
-    companion object {
-        const val BASE_VALUE = 50
-        val RANGE = 0..255
-    }
-}
-
-@JvmInline
-value class Level(val value: Int = CURRENT) {
-    init {
-        require(value in 1..MAX)
-    }
-
-    override fun toString(): String = value.toString()
-
-    companion object {
-        const val CURRENT = 50
-        const val MAX = 100
-    }
-}
-
-@PokemonDsl
-class PokemonBuilder {
-
-    var id: PokemonId = PokemonId("test-pokemon")
-    var name: String = "Test Pokemon"
-    var level: Level = Level()
-    var happiness: Happiness = Happiness()
-    var nature: Nature = Quirky
-    var ability: Ability = RunAway
-    var statModifications: List<StatModification> = emptyList()
-
-    var majorStatus: MajorStatus = MajorStatus.Normal
-    var volatileStatus: MutableSet<VolatileStatus> = mutableSetOf()
-
-    private var elements: Elements = Elements(setOf(Element.NORMAL))
-    private var baseStats: BaseStats = BaseStats()
-    var inBattleHp: Int? = null
-
-    private var effortValues = EffortValues()
-    private var individualValues = IndividualValues()
-
-    private var moves: MutableList<Move> = mutableListOf()
-    var item: Item = Item.NoItem
-
-    fun elements(vararg elements: Element) {
-        this.elements = Elements(elements.toSet())
-    }
-
-    fun effortValues(block: EffortValuesBuilder.() -> Unit) {
-        val built = EffortValuesBuilder().apply(block).build()
-        this.effortValues = built
-    }
-
-    fun effortValue(value: Int, key: StatKey) {
-        this.effortValues = EffortValues(this.effortValues.stats + (key to Stat(value)))
-    }
-
-    fun individualValues(block: IndividualValuesBuilder.() -> Unit) {
-        this.individualValues = IndividualValuesBuilder().apply(block).build()
-    }
-
-    fun individualValue(value: Int, key: StatKey) {
-        this.individualValues = IndividualValues(this.individualValues.stats + (key to Stat(value)))
-    }
-
-    fun baseStats(block: BaseStatsBuilder.() -> Unit) {
-        val built = BaseStatsBuilder().apply(block).build()
-        this.baseStats = built
-    }
-
-    fun addMove(move: Move) {
-        this.moves.add(move)
-    }
-
-    fun addMoves(vararg moves: Move) {
-        this.moves = moves.toMutableList()
-    }
-
-    fun pokemonId(value: String) {
-        this.id = PokemonId(value)
-    }
-
-    fun addStatus(volatileStatus: VolatileStatus) {
-        this.volatileStatus.add(volatileStatus)
-    }
-
-    fun staticConfig(pokemon: Pokemon) {
-        id = pokemon.id
-        elements = pokemon.elements
-        name = pokemon.name
-        baseStats = pokemon.baseStats
-    }
-
-    fun build() = Pokemon(
-        id = id,
-        name = name,
-        elements = elements,
-        level = level,
-        happiness = happiness,
-        nature = nature,
-        ability = ability,
-        baseStats = baseStats,
-        statModifications = statModifications,
-        majorStatus = majorStatus,
-        volatileStatus = volatileStatus,
-        moves = moves.toList(),
-        effortValues = effortValues,
-        individualValues = individualValues,
-        item = this.item
-    ).let {
-        when {
-            inBattleHp != null -> it.copy(inBattleHp = Stat(inBattleHp!!))
-            else -> it
-        }
-    }
-}
-
-fun buildPokemon(block: PokemonBuilder.() -> Unit): Pokemon =
-    PokemonBuilder().apply(block).build()
